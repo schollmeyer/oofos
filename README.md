@@ -1,4 +1,4 @@
 # oofos
 The R package oofos (optimization on fanilies of sets) provides functions for the optimization of linear functions on families of sets (e.g., closure systems, rings of sets and local rings of sets).
-For this, the language of formal concept analysis is used. The concrete implementation uses a mixed integer formulation (for closure systems) or a linear programming formulation (for (local) rings of sets is used.
-For the concrete computation we use the professional software gurobi ( https://www.gurobi.com ) for which free academic licenses ( https://www.gurobi.com/academia/academic-program-and-licenses/ )are available.
+For this, the language of formal concept analysis is used. For the concrete implementation, a mixed integer formulation (for closure systems) or a linear programming formulation (for (local) rings of sets) is used (cf., https://www.foundstat.statistik.uni-muenchen.de/personen/mitglieder/schollmeyer/research/tr_209.pdf p.19ff for closure systems and rings of sets and https://georgschollmeyer.weebly.com/uploads/1/3/8/4/138402857/starshaped_subgroup_discovery.pdf for local rings of sets).
+The actual computation uses the professional software gurobi ( https://www.gurobi.com ) for which free academic licenses ( https://www.gurobi.com/academia/academic-program-and-licenses/ )are available.
