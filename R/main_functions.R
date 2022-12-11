@@ -1,24 +1,24 @@
 extent_opt_c <- function(context, gen_index, v, binary_variables = "afap") {
 
 
-  m <- dim(context)[1]
-  n <- dim(context)[2]
+  n_rows <- dim(context)[1]
+  n_cols <- dim(context)[2]
   mask <- rep(0, m)
   mask[gen_index] <- 1
   N <- 5 * (m + n)
-  NN <- m * n - sum(context)
+  NN <- n_rows * n_cols - sum(context)
   I <- rep(as.integer(0), 5 * NN)
   J <- I
   V <- I
 
-  lb <- rep(0, m + n)
-  ub <- rep(1, m + n)
+  lb <- rep(0, n_rows + n_cols)
+  ub <- rep(1, n_rows + n_cols)
 
   rhs <- rep(0, N)
   sense <- rep("", N)
   t <- 1
   tt <- 1
-  for (k in (1:m)) {
+  for (k in (1:n_rows)) {
     i <- which(context[k, ] == 0)
 
     if (length(i) >= 1) {
@@ -29,7 +29,7 @@ extent_opt_c <- function(context, gen_index, v, binary_variables = "afap") {
       tt <- tt + 1
       index <- (tt:(tt + L - 1))
       I[index] <- t
-      J[index] <- i + m ### A[t,i+m]=1;
+      J[index] <- i + n_rows ### A[t,i+m]=1;
       V[index] <- 1
 
       tt <- tt + L
@@ -43,12 +43,12 @@ extent_opt_c <- function(context, gen_index, v, binary_variables = "afap") {
 
 
   for (k in (1:n)) {
-    i <- which(X[, k] == 0)
+    i <- which(context[, k] == 0)
 
     if (length(i) >= 1) {
       L <- length(i)
       I[tt] <- t
-      J[tt] <- k + m # A[t,k+m]=L
+      J[tt] <- k + n_rows # A[t,k+m]=L
       V[tt] <- L
       tt <- tt + 1
       index <- (tt:(tt + L - 1))
@@ -60,13 +60,13 @@ extent_opt_c <- function(context, gen_index, v, binary_variables = "afap") {
       sense[t] <- "<="
       t <- t + 1
     } else {
-      lb[k + m] <- 1
+      lb[k + n_rows] <- 1
     }
   }
 
 
 
-  for (k in (1:m)) {
+  for (k in (1:n_rows)) {
     i <- which(X[k, ] == 0)
     L <- length(i)
     if (length(i) >= 1) {
@@ -79,7 +79,7 @@ extent_opt_c <- function(context, gen_index, v, binary_variables = "afap") {
 
       index <- (tt:(tt + L - 1))
       I[index] <- t
-      J[index] <- i + m # A[t,i+m]=1;
+      J[index] <- i + n_rows # A[t,i+m]=1;
       V[index] <- 1
       tt <- tt + L
 
@@ -92,7 +92,7 @@ extent_opt_c <- function(context, gen_index, v, binary_variables = "afap") {
 
 
 
-  for (k in (1:n)) {
+  for (k in (1:n_cols)) {
     j <- which(mask == 1 & context[, k] == 0)
 
 
@@ -100,7 +100,7 @@ extent_opt_c <- function(context, gen_index, v, binary_variables = "afap") {
       L <- length(j)
 
       I[tt] <- t
-      J[tt] <- k + m # A[t,k+m]=1;
+      J[tt] <- k + n_rows # A[t,k+m]=1;
       V[tt] <- 1
       tt <- tt + 1
       index <- (tt:(tt + L - 1))
@@ -122,41 +122,41 @@ extent_opt_c <- function(context, gen_index, v, binary_variables = "afap") {
   jj <- which(I != 0 & J != 0)
 
   ###  setze je nach Methode gewisse Variablen als binaer
-  vtypes <- rep("C", m + n)
+  vtypes <- rep("C", n_rows + n_cols)
   if (binary_variables == "afap") {
-    if (length(gen_index) <= min(m, n)) {
+    if (length(gen_index) <= min(n_rows, n_cols)) {
       vtypes[gen_index] <- "B"
     }
-    if (length(gen_index) > min(m, n) & m <= n) {
+    if (length(gen_index) > min(n_rows, n_cols) & n_rows <= n_cols) {
       vtypes[(1:m)] <- "B"
     }
-    if (length(gen_index) > min(m, n) & n <= m) {
+    if (length(gen_index) > min(n_rows, n_cols) & n_cols <= n_rows) {
       vtypes[-(1:m)] <- "B"
     }
   }
 
   if (binary_variables == "sd") {
-    if (m <= n) {
-      vtypes[(1:m)] <- "B"
+    if (n_rows <= n_cols) {
+      vtypes[(1:n_rows)] <- "B"
     } else {
-      vtypes[-(1:m)] <- "B"
+      vtypes[-(1:n_rows)] <- "B"
     }
   }
 
   if (binary_variables == "allgen") {
     vtypes[gen_index] <- "B"
-    vtypes[-(1:m)] <- "B"
+    vtypes[-(1:n_rows)] <- "B"
   }
 
   if (binary_variables == "all") {
-    vtypes <- rep("B", m + n)
+    vtypes <- rep("B", n_rows + n_cols)
   }
 
   if (!(binary_variables %in% c("afap", "sd", "allgen", "all"))) {
     print("invalid argument for binary_variabes")
   }
   return(list(A = simple_triplet_matrix(I[jj], J[jj], V[jj], nrow = t,
-                                        ncol = m + n), rhs = rhs[(1:t)],
+                                        ncol = n_rows + n_cols), rhs = rhs[(1:t)],
               sense = sense[(1:t)], modelsense = "max", lb = lb, ub = ub,
               obj = c(v, rep(0, n)), ext_obj = v, intent_obj = rep(0, n),
               m = m, n = n, vtypes = vtypes, n_constr = t, context = context))
