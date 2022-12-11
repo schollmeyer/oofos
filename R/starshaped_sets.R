@@ -7,7 +7,14 @@
 ##########################################
 
 
+stylized_betweeness <- function(g,h,i,context, attribute_weights){
 
+  common_attributes <- which(g==1 & i==1)
+  if(length(common_attributes)==0){return(1)}
+  ans <- 1-max((1-h[common_attributes])*attribute_weights[common_attributes])
+  return(ans)
+
+}
 
 
 
