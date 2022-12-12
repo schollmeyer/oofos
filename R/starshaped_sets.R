@@ -8,7 +8,7 @@
 
 #' Compute the canoncical (stylized) betweennes relation between objects of a formal context
 #'
-#' @description 'stylized_betweenness' computes the canonical (stylized)
+#' @description 'compute_stylized_betweenness' computes the canonical (stylized)
 #' betweennes relation between objects of a formal context: Given three
 #' objects g,h,i of a formal context we say that h lies betweeen g and i iff
 #'
@@ -38,7 +38,7 @@
 #' n x n x n where n is the number of rows of the context. Higher values
 #' of an entry correspond to a larger degree of betweenness.
 #' @export
-stylized_betweeness <- function(g,h,i,context, attribute_weights){
+compute_stylized_betweeness <- function(g,h,i,context, attribute_weights){
 
   common_attributes <- which(g==1 & i==1)
   if(length(common_attributes)==0){return(1)}
@@ -58,15 +58,6 @@ compute_quotient_order <- function(I){
 
 
 
-compute_stylized_betweeness <- function(g,h,i,context, attribute_weights){
-
-  common_attributes <- which(g==1 & i==1)
-  if(length(common_attributes)==0){return(1)}
-  ans <- 1-max((1-h[common_attributes])*attribute_weights[common_attributes])
-  return(ans)
-
-}
-
 
 
 cut_incidence=function(I,width,interval=stats::quantile(unique(as.vector(I)),c(0.01,0.95))){
@@ -84,7 +75,7 @@ cut_incidence=function(I,width,interval=stats::quantile(unique(as.vector(I)),c(0
 
 
 
-starshaped_subgroup_discovery  <- function(stylized_betweenness,objective,vc_dim,params=list(Outputflag=0)){
+starshaped_subgroup_discovery  <- function(stylized_betweenness,objective,local_vc_dim,params=list(Outputflag=0)){
 
   if (dim(stylized_betweenness)[1] != dim(stylized_betweenness)[2] | dim(stylized_betweenness)[1] != dim(stylized_betweenness)[3] | dim(stylized_betweenness)[2] != dim(stylized_betweenness)[3]){print("dimension mismatch")}
   m <- nrow(stylized_betweenness)
@@ -98,14 +89,15 @@ starshaped_subgroup_discovery  <- function(stylized_betweenness,objective,vc_dim
 
 
     if (vc_dim == Inf) { incidence <- (stylized_betweenness[k,,] >= max(stylized_betweenness[k,,]))*1}
-    else{ incidence <- cut_incidence(Z[k,,],vc_dim) }
+    else{ incidence <- cut_incidence(Z[k,,],local_vc_dim) }
 
 
-    model <- model_from_qoset(t(incidence))# Z[k,,]))
+    model <- model_from_qoset(t(incidence))
     model$obj <- objective
     model$lb <- rep(0,m)
     model$ub <-rep(1,m)
-    model$lb[k] <- 1              ## force centerpoint to be in the set
+    # force centerpoint to be in the set
+    model$lb[k] <- 1
     model$modelsense <- "max"
     b <- gurobi(model,params=params)
     solutions[[k]] <- b
@@ -119,24 +111,20 @@ starshaped_subgroup_discovery  <- function(stylized_betweenness,objective,vc_dim
   i <- which.max(objvals)
 
 
-  #I <<- stylized_betweeness[i,,]
-  if (vc_dim == Inf) { incidence <- (stylized_betweenness[i,,] >= max(stylized_betweenness[k,,]))*1}
-  else{incidence <- cut_incidence(stylized_betweenness[i,,],vc_dim)}
+
+  if (local_vc_dim == Inf) { incidence <- (stylized_betweenness[i,,] >= max(stylized_betweenness[k,,]))*1}
+  else{incidence <- cut_incidence(stylized_betweenness[i,,],local_vc_dim)}
 
 
   model <- model_from_qoset(t(incidence))
   model$obj <- objective
   model$lb <- rep(0,m)
   model$ub <-rep(1,m)
-  model$lb[k] <- 1              ## Sternmittelpunkt drinnen
+  # force centerpoint to be in the set
+  model$lb[k] <- 1
   model$modelsense <- "max"
   b <- gurobi(model,params=params)
-  #solutions[[k]] <- b
-  #objvals[k] <- b$objval
-  #stars[k,] <- b$x
-  #incidence <- cut_incidence(Z[i,,],vc_dim)
-
-  return(list(models=models,obj=objective,solutions=solutions,objvals=objvals,stars=stars,objval=objvals[i],star=stars[i,],center_id =i,fuzzy_incidence=stylized_betweenness[i,,] , incidence = incidence,model=model) )}
+return(list(models=models,obj=objective,solutions=solutions,objvals=objvals,stars=stars,objval=objvals[i],star=stars[i,],center_id =i,fuzzy_incidence=stylized_betweenness[i,,] , incidence = incidence,model=model) )}
 
 plot_stars <- function(starshaped_result,distance_function){
 

@@ -51,7 +51,7 @@ add_two_attribute_implications <- function(model, X) {
   ans <- array(0, c(choose(n, 2), m + n))
   for (k in (1:(n - 1))) {
     idx1 <- (X[, k] == 1)
-    print(k)
+
     for (l in ((k + 1):n)) {
       idx2 <- (X[, l] == 1)
       i <- which(colSums(X[idx1 & idx2, ]) == sum(idx1 & idx2))
@@ -85,7 +85,7 @@ optimistic_estimate_of_pairs <- function(X, v) {
   indexs <- (1:m)
   ans <- array(0, c(n, n))
   for (k in (1:n)) {
-    print(k)
+
 
     idx1 <- (X[, k] == 1)
 
@@ -109,13 +109,10 @@ add_sos_constraints <- function(model, v_max) {
   O <- optimistic_estimate_of_pairs(model$context, model$obj[(1:m)])
   I <- (O <= v_max)
   idx <- (which(diag(I)))
-  print(c("Diag", idx))
   diag(I) <- 0
-  print(dim(I))
   graph <- as(1 - I, "graphNEL")
   coloring <- RBGL::sequential.vertex.coloring(graph)
   K <- coloring[[1]]
-  print(K)
   t <- 1
   sos <- list()
   for (k in (1:K)) {
@@ -139,7 +136,7 @@ add_lazy_constraints <- function(model, v_max, lazy = 1, eps = 0) {
   n <- dim(model$context)[2]
   O <- optimistic_estimate_of_pairs(model$context, model$obj[(1:m)])
   I <- (O <= v_max)
-  print(dim(I))
+
   graph <- as(1 - I, "graphNEL")
   coloring <- RBGL::sequential.vertex.coloring(graph)
   K <- coloring[[1]]
