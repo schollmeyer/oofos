@@ -2,7 +2,7 @@
 % Please edit documentation in R/starshaped_sets.R
 \name{stylized_betweeness}
 \alias{stylized_betweeness}
-\title{Compute the canoncical (stylizedb) betweennes relation between objects of a formal context}
+\title{Compute the canoncical (stylized) betweennes relation between objects of a formal context}
 \usage{
 stylized_betweeness(g, h, i, context, attribute_weights)
 }
@@ -24,9 +24,9 @@ of an entry correspond to a larger degree of betweenness.
 }
 \description{
 'stylized_betweeness' computes the canoncical (stylizedb)
-#' betweennes relation between objects of a formal context: given three
-#' g,h,i of a formal context we say that h lies betweeen g and i iff
-#' Psi({g}) cap Psi({i}) subseteq Psi({h}). Additionally we say in a stylized
+betweennes relation between objects of a formal context: given three
+g,h,i of a formal context we say that h lies betweeen g and i iff
+Psi({g}) cap Psi({i}) subseteq Psi({h}). Additionally we say in a stylized
 manner that h lies betweeen g and i iff
 Psi({g}) cap Psi({i}) subseteq Psi({h}) is almost true with the exception of
 some attributes of Psi({g}) cap Psi({i}) that do not belong to Psi({h}) but
