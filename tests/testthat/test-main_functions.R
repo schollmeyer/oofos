@@ -1,5 +1,4 @@
 test_that("optimize_on_context_extents works", {
-
   context <- compute_random_context(40,6)
   objective <- runif(40)-0.5
   lattice<-compute_concept_lattice(context)
