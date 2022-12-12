@@ -7,6 +7,15 @@ The actual computation uses the professional software gurobi ( https://www.gurob
 
 You can install the development version of oofos from GitHub with:
 
-
-install.packages("devtools")
+``` r
+# install.packages("devtools")
 devtools::install_github("schollmeyer/oofos")
+```
+## Example
+
+This is a basic example which shows you how to solve a common problem:
+
+``` r
+# library(ddandrda)
+## basic example code
+```
