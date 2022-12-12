@@ -23,12 +23,14 @@
 #' means of the underlying formal context.
 #'
 #' @param g is the index of object g w.r.t. the underlying context 'context'.
+#'
 #' @param h is the index of object h w.r.t. the underlying context 'context'.
+#'
 #' @param i is the index of object i w.r.t. the underlying context 'context'.
 #' @param context is the underlying context.
-#' @param attribute_weights is the weight vectorfor the attributes.
+#' @param attribute_weights is the weight vector for the attributes.
 #' @return a ternary fuzzy relation given by an array of dimension
-#' n times n times n where n is the number of rows of the context. Higher avlues
+#' n x n x n where n is the number of rows of the context. Higher values
 #' of an entry correspond to a larger degree of betweenness.
 #' @export
 stylized_betweeness <- function(g,h,i,context, attribute_weights){
