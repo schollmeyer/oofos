@@ -17,18 +17,25 @@ This is a basic example which shows you how to solve a common problem:
 
 ``` r
 library(oofos)
-context <- (c(1,1,0,0,1,0,1,
-	      1,0,0,0,0,1,0,
-	      0,1,0,0,0,0,0,
-	      0,1,0,1,0,0,0,
-	      0,1,0,1,0,0,0,
-	      0,0,1,1,1,0,0,
-	      0,0,0,0,0,1,0,
-	      0,0,0,0,0,1,0,
-	      0,1,0,1,0,0,0,
-	      1,0,1,0,0,1,0), nrow = 10, ncol = 7, byrow = TRUE)
+context <- matrix(c(1,1,0,0,1,0,1,
+	      	    1,0,0,0,0,1,0,
+	      	    0,1,0,0,0,0,0,
+	      	    0,1,0,1,0,0,0,
+	            0,1,0,1,0,0,0,
+	      	    0,0,1,1,1,0,0,
+	      	    0,0,0,0,0,1,0,
+	      	    0,0,0,0,0,1,0,
+	      	    0,1,0,1,0,0,0,
+	      	    1,0,1,0,0,1,0), nrow = 10, ncol = 7, byrow = TRUE)
 	      
-objective <- c(1,2,3,4,5,6,7,8,9,10) - 55
+objective <- c(1,2,3,4,5,6,7,8,9,10) - 5.5
 model <- optimize_on_context_extents(context,(1:10),objective)
-model$objval
+result <- gurobi(model)
+
+> result$x
+[1] 0 0 0 0 0 1 0 0 0 1 0 0 1 0 0 0 0
+ 
+> result$objval
+[1] 5
+
 ```
