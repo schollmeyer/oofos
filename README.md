@@ -16,6 +16,6 @@ devtools::install_github("schollmeyer/oofos")
 This is a basic example which shows you how to solve a common problem:
 
 ``` r
-# library(ddandrda)
+# library(oofos)
 ## basic example code
 ```
