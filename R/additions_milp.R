@@ -17,20 +17,19 @@ add_two_object_implications <- function(model, X, index1, index2) {
       idx2 <- (X[l, ] == 1)
       idx <- idx1 & idx2
       idx <<- idx
-      if(length(which(idx==1)) >0){
-        XX <- matrix(X[,idx],ncol=length(which(idx==1)))
-      i <- which(rowSums(XX) == sum(idx1 & idx2) & mask2)
-      i <- setdiff(i, c(k,l))
+      if (length(which(idx == 1)) > 0) {
+        XX <- matrix(X[, idx], ncol = length(which(idx == 1)))
+        i <- which(rowSums(XX) == sum(idx1 & idx2) & mask2)
+        i <- setdiff(i, c(k, l))
 
 
-      if (length(i) > 0) {
+        if (length(i) > 0) {
+          ans[t, i] <- -1 / (length(i))
+          ans[t, c(k, l)] <- 1
 
-        ans[t, i] <- -1 / (length(i))
-        ans[t, c(k, l)] <- 1
-
-        t <- t + 1
+          t <- t + 1
+        }
       }
-    }
     }
   }
   t <- t - 1
@@ -85,8 +84,6 @@ optimistic_estimate_of_pairs <- function(X, v) {
   indexs <- (1:m)
   ans <- array(0, c(n, n))
   for (k in (1:n)) {
-
-
     idx1 <- (X[, k] == 1)
 
     for (l in (k:n)) {

@@ -16,7 +16,7 @@ compute_phi <- function(subset_attributes, context) {
 
   # Determines and subsets the attributes which are selected
   index_attribute <- which(subset_attributes == 1)
-  selected_attributes <- as.matrix(context[ ,index_attribute])
+  selected_attributes <- as.matrix(context[, index_attribute])
   dim(selected_attributes) <- c(dim(context)[1], length(index_attribute))
 
   # Counting for each object how many selected attributes hold and choosing the
@@ -26,7 +26,7 @@ compute_phi <- function(subset_attributes, context) {
 
   # returning a list which represents which objects correspond to the considered
   # attribute set
-  extend <- rep(0,dim(context)[1])
+  extend <- rep(0, dim(context)[1])
   extend[index_obejct] <- 1
 
   return(extend)
@@ -44,8 +44,8 @@ compute_psi <- function(subset_objects, context) {
 
   # Determines and sub-setting the objects which are selected
   index_object <- which(subset_objects == 1)
-  selected_objects <- as.matrix(context[index_object,])
-  dim(selected_objects) <- c(length(index_object),dim(context)[2])
+  selected_objects <- as.matrix(context[index_object, ])
+  dim(selected_objects) <- c(length(index_object), dim(context)[2])
 
   # Counting for each attribute how many selected objects are related and chose
   # the ones where all objects are related
@@ -54,13 +54,13 @@ compute_psi <- function(subset_objects, context) {
 
   # returning an array which represents the attributes which correspond to the
   # considered object set
-  intent <- rep(0,dim(context)[2])
+  intent <- rep(0, dim(context)[2])
   intent[index_attribute] <- 1
   return(intent)
 }
 
 
-operator_closure_attr_input <- function(subset_attribute, context){
+operator_closure_attr_input <- function(subset_attribute, context) {
   # Defines the closure operator for computing all intents (attribute)
 
   # Input: subset_attribute (array): set of attributes
@@ -101,9 +101,8 @@ adds_element <- function(old_subset, element) {
   if (element == 1) {
     subset <- rep(0, length(old_subset))
     subset[element] <- 1
-  }
-  else {
-    index_lower_element_index <- rep(0,length(old_subset))
+  } else {
+    index_lower_element_index <- rep(0, length(old_subset))
     index_lower_element_index[(1:(element - 1))] <- 1
     # pmin: A and temp are compared by element by element and the minimum is selected
     subset <- pmin(old_subset, index_lower_element_index)
@@ -126,11 +125,10 @@ compare_closures_lower_i <- function(old_closure, new_closure, element) {
   # Output (logical): returns true if old_closure < new_closure
   if (element == 1) {
     return(new_closure[element] == 1 & old_closure[element] == 0)
-  }
-  else{
-    temp <- rep(0,length(old_closure))
+  } else {
+    temp <- rep(0, length(old_closure))
     temp[(1:(element - 1))] <- 1
-    return(new_closure[element] == 1 & old_closure[element] == 0 & all(pmin(old_closure,temp) == pmin(new_closure,temp)))
+    return(new_closure[element] == 1 & old_closure[element] == 0 & all(pmin(old_closure, temp) == pmin(new_closure, temp)))
   }
 }
 
@@ -174,8 +172,7 @@ compute_all_closure <- function(closure_operator, context,
     # selected yet
     if (length(attributs_selected) == 0) {
       index <- (1:number_attributes)
-    }
-    else {
+    } else {
       index <- (1:number_attributes)[-attributs_selected]
     }
 
@@ -210,7 +207,7 @@ compute_all_closure <- function(closure_operator, context,
 }
 
 
-compute_concept_lattice <- function(context, compute_extents = TRUE){
+compute_concept_lattice <- function(context, compute_extents = TRUE) {
   # computes the formal concept lattice.
   # Therefore, all formal concept which are defined by the formal context are
   # computed.
@@ -237,21 +234,22 @@ compute_concept_lattice <- function(context, compute_extents = TRUE){
     result$extents <- matrix(FALSE, ncol = number_objects, nrow = number_closure)
     for (k in (1:number_closure)) {
       # compute the extends based on the intents
-      result$extents[k,] <- compute_phi(result$intents[k,], context)
+      result$extents[k, ] <- compute_phi(result$intents[k, ], context)
       result$concepts[k] <- paste("{",
-                                  paste((rownames(context))[which(result$extents[k,] == 1)],collapse = ","),
-                                  "}   {",
-                                  paste((colnames(context))[which(result$intents[k,] == 1)] ,collapse = ","),
-                                  "}",
-                                  collapse = "")
+        paste((rownames(context))[which(result$extents[k, ] == 1)], collapse = ","),
+        "}   {",
+        paste((colnames(context))[which(result$intents[k, ] == 1)], collapse = ","),
+        "}",
+        collapse = ""
+      )
     }
-  }
-  else{
+  } else {
     for (k in (1:number_closure)) {
       result$concepts[k] <- paste("{",
-                                  paste((colnames(context))[which(result$intents[k,] == 1)],collapse = ","),
-                                  "}",
-                                  collapse = "")
+        paste((colnames(context))[which(result$intents[k, ] == 1)], collapse = ","),
+        "}",
+        collapse = ""
+      )
     }
   }
 
@@ -264,7 +262,7 @@ compute_concept_lattice <- function(context, compute_extents = TRUE){
 # (here: extends)
 ################################################################################
 
-compute_incidence <- function(extent_list){
+compute_incidence <- function(extent_list) {
   # generates incidence matrix of a given data table (here it's a closure set)
   # Needed to plot "Begriffsverband"
 
@@ -283,7 +281,7 @@ compute_incidence <- function(extent_list){
   for (k in (1:number_extends)) {
     for (l in (1:number_extends)) {
       # If every element in set k is also in set l, we switch this entry to TRUE
-      ans[k,l] <- all(extent_list[k,] <= extent_list[l,])
+      ans[k, l] <- all(extent_list[k, ] <= extent_list[l, ])
     }
   }
   return(ans)
@@ -297,14 +295,14 @@ compute_random_context <- function(nrow = 20,
     withr::with_seed(
       seed = seed,
       result <- matrix(stats::runif(nrow * ncol) <= prob,
-                       nrow = nrow,
-                       ncol = ncol
+        nrow = nrow,
+        ncol = ncol
       ) * 1
     )
   } else {
     result <- matrix(stats::runif(nrow * ncol) <= prob,
-                     nrow = nrow,
-                     ncol = ncol
+      nrow = nrow,
+      ncol = ncol
     ) * 1
   }
   return(result)
