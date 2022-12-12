@@ -8,17 +8,19 @@ The actual computation uses the professional software gurobi ( https://www.gurob
 You can install the development version of oofos from GitHub with:
 
 ``` r
-# install.packages("devtools")
-# You have to manually install the R package RBGL via:
 
+
+# You have to manually install the R package RBGL via:
 if (!require("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
 
 BiocManager::install("RBGL")
-library(gurobi)
+
 
 # You also have to install gurobi and load it:
 library(gurobi)
+
+# install.packages("devtools")
 devtools::install_github("schollmeyer/oofos")
 ```
 ## Example
