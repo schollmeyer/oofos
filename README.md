@@ -17,5 +17,14 @@ This is a basic example which shows you how to solve a common problem:
 
 ``` r
 # library(oofos)
-## basic example code
+##  context <- (c(1,1,0,0,1,0,1,
+                  1,0,0,0,0,1,0,
+                  0,1,0,0,0,0,0,
+                  0,1,0,1,0,0,0,
+                  0,1,0,1,0,0,0,
+                  0,0,1,1,1,0,0,
+                  0,0,0,0,0,1,0,
+				          0,0,0,0,0,1,0,
+				          0,1,0,1,0,0,0,
+				          1,0,1,0,0,1,0), nrow = 10, ncol = 7, byrow = TRUE)
 ```
