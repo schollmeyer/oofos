@@ -6,7 +6,31 @@
 ########				                  ########
 ##########################################
 
-
+#' Compute the canoncical (stylizedb) betweennes relation between objects of a formal context
+#'
+#' @description 'stylized_betweeness' computes the canoncical (stylizedb)
+#' #' betweennes relation between objects of a formal context: given three
+#' #' g,h,i of a formal context we say that h lies betweeen g and i iff
+#' #' Psi({g}) cap Psi({i}) subseteq Psi({h}). Additionally we say in a stylized
+#' manner that h lies betweeen g and i iff
+#' Psi({g}) cap Psi({i}) subseteq Psi({h}) is almost true with the exception of
+#' some attributes of Psi({g}) cap Psi({i}) that do not belong to Psi({h}) but
+#' that are not so 'important' in the sense that there are not too much objects
+#' that have all attributes in (Psi({g}) cap Psi({i})) -  Psi({h}) but that have
+#' not all attributes in Psi({h}). Concretely the stylized betweennes is
+#' quantified by the maximum of the weights 'attribute_weights' associated
+#' to these attributes. (The weights could be defined for example as the cloumn
+#' means of the underlying formal context.
+#'
+#' @param g is the index of object g w.r.t. the underlying context 'context'.
+#' @param h is the index of object h w.r.t. the underlying context 'context'.
+#' @param i is the index of object i w.r.t. the underlying context 'context'.
+#' @param context is the underlying context.
+#' @param attribute_weights is the weight vectorfor the attributes.
+#' @return a ternary fuzzy relation given by an array of dimension
+#' n times n times n where n is the number of rows of the context. Higher avlues
+#' of an entry correspond to a larger degree of betweenness.
+#' @export
 stylized_betweeness <- function(g,h,i,context, attribute_weights){
 
   common_attributes <- which(g==1 & i==1)
