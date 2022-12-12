@@ -50,4 +50,11 @@ result <- gurobi(model)
 > result$objval
 [1] 5
 
+dat <- na.omit(CDM::data.timss07.G4.lee$data)
+context <- dat[,-(1:3)]
+target <- compute_objective (dat,"girl",0)
+model <- optimize_on_context_extents(context,(1:344),target)
+result <- gurobi(model)
+result$objval
+
 ```
