@@ -6,7 +6,7 @@
 ########				                  ########
 ##########################################
 
-#' Compute the canoncical (stylizedb) betweennes relation between objects of a formal context
+#' Compute the canoncical (stylized) betweennes relation between objects of a formal context
 #'
 #' @description 'stylized_betweeness' computes the canoncical (stylizedb)
 #' #' betweennes relation between objects of a formal context: given three
