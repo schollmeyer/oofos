@@ -109,7 +109,7 @@ add.sos.constraints=function(model,v.max){
   diag(I)=0
   print(dim(I))
   graph=as(1-I,"graphNEL")
-  coloring=sequential.vertex.coloring(graph)
+  coloring=RBGL::sequential.vertex.coloring(graph)
   K=coloring[[1]]
   print(K)
   t=1
@@ -133,7 +133,7 @@ add.lazy.constraints=function(model,v.max,lazy=1,eps=0){
   I=(O<=v.max)
   print(dim(I))
   graph=as(1-I,"graphNEL")
-  coloring=sequential.vertex.coloring(graph)
+  coloring=RBGL::sequential.vertex.coloring(graph)
   K=coloring[[1]]
   t=1
   A=array(as.logical(0),c(K,m+n))
