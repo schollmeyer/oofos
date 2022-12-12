@@ -8,6 +8,9 @@ The actual computation uses the professional software gurobi ( https://www.gurob
 You can install the development version of oofos from GitHub with:
 
 
+# install.packages("devtools")
+devtools::install_github("hannahblo/ddandrda")
+
 install.packages("devtools")
 
 devtools::install_github("schollmeyer/oofos")
