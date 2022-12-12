@@ -9,4 +9,5 @@ You can install the development version of oofos from GitHub with:
 
 
 install.packages("devtools")
+
 devtools::install_github("schollmeyer/oofos")
