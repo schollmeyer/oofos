@@ -50,6 +50,7 @@ result <- gurobi(model)
 > result$objval
 [1] 5
 
+# For this example the R package CDM (Cognitive Diagnosis Modeling) must be installed.
 dat <- na.omit(CDM::data.timss07.G4.lee$data)
 context <- dat[,-(1:3)]
 target <- compute_objective (dat,"girl",0)
