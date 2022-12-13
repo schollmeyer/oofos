@@ -307,3 +307,56 @@ compute_random_context <- function(nrow = 20,
   }
   return(result)
 }
+
+###
+
+# From Package ddanrda
+# TODO : harmonize with current version of ddandrda
+
+#' Plot a binary relation
+#' @description 'plot_relation' plots a binary relation(e.g., a partial order)
+#' by drawing the Hasse diagramm of its Dedekind–MacNeille completion. Note
+#' that the plotted relation needs not to be a partial order, it can be an
+#' arbitrary relation.
+#'
+#' @param incidence The incidence relation of the partial order.
+#'
+#' @return The drawing of the partial order in the form of the Hasse diagramm of
+#' the Dedekind-MacNeille completion of the given partial order.
+#' @examples
+#'
+#' # plot an interval order
+#' upper <- (1:10)
+#' lower <- upper - runif(10)
+#' interval_order <- array(0, c(10, 10))
+#' for (k in (1:10)) {
+#'   for (l in (1:10)) {
+#'     interval_order[k, l] <- (upper[k] <= lower[l])
+#'   }
+#' }
+#' plot_relation(interval_order)
+#'
+#' # plot a quasiorder
+#' q_order <- array(1 * (runif(100) >= 0.9), c(10, 10))
+#' diag(q_order) <- 1
+#' q_order[1, 2] <- q_order[2, 1] <- 1
+#' q_order <- compute_transitive_hull(q_order)
+#' plot_relation(q_order)
+#'
+#' # plot the Chevron
+#' chevron <- rbind(
+#'   c(1, 1, 0, 0, 0, 0), c(0, 1, 0, 0, 0, 0), c(1, 1, 1, 0, 1, 1),
+#'   c(0, 1, 0, 1, 0, 1), c(0, 0, 0, 0, 1, 1), c(0, 0, 0, 0, 0, 1)
+#' )
+#' plot_relation(chevron)
+#' @export
+plot_relation <- function(incidence) {
+  # define the incidence as a formal context for the fcaR package
+  fc <- fcaR::FormalContext$new(incidence[, seq_len(nrow(incidence))])
+  # compute all concepts
+  fc$find_concepts()
+  # plot the Hasse graph of the formal concept lattice, i.e., the diagram of the
+  # Dedekind–MacNeille completion of the relation incidence (given as a 0-1
+  # matrix)
+  fc$concepts$plot()
+}

@@ -107,7 +107,8 @@ add_sos_constraints <- function(model, v_max) {
   I <- (O <= v_max)
   idx <- (which(diag(I)))
   diag(I) <- 0
-  graph <- as(1 - I, "graphNEL")
+  graph <- igraph::graph_from_adjacency_matrix((1-I))##igraph::as((1 - I), "graphNEL")
+  graph <- igraph::as_graphnel(graph)
   coloring <- RBGL::sequential.vertex.coloring(graph)
   K <- coloring[[1]]
   t <- 1
@@ -134,7 +135,7 @@ add_lazy_constraints <- function(model, v_max, lazy = 1, eps = 0) {
   O <- optimistic_estimate_of_pairs(model$context, model$obj[(1:m)])
   I <- (O <= v_max)
 
-  graph <- as(1 - I, "graphNEL")
+  graph <- igraph::as(1 - I, "graphNEL")
   coloring <- RBGL::sequential.vertex.coloring(graph)
   K <- coloring[[1]]
   t <- 1

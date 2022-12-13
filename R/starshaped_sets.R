@@ -61,10 +61,10 @@ compute_quotient_order <- function(I){
 
 
 cut_incidence=function(I,width,interval=stats::quantile(unique(as.vector(I)),c(0.01,0.95))){
-  vc <- width_hopcroft_karp(compute_quotient_order(compute_transitive_hull(I >= max(I))))
+  vc <- compute_width(compute_quotient_order(compute_transitive_hull(I >= max(I))))$width
   if(vc <= width){return(I >= max(I))}
   #interval <<- interval
-  f <- function(C,I){W=width_hopcroft_karp(compute_quotient_order(compute_transitive_hull(I >=C)))$width;return(W-width)}
+  f <- function(C,I){W=compute_width(compute_quotient_order(compute_transitive_hull(I >=C)))$width;return(W-width)}
   ans <- uniroot(f,interval=interval,I=I)
   return(compute_transitive_hull(I>=ans$root))}
 
@@ -126,6 +126,7 @@ starshaped_subgroup_discovery  <- function(stylized_betweenness,objective,local_
   b <- gurobi(model,params=params)
 return(list(models=models,obj=objective,solutions=solutions,objvals=objvals,stars=stars,objval=objvals[i],star=stars[i,],center_id =i,fuzzy_incidence=stylized_betweenness[i,,] , incidence = incidence,model=model) )}
 
+
 plot_stars <- function(starshaped_result,distance_function){
 
   i <- which(starshaped_result$star==1)
@@ -141,6 +142,8 @@ plot_stars <- function(starshaped_result,distance_function){
 
 
 }
+
+
 
 plot_corder <- function(corder,main=""){
   m <- nrow(corder)
@@ -210,141 +213,6 @@ model_from_qoset <- function(Q){## constructs linear program for the optimizatio
 
 
 
-classification.with.stylized.betweeness=function(x.train,y.train,x.test,y.test,stylizedBetweenness=sb1,p,VCDim,params=list(outputFlag=0,presolve=0,threads=1),VCcut=TRUE,interval){
-
-  print(Sys.time())
-  m.train <- dim(x.train)[1]
-  m.test  <- dim(x.test)[1]
-  m       <- m.train+m.test
-  labels  <- levels(y.train)
-  X       <- rbind(x.train,x.test)
-  Y       <- c(y.train,y.test)
-  II      <- array(0,c(m,m,m))
-  AP     <- array(0,c(m.test,2*m.train));AM=AP
-  bnsplus <- bnsminus <- ansplus <- ansminus <- rep(0,m.train)
-  ansplussol=list()
-  ansminussol=list()
-  bnsplussol=list()
-  bnsminussol=list()
-  sol=list()
-  sol2=list()
-  t=1
-  sols=list()
-
-  for(kkk in (1:length(stylizedBetweenness))){
-    kkk<<-kkk
-    SB <- (stylizedBetweenness[kkk])
-    SB <- SB[[1]]
-    #Print(SB)
-    B       <- SB(X,p=p)
-    FI      <- pmin(B$A,B$B)
-    FII <<- FI
-
-
-
-    for(k in (1:m)){
-
-      if(VCcut){J=incidence.cut(FI[k,,],width=VCDim[kkk],interval=interval)}#c(sort(unique(as.vector(FI[k,,])))[2],1))}
-      else{J=incidence.cut2(FI[k,,],width=VCDim[kkk],interval=c(sort(unique(as.vector(FI[k,,])))[2],1))}
-      II[k,,]=pmax(II[k,,],(J))
-    }
-  }
-
-
-  II <<- II
-  VCDIMS=rep(0,m)
-  for(kkk in (1:m)){
-
-    VCDIMS[kkk]=(width.hopcroft.karp(transitive.hull(II[kkk,,]))$width)}
-  Print(table(VCDIMS))
-  II=CUT(II,EPS,m.train)
-
-  II <<- II
-  print(Sys.time())
-
-  for (ind in (1:m.test)){
-    index <- c((1:m.train), ind+m.train)
-    #print(Sys.time())
-    for(k in (1:m.train)){  ## quant ueber alle sternmittelpunkte## hier auch m moeglich
-      M <- model_from_qoset(II[k,index,index])
-      M$lb[k] <- 1              ## Sternmittelpunkt drinnen
-
-      #1
-      v <- rep(0,m.train+1);v[(1:m.train)]=probabilityDifferences(y.train,label=labels[1])
-      M$modelsense <- "max"
-      M$lb[m.train+1] <- 1   ## testpunkt drinnen
-      M$obj <- v  #+    CC*rep(-1,length(v))###fuer  vortrag
-      b <- gurobi(M,params=params)
-      ansplus[k] <- b$objval
-      ansplussol[[k]]=b$x
-
-      sols[[t]]=b$x
-      t=t+1
-
-      ##fuer vortrag:
-
-      #if(k==K){
-      #b <<- b
-      #}
-
-
-      #2
-
-      v <- rep(0,m.train+1);v[(1:m.train)]=probabilityDifferences(y.train,label=labels[2])
-      M$obj <- v
-      b <- gurobi(M,params=params)
-      ansminus[k] <- b$objval
-      ansminussol[[k]]=b$x
-
-      sols[[t]]=b$x
-      t=t+1
-
-
-      #3
-      v <- rep(0,m.train+1);v[(1:m.train)]=probabilityDifferences(y.train,label=labels[1])
-      M$obj <- v
-      M$lb[m.train+1] <- 0;M$ub[m.train+1] <- 0  ### testpunkt nicht drinnen
-      M$modelsense <- "min"
-      b <- gurobi(M,params=params)
-      if(is.null(b$objval)){print("warning: no feasible solution")}
-
-      if(!is.null(b$objval)){bnsplus[k]=-b$objval}
-      bnsplussol[[k]]=b$x
-
-      sols[[t]]=b$x
-      t=t+1
-
-
-
-      #4
-      v <- rep(0,m.train+1);v[(1:m.train)]=probabilityDifferences(y.train,label=labels[2])
-      M$obj <- v
-      b <- gurobi(M,params=params)
-      if(is.null(b$objval)){print("warning: no feasible solution")}
-      if(!is.null(b$objval)){bnsminus[k]=-b$objval}
-      bnsminussol[[k]]=b$x
-
-      sols[[t]]=b$x
-      t=t+1
-    }
-
-    AP[ind,] <- c(ansplus,bnsplus)
-    AM[ind,] <- c(ansminus,bnsminus)
-
-  }
-  predictions <- factor(rep(y.train[1],m.test),level=labels)
-  unique=rep(0,m.test)
-  for(k in (1:m.test)){
-    if(AP[k,] %glex% AM[k,]){predictions[k] <- labels[1];sol[[k]]=ansplussol[[k]];sol2[[k]]=bnsplussol[[k]]}
-    else{predictions[k] <- labels[2];sol[[k]]=ansminussol[[k]];sol2[[k]]=bnsminussol[[k]]}
-    if(max(AP[k,]) > max(AM[k,]) | max(AP[k,]) < max(AM[k,])){unique[k]=1}
-  }
-
-  return(list(AP=AP,AM=AM,predictions=predictions,errorProb=mean(y.test!=predictions),unique=unique, unique.prop=mean(unique),betweenProb=betweennessProb(II[(1:m.train),(1:m.train),(1:m.train)],y.train),sol=sol,sol2=sol2,sols=sols))}
-
-
-cwsb=classification.with.stylized.betweeness
-
 
 ###### stilisierte Zwischenrelationen
 
@@ -376,4 +244,9 @@ sb1=function(XR,p){
     diag(A[K,,])=1
     diag(B[K,,])=1}
   return(list(A=A,B=B))}
+
+
+#######
+#######
+#######
 

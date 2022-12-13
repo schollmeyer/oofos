@@ -2,4 +2,7 @@
 
 export(compute_objective)
 export(compute_stylized_betweeness)
+export(compute_transitive_hull)
+export(compute_width)
 export(optimize_on_context_extents)
+export(plot_relation)
