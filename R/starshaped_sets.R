@@ -6,6 +6,30 @@
 ########				                  ########
 ##########################################
 
+
+
+check_if_starshaped <- function(set, ternary_relation){
+  n_rows <- nrow(ternary_relation)
+  for(k in (1:n_rows)){
+
+    if(check_if_center_point(k,set,ternary_relation)){return(TRUE)}
+  }
+return(FALSE)}
+
+check_if_center_point <- function(point,set,ternary_relation){
+  n_rows <- nrow(ternary_relation)
+  for(k in which(set==1)){
+
+    indexs <- which(ternary_relation[point,,k]==1)
+
+    if(any(set[indexs]==0)){return(FALSE)}
+  }
+
+  return(TRUE)
+
+
+}
+
 #' Compute the canoncical (stylized) betweennes relation between objects of a formal context
 #'
 #' @description 'compute_stylized_betweenness' computes the canonical (stylized)
@@ -60,24 +84,31 @@ get_whole_stylized_betweenness <- function(context, stylized_betweenness_functio
 return(result)
 }
 
+#' Compute the quotient order of a quasiorder
+#'
+#' @description 'compute_quotient_order' computes the quotient order of a
+#' quasiorder by deleting equivalent 'duplicates' from the given incidence
+#' matrix of the quasiorder
+#'
+#' @param incidence is the incidence matrix of the quasiorder
+#'
+#' @return the incidence matrix of the quotient order
+#'
+#' @export
+compute_quotient_order <- function(incidence){
+  index <- !duplicated(incidence)&!duplicated(t(incidence))
+return(I[index,index])}
 
 
-compute_quotient_order <- function(I){
-
-  #computes quotient order from a quasiorder
-  index <- !duplicated(I)&!duplicated(t(I));return(I[index,index])}
 
 
 
-
-
-cut_incidence=function(I,width,interval=stats::quantile(unique(as.vector(I)),c(0.01,0.95))){
-  vc <- compute_width(compute_quotient_order(compute_transitive_hull(I >= max(I))))$width
-  if(vc <= width){return(I >= max(I))}
-  #interval <<- interval
-  f <- function(C,I){W=compute_width(compute_quotient_order(compute_transitive_hull(I >=C)))$width;return(W-width)}
-  ans <- uniroot(f,interval=interval,I=I)
-  return(compute_transitive_hull(I>=ans$root))}
+cut_incidence=function(incidence,width,interval=stats::quantile(unique(as.vector(incidence)),c(0.001,0.995))){
+  vc <- compute_width(compute_quotient_order(compute_transitive_hull(incidence >= interval[2])))$width
+  if(vc <= width){return(incidence >= interval[2])}
+  f <- function(C,incidence){ width_2 <-compute_width(compute_quotient_order(compute_transitive_hull(incidence >=C)))$width;return(width_2-width)}
+  ans <- uniroot(f,interval=interval,incidence=incidence)
+return(compute_transitive_hull(incidence>=ans$root))}
 
 
 
@@ -99,7 +130,7 @@ starshaped_subgroup_discovery  <- function(stylized_betweenness,objective,local_
   for(k in (1:m)){  ## quantify over all starcenters
 
 
-    if (vc_dim == Inf) { incidence <- (stylized_betweenness[k,,] >= max(stylized_betweenness[k,,]))*1}
+    if (local_vc_dim == Inf) { incidence <- (stylized_betweenness[k,,] >= max(stylized_betweenness[k,,]))*1}
     else{ incidence <- cut_incidence(Z[k,,],local_vc_dim) }
 
 

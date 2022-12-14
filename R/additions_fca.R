@@ -1,3 +1,41 @@
+compute_example_contexts <- function(){
+  planets <- fcaR::planets
+  vegas <- fcaR::vegas
+  mat <- upper.tri(diag(rep(1,20)))
+  diag(mat) <- 1
+  mat[3,c(4,5,10)] <- 0
+  mat[4,c(5,8)] <- 0
+  mat[5,6] <- 0
+  mat[6,c((7:11),13) ] <- 0
+  mat[7,c((8:10), 14)] <- 0
+  mat[8, c((9:11),15)] <- 0
+  mat[9, c(10,12)] <- 0
+  mat[10,c(13,15)] <- 0
+  mat[11,c((12:15),18 )]<- 0
+  mat[12,(13:15)]<- 0
+  mat[13,c((14:15),17 )]<- 0
+  mat[14,15]<- 0
+  mat[15,16]<- 0
+  mat[16, c(17,18)] <- 0
+  mat[17,18] <- 0
+
+  colnames(mat) <- c("Pause","Einklang","Sekunde","Terz","Quart",
+                     "quintseptfreier Nonakkord","quintfreier Septakkord",
+                     "terzseptfreier Nonakkord","terzfreier Septakkord",
+                     "Dreiklang","kompakter Septakkord","septfreier Nonakkord",
+                     "quintnonfreier Undezakkord", "terzfreier Nonakkord",
+                     "quintfreier Nonakkord","nonfreier Undezakkord",
+                     "kompakter Nonakkord","septfreier Undezakkord",
+                     "kompakter Undezakkord","kompakter Tredezakkord")
+  rownames(mat) <- colnames(mat)
+
+  # Literatur: Rudolf Wille
+  #  Musiktheorie und Mathematik 1985. Springer
+return(list(planets=planets,vegas=vegas,chords=mat))
+
+}
+
+
 ################################################################################
 # Formal Concept Analysis and Implications (general)
 ################################################################################
