@@ -27,18 +27,18 @@
 #' to these attributes. (The weights could be defined for example as the cloumn
 #' means of the underlying formal context).
 #'
-#' @param g is the index of object g w.r.t. the underlying context 'context'.
+#' @param g is the object g represented by a 0-1 vector of attributes.
 #'
-#' @param h is the index of object h w.r.t. the underlying context 'context'.
+#' @param h is the object h represented by a 0-1 vector of attributes.
 #'
-#' @param i is the index of object i w.r.t. the underlying context 'context'.
+#' @param i is the object i represented by a 0-1 vector of attributes.
 #' @param context is the underlying context.
 #' @param attribute_weights is the weight vector for the attributes.
 #' @return a ternary fuzzy relation given by an array of dimension
 #' n x n x n where n is the number of rows of the context. Higher values
 #' of an entry correspond to a larger degree of betweenness.
 #' @export
-compute_stylized_betweeness <- function(g,h,i,context, attribute_weights){
+compute_stylized_betweenness <- function(g,h,i,context, attribute_weights=colMeans(context)){
 
   common_attributes <- which(g==1 & i==1)
   if(length(common_attributes)==0){return(1)}
@@ -47,7 +47,18 @@ compute_stylized_betweeness <- function(g,h,i,context, attribute_weights){
 
 }
 
-
+get_whole_stylized_betweenness <- function(context, stylized_betweenness_function=compute_stylized_betweenness,...){
+  n_rows <- nrow(context)
+  result <- array(0,rep(n_rows,3))
+  for(k in (1:n_rows)){
+    for(l in (1:n_rows)){
+      for(m in (1:n_rows)){
+        result[k,l,m] <- stylized_betweenness_function(context[k,],context[l,],context[m,],context, ...)
+      }
+    }
+  }
+return(result)
+}
 
 
 

@@ -19,12 +19,21 @@ compute_example_posets <- function(n){
   # literature: David Kelly: On the dimension of partially ordered sets.
   # Discrete Mathematics 35 (1981) 135-156
 
-  # TODO: power set: Frage: Mit welchem Package
-  # zweidimensionales Gitter (ebenfalls mit gtools?)
+  two_dimensional_grid <- compute_incidence(gtools::permutations(n,2,repeats.allowed=TRUE))
+  powerset_order <- compute_incidence(gtools::permutations(2,n,repeats.allowed=TRUE)-1)
+  # interval_order
+  upper <- (1:n)
+  lower <- upper - runif(n)*4.01
+  interval_order <- array(0, c(n, n))
+  for (k in (1:n)) {
+    for (l in (1:n)) {
+      interval_order[k, l] <- (upper[k] <= lower[l])
+    }
+  }
 
 
 return(list(chain=chain, antichain=antichain,
-            maximum_edge_poset=maximum_edge_poset,kelly_poset=kellys_poset))
+            maximum_edge_poset=maximum_edge_poset,kelly_poset=kellys_poset,two_dimensional_grid=two_dimensional_grid,powerset_order=powerset_order,interval_order=interval_order))
 
 }
 
