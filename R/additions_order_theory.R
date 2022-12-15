@@ -1,50 +1,69 @@
 
-neighbour_incidence=function(I){     #berechnet Nachbarschaftsrelation (covering relation) zu einer homogenen Relation I)
-  n=dim(I)[1]
-  II=as.logical(I-compute_relation_product(I-diag(rep(1,n)),I-diag(rep(1,n))))
-  dim(II)=c(n,n)
-  return(II)}
+compute_cover_relation <- function(incidence) {
+  # computes the cover relation of a poset
+  # If the relation incidence is transitive and antysmmetric bot not reflexive,
+  # then the cover relation of the reflexive hull of incidence is computed.
+  diag(incidence) <- 1
+  n_rows <- nrow(incidence)
+  incidence <- as.logical(incidence - compute_relation_product(incidence - diag(rep(1, n_rows)), incidence - diag(rep(1, n_rows))))
+  dim(incidence) <- c(n_rows, n_rows)
+  diag(incidence) <- 0
+  return(incidence)
+}
 
-trr=function(I){        # Hilfsfunktion zur Funktion tr, siehe unten
-  I1=I*lower.tri(I)
-  I2=I*upper.tri(I)
-  ans=pmax(neighbour_incidence(I1),neighbour_incidence(I2))
-  return(ans)}
+compute_cover_ordered_quoset <- function(incidence) {
+  # helper function that computes a cover relation of a quasiordered set
+  # where the incidence matrix has to be already ordered in increasing columnsums
+  # This function is used by the function 'compute_pseudoreduction'
+  incidence_1 <- incidence * lower.tri(incidence)
+  incidence_2 <- incidence * upper.tri(incidence)
+  result <- pmax(compute_cover_relation(incidence_1), compute_cover_relation(incidence_2))
+  return(result)
+}
 
 
-tr=function(I){   # berechnet eine transitive (pseudo-)Reduktion einer Relation I (Ergebnis ist nicht notwendig minimal bezueglich Mengeninklusion und damit keine eigentliche transitive reduktion, vgl. auch https://en.wikipedia.org/wiki/Transitive_reduction
-  o=order(colSums(I))
-  ans=trr(I[o,o])
+compute_pseudoreduction <- function(incidence) {
+  # computes a transitive pseudoreduction of an arbitrary homogeneous
+  # relation (result is not necessarly minimal w.r.t. set inclusion and
+  # therefore is not a proper transitive reduction, cf., also
+  # https://en.wikipedia.org/wiki/Transitive_reduction)
+  diagonal_elements <- diag(incidence)
+  incidence <- compute_transitive_hull(incidence)
+  o <- order(colSums(incidence))
+  result <- compute_cover_ordered_quoset(incidence[o, o])
   p <- Matrix::invPerm(o)
-  return(ans[p,p])}
+  result <- result[p, p]
+  diag(result) <- diagonal_elements
+  return(result)
+}
 
 
-compute_example_posets <- function(n){
-  antichain <- diag(rep(1,n))
+compute_example_posets <- function(n) {
+  antichain <- diag(rep(1, n))
   chain <- upper.tri(antichain)
   diag(chain) <- 1
-  maximum_edge_poset <- array(0,c(n,n))
-  m <- ceiling(n/2)
-  maximum_edge_poset[(1:m),-(1:m)] <- 1
-  diag(maximum_edge_poset) <-1
+  maximum_edge_poset <- array(0, c(n, n))
+  m <- ceiling(n / 2)
+  maximum_edge_poset[(1:m), -(1:m)] <- 1
+  diag(maximum_edge_poset) <- 1
 
-  q_n <- diag(rep(1,n))
-  r_n <- 1-q_n
+  q_n <- diag(rep(1, n))
+  r_n <- 1 - q_n
   s_n <- lower.tri(q_n)
   diag(s_n) <- 1
   t_n <- upper.tri(q_n)
   diag(t_n) <- 1
-  p_n <- rbind(q_n,r_n,s_n[-c(1,n-1,n),],t_n[-c(1,2,n),])
+  p_n <- rbind(q_n, r_n, s_n[-c(1, n - 1, n), ], t_n[-c(1, 2, n), ])
   kellys_poset <- compute_incidence(p_n)
   # TODO : checken ob richtig
   # literature: David Kelly: On the dimension of partially ordered sets.
   # Discrete Mathematics 35 (1981) 135-156
 
-  two_dimensional_grid <- compute_incidence(gtools::permutations(n,2,repeats.allowed=TRUE))
-  powerset_order <- compute_incidence(gtools::permutations(2,n,repeats.allowed=TRUE)-1)
+  two_dimensional_grid <- compute_incidence(gtools::permutations(n, 2, repeats.allowed = TRUE))
+  powerset_order <- compute_incidence(gtools::permutations(2, n, repeats.allowed = TRUE) - 1)
   # interval_order
   upper <- (1:n)
-  lower <- upper - runif(n)*4.01
+  lower <- upper - runif(n) * 4.01
   interval_order <- array(0, c(n, n))
   for (k in (1:n)) {
     for (l in (1:n)) {
@@ -53,9 +72,10 @@ compute_example_posets <- function(n){
   }
 
 
-return(list(chain=chain, antichain=antichain,
-            maximum_edge_poset=maximum_edge_poset,kellys_poset=kellys_poset,two_dimensional_grid=two_dimensional_grid,powerset_order=powerset_order,interval_order=interval_order))
-
+  return(list(
+    chain = chain, antichain = antichain,
+    maximum_edge_poset = maximum_edge_poset, kellys_poset = kellys_poset, two_dimensional_grid = two_dimensional_grid, powerset_order = powerset_order, interval_order = interval_order
+  ))
 }
 
 
@@ -177,6 +197,7 @@ compute_transitive_hull <- function(relation_mat) {
 
   old_matrix <- array(0, c(number_obj, number_obj))
   next_matrix <- relation_mat
+  diag(next_matrix) <- 1 ## TODO  In ddandrda auch korrigieren
   transitive_hull <- relation_mat
 
   # each while-loop computes the next step of the path given by relation_mat
@@ -197,6 +218,7 @@ compute_transitive_hull <- function(relation_mat) {
   # --> set to 1
   index_non_zero <- which(transitive_hull > 0)
   transitive_hull[index_non_zero] <- 1
+  diag(transitive_hull) <- diag(relation_mat)
 
   return(transitive_hull)
 }

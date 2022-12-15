@@ -249,9 +249,11 @@ starshaped_subgroup_discovery_h0 <- function(models,params=list(outputflag=0)){
 
 
 
-model_from_qoset <- function(Q){## constructs linear program for the optimization over all upsets of a quasiordered set Q
+model_from_qoset <- function(Q){
 
-  QQ <- tr(Q)
+  ## constructs linear program for the optimization over all upsets of a quasiordered set Q
+
+  QQ <- compute_pseudoreduction(Q)
   m  <- sum(QQ)
   n  <- dim(QQ)[1]
   A  <- array(as.integer(0),c(m,n))
