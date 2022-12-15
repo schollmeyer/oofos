@@ -6,23 +6,50 @@
 ########				                  ########
 ##########################################
 
+get_random_ternary_relation <- function(n,prob,reflexive=FALSE,transitive=FALSE){
 
+  result <- (stats::runif(n^3)>=prob)*1
+  dim(result) <- rep(n,3)
+  for(k in (1:n)){
+   if(reflexive){diag(result[k,,])=1}
+    if(transitive){result[k,,] <- compute_transitive_hull(result[k,,])}
+  }
+  return(result)
+
+}
+
+get_betweenness_from_p_order <- function(p_order){
+  n_rows <- nrow(p_order)
+  result <- array(0,c(rep(n_rows,3)))
+  for(k in seq_len(n_rows)){
+    for(l in seq_len(n_rows)){
+      for(m in seq_len(n_rows)){
+        result[k,l,m] <- (p_order[k,l] & p_order[l,m]) |
+                          (p_order[m,l] & p_order[l,k])
+      }
+    }
+  }
+return(result)
+
+}
 
 check_if_starshaped <- function(set, ternary_relation){
+  if(all(set==0)){return(FALSE)}
   n_rows <- nrow(ternary_relation)
-  for(k in (1:n_rows)){
+  for(k in which(set==1)){
 
     if(check_if_center_point(k,set,ternary_relation)){return(TRUE)}
   }
 return(FALSE)}
 
-check_if_center_point <- function(point,set,ternary_relation){
+check_if_center_point <- function(point, set,ternary_relation){
   n_rows <- nrow(ternary_relation)
   for(k in which(set==1)){
 
     indexs <- which(ternary_relation[point,,k]==1)
 
     if(any(set[indexs]==0)){return(FALSE)}
+
   }
 
   return(TRUE)
@@ -141,7 +168,7 @@ starshaped_subgroup_discovery  <- function(stylized_betweenness,objective,local_
     # force centerpoint to be in the set
     model$lb[k] <- 1
     model$modelsense <- "max"
-    b <- gurobi(model,params=params)
+    b <- gurobi::gurobi(model,params=params)
     solutions[[k]] <- b
     objvals[k] <- b$objval
     stars[k,] <- b$x
@@ -165,7 +192,7 @@ starshaped_subgroup_discovery  <- function(stylized_betweenness,objective,local_
   # force centerpoint to be in the set
   model$lb[k] <- 1
   model$modelsense <- "max"
-  b <- gurobi(model,params=params)
+  b <- gurobi::gurobi(model,params=params)
 return(list(models=models,obj=objective,solutions=solutions,objvals=objvals,stars=stars,objval=objvals[i],star=stars[i,],center_id =i,fuzzy_incidence=stylized_betweenness[i,,] , incidence = incidence,model=model) )}
 
 
@@ -201,7 +228,7 @@ starshaped_subgroup_discovery_recompute <- function(models,objective){
   for(k in (1: length(models))){
     M <- models[[k]]
     M$obj <- objective
-    ans <- max(ans,gurobi(M,param=list(outputflag=0))$objval)
+    ans <- max(ans,gurobi::gurobi(M,param=list(outputflag=0))$objval)
   }
 
   return(ans)}
@@ -215,7 +242,7 @@ starshaped_subgroup_discovery_h0 <- function(models,params=list(outputflag=0)){
   for(k in (1: length(models))){
     M <- models[[k]]
     M$obj <- v
-    ans <- max(ans,gurobi(M,params=params)$objval)
+    ans <- max(ans,gurobi::gurobi(M,params=params)$objval)
   }
 
   return(ans)}

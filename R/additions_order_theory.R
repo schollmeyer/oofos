@@ -1,3 +1,24 @@
+
+neighbour_incidence=function(I){     #berechnet Nachbarschaftsrelation (covering relation) zu einer homogenen Relation I)
+  n=dim(I)[1]
+  II=as.logical(I-compute_relation_product(I-diag(rep(1,n)),I-diag(rep(1,n))))
+  dim(II)=c(n,n)
+  return(II)}
+
+trr=function(I){        # Hilfsfunktion zur Funktion tr, siehe unten
+  I1=I*lower.tri(I)
+  I2=I*upper.tri(I)
+  ans=pmax(neighbour_incidence(I1),neighbour_incidence(I2))
+  return(ans)}
+
+
+tr=function(I){   # berechnet eine transitive (pseudo-)Reduktion einer Relation I (Ergebnis ist nicht notwendig minimal bezueglich Mengeninklusion und damit keine eigentliche transitive reduktion, vgl. auch https://en.wikipedia.org/wiki/Transitive_reduction
+  o=order(colSums(I))
+  ans=trr(I[o,o])
+  p <- Matrix::invPerm(o)
+  return(ans[p,p])}
+
+
 compute_example_posets <- function(n){
   antichain <- diag(rep(1,n))
   chain <- upper.tri(antichain)
@@ -33,7 +54,7 @@ compute_example_posets <- function(n){
 
 
 return(list(chain=chain, antichain=antichain,
-            maximum_edge_poset=maximum_edge_poset,kelly_poset=kellys_poset,two_dimensional_grid=two_dimensional_grid,powerset_order=powerset_order,interval_order=interval_order))
+            maximum_edge_poset=maximum_edge_poset,kellys_poset=kellys_poset,two_dimensional_grid=two_dimensional_grid,powerset_order=powerset_order,interval_order=interval_order))
 
 }
 
