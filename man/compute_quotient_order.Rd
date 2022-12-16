@@ -15,5 +15,6 @@ the incidence matrix of the quotient order
 \description{
 'compute_quotient_order' computes the quotient order of a
 quasiorder by deleting equivalent 'duplicates' from the given incidence
-matrix of the quasiorder
+matrix of the quasiorder. if 'incidence' is not a quasiorder, then first the
+transitive reflexive hull is computet.
 }

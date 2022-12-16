@@ -26,8 +26,8 @@ test_that("compute_widths works", {
 
   incidence <- compute_random_context(40,40)
   betweenness <- get_whole_stylized_betweenness(incidence)
-  widths1 <- compute_widths(betweenness >= quantile(as.vector(betweenness),0.8))
-  widths2 <- compute_widths(betweenness >= quantile(as.vector(betweenness),0.7))
+  widths1 <- compute_widths(betweenness >= stats::quantile(as.vector(betweenness),0.8))
+  widths2 <- compute_widths(betweenness >= stats::quantile(as.vector(betweenness),0.7))
   expect_equal(all(widths1$widths >= widths2$widths),TRUE)
 
 })

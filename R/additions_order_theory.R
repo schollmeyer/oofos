@@ -128,6 +128,7 @@ compute_width <- function(incidence) {
   if (n_rows == 1) {
     return(list(width = 1))
   }
+  incidence <<- incidence
 
   diag(incidence) <- 0
   graph_incidence <- rbind(cbind(0 * incidence, incidence), cbind(0 * incidence, 0 * incidence))
@@ -207,6 +208,7 @@ compute_transitive_hull <- function(relation_mat) {
   old_matrix <- array(0, c(number_obj, number_obj))
   next_matrix <- relation_mat
   diag(next_matrix) <- 1 ## TODO  In ddandrda auch korrigieren
+  diag(relation_mat) <- 1 ## TODO ...
   transitive_hull <- relation_mat
 
   # each while-loop computes the next step of the path given by relation_mat

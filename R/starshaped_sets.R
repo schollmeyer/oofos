@@ -116,7 +116,8 @@ return(result)
 #'
 #' @description 'compute_quotient_order' computes the quotient order of a
 #' quasiorder by deleting equivalent 'duplicates' from the given incidence
-#' matrix of the quasiorder
+#' matrix of the quasiorder. if 'incidence' is not a quasiorder, then first the
+#' transitive reflexive hull is computet.
 #'
 #' @param incidence is the incidence matrix of the quasiorder
 #'
@@ -124,6 +125,8 @@ return(result)
 #'
 #' @export
 compute_quotient_order <- function(incidence){
+  diag(incidence) <- 1
+  incidence <- compute_transitive_hull(incidence)
   index <- which(!duplicated(incidence)&!duplicated(t(incidence)))
   result <- incidence[index,index]
   dim(result) <- rep(length(index),2)
@@ -133,10 +136,11 @@ return(result)}
 
 
 
-cut_incidence=function(incidence,width,interval=stats::quantile(unique(as.vector(incidence)),c(0.1,0.95))){
+cut_incidence=function(incidence,width,interval=stats::quantile(unique(as.vector(incidence)),c(0,1))){
   vc <- compute_width(compute_quotient_order(compute_transitive_hull(incidence >= interval[2])))$width
   if(vc <= width){return(incidence >= interval[2])}
   f <- function(C,incidence){ width_2 <-compute_width(compute_quotient_order(compute_transitive_hull(incidence >=C)))$width;return(width_2-width)}
+
   ans <- uniroot(f,interval=interval,incidence=incidence)
 return(compute_transitive_hull(incidence>=ans$root))}
 
@@ -165,12 +169,14 @@ starshaped_subgroup_discovery  <- function(stylized_betweenness,objective,local_
 
 
     model <- model_from_qoset(t(incidence))
+    if(is.null(model)){model=list(A=matrix(0,nrow=1,ncol=m),rhs=1,sense="<=")}
     model$obj <- objective
     model$lb <- rep(0,m)
     model$ub <-rep(1,m)
     # force centerpoint to be in the set
     model$lb[k] <- 1
     model$modelsense <- "max"
+
     b <- gurobi::gurobi(model,params=params)
     solutions[[k]] <- b
     objvals[k] <- b$objval
@@ -189,6 +195,7 @@ starshaped_subgroup_discovery  <- function(stylized_betweenness,objective,local_
 
 
   model <- model_from_qoset(t(incidence))
+  if(is.null(model)){model=list(A=matrix(0,nrow=1,ncol=m),rhs=1,sense="<=")}
   model$obj <- objective
   model$lb <- rep(0,m)
   model$ub <-rep(1,m)
@@ -292,7 +299,13 @@ model_from_qoset <- function(Q){
     }
   }
   t <- t-1
-  ans <- list(A=A[(1:t),],rhs=rep(0,t),sense=sense[(1:t)],lb=rep(0,n),ub=rep(1,n))
+
+  if(t==0){return(NULL)}
+  A <- A[(1:t),]
+
+  if(t==1){dim(A)=c(1,length(A))}
+
+  ans <- list(A=A,rhs=rep(0,t),sense=sense[(1:t)],lb=rep(0,n),ub=rep(1,n))
   return(ans)}
 
 

@@ -4,6 +4,14 @@ test_that("starshaped_subgroup_discovery works", {
   objective <- stats::rnorm(nrow(betweenness))
   result <- starshaped_subgroup_discovery(betweenness,objective,Inf)
   expect_equal(check_if_starshaped(result$star,betweenness),TRUE)
+  result_2 <- starshaped_subgroup_discovery(betweenness,objective,8)
+  result$objval > result_2$objval
+
+  ternary_relation <- runif(20^3);dim(ternary_relation) <-rep(20,3)
+  objective <- rnorm(20)
+  result_1 <- starshaped_subgroup_discovery(ternary_relation,objective,Inf)
+  result_2 <- starshaped_subgroup_discovery(ternary_relation,objective,8)
+  expect_equal(result_1$objval > result_2$objval,TRUE)
 
 
   n <- 3
