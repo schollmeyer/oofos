@@ -33,6 +33,7 @@ return(result)
 
 }
 
+#compute_examples_starhaped_bet
 check_if_starshaped <- function(set, ternary_relation){
   if(all(set==0)){return(FALSE)}
   n_rows <- nrow(ternary_relation)
@@ -123,14 +124,16 @@ return(result)
 #'
 #' @export
 compute_quotient_order <- function(incidence){
-  index <- !duplicated(incidence)&!duplicated(t(incidence))
-return(I[index,index])}
+  index <- which(!duplicated(incidence)&!duplicated(t(incidence)))
+  result <- incidence[index,index]
+  dim(result) <- rep(length(index),2)
+return(result)}
 
 
 
 
 
-cut_incidence=function(incidence,width,interval=stats::quantile(unique(as.vector(incidence)),c(0.001,0.995))){
+cut_incidence=function(incidence,width,interval=stats::quantile(unique(as.vector(incidence)),c(0.1,0.95))){
   vc <- compute_width(compute_quotient_order(compute_transitive_hull(incidence >= interval[2])))$width
   if(vc <= width){return(incidence >= interval[2])}
   f <- function(C,incidence){ width_2 <-compute_width(compute_quotient_order(compute_transitive_hull(incidence >=C)))$width;return(width_2-width)}
@@ -158,7 +161,7 @@ starshaped_subgroup_discovery  <- function(stylized_betweenness,objective,local_
 
 
     if (local_vc_dim == Inf) { incidence <- (stylized_betweenness[k,,] >= max(stylized_betweenness[k,,]))*1}
-    else{ incidence <- cut_incidence(Z[k,,],local_vc_dim) }
+    else{ incidence <- cut_incidence(stylized_betweenness[k,,],local_vc_dim) }
 
 
     model <- model_from_qoset(t(incidence))
@@ -195,6 +198,16 @@ starshaped_subgroup_discovery  <- function(stylized_betweenness,objective,local_
   b <- gurobi::gurobi(model,params=params)
 return(list(models=models,obj=objective,solutions=solutions,objvals=objvals,stars=stars,objval=objvals[i],star=stars[i,],center_id =i,fuzzy_incidence=stylized_betweenness[i,,] , incidence = incidence,model=model) )}
 
+
+compute_widths <- function(ternary_relation){
+  # TODO : Antiketten auch berechnen und ausgeben (Achtung mit Faktorisierung)
+  n_rows <- nrow(ternary_relation)
+  result <- rep(0,n_rows)
+  for(k in seq_len(n_rows)){
+    result[k] <- compute_width(ternary_relation[k,,])$width
+  }
+return(list(widths=result))
+}
 
 plot_stars <- function(starshaped_result,distance_function){
 

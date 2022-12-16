@@ -97,12 +97,15 @@ compute_incidence <- function(X) { ## erzeugt Inzidenzmatrix einer gegebenen Dat
 #' pairwise incomparable elements.)
 #' For computing the width is done with a maximum matching formulation, see
 #' \url{https://mathoverflow.net/questions/189161/fastest-algorithm-to-compute-the-width-of-a-poset}
-#'
+#' If 'incidence' is an arbitrary homogeneous relation, then first the reflexive
+#' hull is computed and then the width of the quotient order ( i.e., incidence
+#' factorized over incidence cap incidence^T )
 #' @param incidence  square incidence matrix with 0-1 entries
 #' @return a list with entry width that gives the width of the poset.
 #'
 #' @export
 compute_width <- function(incidence) {
+  # TODO : Antiketten auch berechnen und ausgeben (Achtung mit Faktorisierung)
   if (is.null(incidence)) {
     return(list(width = 0))
   }
@@ -116,8 +119,14 @@ compute_width <- function(incidence) {
     return(NULL)
   }
   incidence <- compute_transitive_hull(incidence)
+  diag(incidence) <- 1
+  incidence <- compute_quotient_order(incidence)
+  n_rows <- nrow(incidence)
   if (n_rows == 0) {
     return(list(width = 0))
+  }
+  if (n_rows == 1) {
+    return(list(width = 1))
   }
 
   diag(incidence) <- 0

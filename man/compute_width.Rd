@@ -18,4 +18,7 @@ i.e., the maximal cardinality of an antichain. (An antichain is a set of
 pairwise incomparable elements.)
 For computing the width is done with a maximum matching formulation, see
 \url{https://mathoverflow.net/questions/189161/fastest-algorithm-to-compute-the-width-of-a-poset}
+If 'incidence' is an arbitrary homogeneous relation, then first the reflexive
+hull is computed and then the width of the quotient order ( i.e., incidence
+factorized over incidence cap incidence^T )
 }
