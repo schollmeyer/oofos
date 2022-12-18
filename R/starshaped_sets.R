@@ -99,16 +99,23 @@ compute_stylized_betweenness <- function(g,h,i,context, attribute_weights=colMea
 
 }
 
-get_whole_stylized_betweenness <- function(context, stylized_betweenness_function=compute_stylized_betweenness,...){
+get_whole_stylized_betweenness <- function(context,
+                                           stylized_betweenness_function
+                                           =compute_stylized_betweenness,
+                                           ...){
   n_rows <- nrow(context)
   result <- array(0,rep(n_rows,3))
+  pb = txtProgressBar(min = 0, max = n_rows, initial = 0)
   for(k in (1:n_rows)){
+    setTxtProgressBar(pb,k)
+    #if(print_progress){print(c("progress"))}
     for(l in (1:n_rows)){
       for(m in (1:n_rows)){
         result[k,l,m] <- stylized_betweenness_function(context[k,],context[l,],context[m,],context, ...)
       }
     }
   }
+  close(pb)
 return(result)
 }
 

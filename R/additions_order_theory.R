@@ -90,6 +90,11 @@ compute_incidence <- function(X) { ## erzeugt Inzidenzmatrix einer gegebenen Dat
   return(ans)
 }
 
+# TODO MILP version von width plus beides geneinander testen. Achtung: bei nicht-posets kann
+# ergebnis unterschiedlich sein.
+
+# TODO :? principalfilter VC dim (ist bei distrib verb identisch zu odim,...)
+
 #' Compute the width of a partiallyordered set
 #'
 #' @description 'compute_width' computes the width of partially ordered set,
