@@ -182,7 +182,7 @@ optimistic_estimate_of_pairs2 <- function(X, v, timelimit) {
       MM$lb[l + m] <- 1
 
 
-      ans[k, l] <- gurobi(MM, list(presolve = 0, outputflag = 0, timelimit = timelimit)$objbound)
+      ans[k, l] <- gurobi::gurobi(MM, list(presolve = 0, outputflag = 0, timelimit = timelimit)$objbound)
       if (k != l) {
         ans[l, k] <- ans[k, l]
       }
