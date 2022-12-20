@@ -1,0 +1,1059 @@
+
+################################################################################
+################################################################################
+################################################################################
+#####################                         ##################################
+##################                               ###############################
+###############                                     ############################
+# Vapnik-Chervonenkis theory in formal concept analysis ########################
+###############                                     ############################
+##################                               ###############################
+#####################                         ##################################
+################################################################################
+################################################################################
+################################################################################
+#' Computes a MILP model for the computation of the VC-dimension of a formal
+#' contetx
+#'
+#' @description 'compute_extent_vc_dimension' builds a MILP model for the
+#' computation of the Vapnik-Chervonenkis dimension of the family of all extents
+#' of the concept lattice of a formal context.
+#'
+#' @param context is the underlying formal context.
+#'
+#' @param additional_constraint is an additional constraint within the MILP
+#' formulation for computing th VC dimension. If set to 'TRUE' then it is
+#' explicitly demanded that the number of the objects and the number of the
+#' attributes that are involved in the maximum contranominal scale (which is
+#' directlyconnected to a shatterable subset of maximal cardinality, cf., TODO
+#' ) are identical.
+#'
+#' @return a MILP model that can be optimized with 'gurobi(.)'. The VC dimension
+#' is then given bei the maximum value ('$objval') of the optimized model.
+#'
+#'
+#' @examples
+#'
+#'
+#' chevron <- rbind(
+#'   c(1, 1, 0, 0, 0, 0), c(0, 1, 0, 0, 0, 0), c(1, 1, 1, 0, 1, 1),
+#'   c(0, 1, 0, 1, 0, 1), c(0, 0, 0, 0, 1, 1), c(0, 0, 0, 0, 0, 1)
+#' )
+#' plot_relation(chevron)
+#'
+#' model <- compute_extent_vc_dimension(chevron)
+#' vc <- gurobi::gurobi(model, list(outputflag = 0))
+#' vc$objval
+#'
+#' # [1] 2  Vc dimenion of the family of all intersections of pronicpal filter
+#' # should be 2
+#'
+#' which(vc$x[(1:6)] == 1)
+#' # [1] 2 5  For example the set of elements 2 and 5 can be shattered by the
+#' # extents of the context (There are more shatterable sets of size 2)
+#'
+#'
+#' model <- compute_extent_vc_dimension(1 - chevron)
+#'
+#' # Here, we analyze the contraordinalscale for the chevron (1-chevron!) .
+#' # In this case the extents are exactly the upsets
+#' # cf., Mathematische Strukturen Ws19/20 Uebung 3, Aufgabe 2 (Oberhalbmengen
+#' # sind genau die Umfaenge der Kontraordinalskala)
+#' # In this case the VC dimension is exactly the width of the contraordinal
+#' # context, cf., Schollmeyer 2017 TR 209, Definition & Proposition 2, p. 31).
+#' vc <- gurobi::gurobi(model,list(outputflag=0))
+#'
+#' vc$objval
+#'
+#' # [1] 3 VC dimension should be 3
+#'
+#' which(vc$x[(1:6)] == 1)
+#'
+#' # [1] 1 4 5 For example the set of elements 1 4 and 5 is shatterabel /
+#' # an antichain
+#'
+#' @export
+compute_extent_vc_dimension <- function(context, additional_constraint = TRUE) {
+  # computes the Vapnik-Chervonenkis dimension of a given context 'context'
+  n_rows <- nrow(context)
+  n_cols <- ncol(context)
+  result <- list()
+  result$A <- array(0, c(2 * (n_rows + n_cols), n_rows + n_cols))
+  result$rhs <- rep(0, 2 * (n_rows + n_cols))
+  result$sense <- rep("", 2 * (n_rows + n_cols))
+  t <- 1
+  for (i in seq_len(n_rows)) {
+    j <- which(context[i, ] == 0) ## TODO : comment
+    result$A[t, j + n_rows] <- 1
+    result$A[t, i] <- n_cols - 1
+    result$rhs[t] <- n_cols
+    result$sense[t] <- "<="
+    t <- t + 1
+
+    result$A[t, j + n_rows] <- 1 ## TODO: comment
+    result$A[t, i] <- -1
+    result$rhs[t] <- 0
+    result$sense[t] <- ">="
+    t <- t + 1
+  }
+
+
+
+  for (j in seq_len(n_cols)) {
+    i <- which(context[, j] == 0) ## TODO : comment
+    result$A[t, i] <- 1
+    result$A[t, j + n_rows] <- n_rows - 1
+    result$rhs[t] <- n_rows
+    result$sense[t] <- "<="
+    t <- t + 1
+
+    result$A[t, i] <- 1 ## TODO : comment
+    result$A[t, j + n_rows] <- -1
+    result$rhs[t] <- 0
+    result$sense[t] <- ">="
+    t <- t + 1
+  }
+
+
+  result$modelsense <- "max"
+  result$lb <- rep(0, n_rows + n_cols)
+  result$ub <- rep(1, n_rows + n_cols)
+  result$vtypes <- c(rep("B", n_rows), rep("B", n_cols))
+  result$obj <- c(rep(1, n_rows), rep(0, n_cols))
+
+  result$A <- rbind(
+    result$A, c(rep(1, n_rows), rep(0, n_cols)),
+    c(rep(0, n_rows), rep(1, n_cols)), rep(1, n_rows + n_cols)
+  )
+  result$rhs <- c(
+    result$rhs, min(n_rows, n_cols), min(n_rows, n_cols),
+    n_rows + n_cols
+  )
+  result$sense <- c(result$sense, "<=", "<=", "<=")
+
+  if (additional_constraint) {
+    result$A <- rbind(result$A, c(rep(-1, n_rows), rep(1, n_cols)))
+    result$rhs <- c(result$rhs, 0)
+    result$sense <- c(result$sense, "=")
+  }
+  return(result)
+}
+
+#' Check if subset is enlargable to a sufg premise of size s
+#'
+#'
+#' @description 'check_objset_sufg_candidate' checks if a given set of objects is
+#' extendable to a ufg-premise of size s.
+#' If one wants to check if a given set'subset' is itself an ufg-premise, then
+#' one can simply set s=|subset|.
+#' Note that we assume here that the underlying context 'context' represents the
+#' whole data space (i.e., the small context is the large context, thus the term
+#' sufg (s for small) instead of ufg)
+#'
+#' @param subset is the envisaged subset given as a 0-1-vector.
+#'
+#' @param context is the underlying context.
+#'
+#' @param s is the envisaged cardinality of the set to which the set 'subset'
+#'
+#' can or can not be extended.
+#'
+#' @return A list with entry result which is TRUE if the set can be extended,
+#' otherwise it is FALSE. The entry set is the set to which 'subset' can be
+#' enlarged, given as a 0-1-vector.
+#'
+#'
+#'
+#' @examples
+#' context <- matrix(c(1,1,0,0,1,0,1,
+#'                     1,0,0,0,0,1,0,
+#'                     0,1,0,0,0,0,0,
+#'                     0,1,0,1,0,0,0,
+#'                     0,1,0,1,0,0,0,
+#'                     0,0,1,1,1,0,0,
+#'                     0,0,0,0,0,1,0,
+#'                     0,0,0,0,0,1,0,
+#'                     0,1,0,1,0,0,0,
+#'                     1,0,1,0,0,1,0), nrow = 10, ncol = 7, byrow = TRUE)
+#'
+#' fc <- fcaR::FormalContext$new(t(context))
+#'
+#' #Implikationen:
+#'
+#' fc$find_implications()
+#' fc$implications
+#'
+#' # aus der kanonischen Implikationsbasis ist die ufg Basis schwer abzuleiten,
+#' # einfacher ist es, denn Begriffsverband anzuschauen. Z.b. ist es einfach
+#' # abzulesen, dass {A1,A6,A10} -> {A1,A2,.., A10}
+#' # gilt, da das Infimum von A1,A6,A10 das kleinste Elemente ist und damit unter
+#' # Gegenstaenden liegt (ACHTUNG: Im Bild wird der Verband von t(context)
+#' # und nicht context berechnet (dann werden im plot die Begriffe mit den
+#' # entrechenden Gegenstaenden A1,...A10 bezeichnet und man kann die
+#' # Gegenstandsimplikationen einfach ablesen.
+#'
+#'
+#'
+#'
+#'
+#' fc$find_concepts()
+#' fc$concepts$plot()
+#' subset <- rep(0,10)
+#' subset[c(7)]<- 1
+#' check_objset_sufg_candidate(subset,context,1)
+#'
+#' # TRUE
+#' # passt denn {A7} -> {A8,A2,A10,A7} ist ufg Implikation
+#' check_objset_sufg_candidate(subset,context,2)
+#' # TRUE
+#' # passt denn z.B. {A7,A3} -> {A1,... A10} ist ufg Implikation
+#' # objset_is_sufg_candidate(subset,context,3)
+#' # FALSE
+#' # scheint ebenfalls zu passen
+#' subset <- rep(0,10)
+#' subset[c(7,8)] <- 1
+#' check_objset_sufg_candidate(subset,context,2)
+#' # FALSE passt
+#'
+#' subset <- rep(0,10)
+#'
+#' check_objset_sufg_candidate(subset,context,3)
+#'
+#' #$result
+#' # [1] TRUE
+#' # $set
+#' # [1] 1 0 0 0 0 1 0 0 0 1
+#'
+#' # passt, denn die Leere Menge ist zu der ufg Praemisse {A1,A6,A10}
+#' # erweiterbar (siehe oben)
+#'
+#'
+#' @export
+check_objset_sufg_candidate <- function(subset, context, s) {
+  # TODO : Englih!
+  # wenn man einfach testen will ob eine Menge S eine ufg-Praemisse
+  # ist, dann muss man einfach s = |S| setzen
+  # Im Moment ist es so programmiert (glaube ich), dass verschieden Gegenstaende
+  # mit genau den gleichen Attrbuten als ein genstand behandelt werden, bzw.
+  # waere das ja nur relevant bei Praemissen der kardinalitaet 1, die hier
+  # immer als nicht ufg behandelt werden, da muesste ich nochmal drueber
+  # nachdenken
+  # tests if subset is enlargable to a sufg premise of size K
+  mat <- compute_sufg_dimension(context)
+  mat$lb[which(subset == 1)] <- 1
+  mat$A <- rbind(mat$A, c(
+    rep(1, nrow(context)), rep(0, ncol(context)),
+    rep(0, nrow(context))
+  ))
+  mat$rhs <- c(mat$rhs, s)
+  mat$sense <- c(mat$sense, "=")
+  mat$obj <- NULL
+  result <- gurobi::gurobi(mat, list(outputflag = 0))
+  return(list(result=result$status == "OPTIMAL",
+              set=result$x[seq_len(nrow(context))]))
+}
+
+
+
+#' Compute the (s)ufg-dimension of a formal context
+#'
+#' @description 'compute_sufg_dimension' computes the (s)ufg-dimension of a
+#' formal context, i.e., the maximal cardinality of a (s)ufg-premise. Here we
+#' assume that the underlying ground space is represented by the formal context
+#' 'context', i.e. the formal context representing the whole space we are
+#' thinking in (the 'large context') is identical to the given context 'context'
+#' that at the same time rpresents the context representing the observed data
+#' points (the 'small context'). Thus the addition s (for small).
+#'
+#' @param context is the underlying context.
+#'
+#' @param additional_constraint If set to TRUE, then an additional constraint
+#' for the MILP formulation is added which sometimes speeds up computation.
+#'
+#' @return A MILP model that can be optimized with 'gurobi(.)'. The optimal
+#' value ('$objval') of the optimized model then corresponds to the (s)ufg
+#' dimension of the context.
+#'
+#'
+
+compute_sufg_dimension <- function(context, additional_constraint = TRUE) {
+  # Berechnet MILP Model zur Berechnung der sufg-Dimension eines Kontextes
+  #'context' (s bezieht sich auf
+  # small i.S.v. der kleine Kontext ist der große Kontext
+  # Model ist recht aehnlich zum Model, das bei compute_extent_vc_dimension
+  # berechnet wird, da ja die ufg Objekte insbesondere auch eine Kontranominal-
+  # skala mit den distinguihing attributes bilden muessen.
+  n_rows <- dim(context)[1]
+  n_cols <- dim(context)[2]
+  result <- list()
+  result$A <- array(0, c(2 * (n_rows + n_cols) + n_rows + n_cols + n_rows, n_rows + n_cols + n_rows))
+  result$rhs <- rep(0, 2 * (n_rows + n_cols) + n_rows + n_cols)
+  result$sense <- rep("", 2 * (n_rows + n_cols))
+  t <- 1
+  for (i in seq_len(n_rows)) {
+    j <- which(context[i, ] == 0) ## a) TODO : comment
+    result$A[t, j + n_rows] <- 1
+    result$A[t, i] <- n_cols - 1
+    result$rhs[t] <- n_cols
+    result$sense[t] <- "<="
+    t <- t + 1
+
+    result$A[t, j + n_rows] <- 1 ## b) TODO : comment
+    result$A[t, i] <- -1
+    result$rhs[t] <- 0
+    result$sense[t] <- ">="
+    t <- t + 1
+  }
+
+
+
+  for (j in seq_len(n_cols)) {
+    i <- which(context[, j] == 0) ## a) TODO : comment
+    result$A[t, i] <- 1
+    result$A[t, j + n_rows] <- n_rows - 1
+    result$rhs[t] <- n_rows
+    result$sense[t] <- "<="
+    t <- t + 1
+
+    result$A[t, i] <- 1 ## b) TODO : comment
+    result$A[t, j + n_rows] <- -1
+    result$rhs[t] <- 0
+    result$sense[t] <- ">="
+    t <- t + 1
+  }
+
+  for (i in seq_len(n_rows)) {
+    ## For sufg: object that is nonredundantly implied (i.e., with
+    ## corresponding zeros for the distinguishing attributes) have to exist.
+    j <- which(context[i, ] == 1)
+    result$A[t, j + n_rows] <- -1
+    result$A[t, i + n_rows + n_cols] <- -n_cols
+    result$rhs[t] <- -n_cols
+    result$sense[t] <- ">="
+    t <- t + 1
+  }
+
+  for (j in seq_len(n_cols)) {
+    i <- which(context[, j] == 0)
+    result$A[t, i + n_rows + n_cols] <- 1
+    result$A[t, i] <- -1
+    result$rhs[t] <- 0
+    result$sense[t] <- "<="
+    t <- t + 1
+  }
+
+
+
+  for (i in seq_len(n_rows)) { ###  Objekt b aus Charakterisierung ufg darf nicht mit
+    # Gegenstand aus Kontranominalskala übereinstimmen (nur wichtig, wenn
+    # einelementige UFG betrachtet wird)
+    result$A[t, i] <- 1
+    result$A[t, i + n_rows + n_cols] <- 1
+    result$sense[t] <- "<="
+    result$rhs[t] <- 1
+    t <- t + 1
+  }
+  t <- t - 1
+
+  result$A <- result$A[seq_len(t), ]
+  result$sense <- result$sense[seq_len(t)]
+  result$rhs <- result$rhs[seq_len(t)]
+
+
+
+
+
+  result$modelsense <- "max"
+  result$lb <- rep(0, n_rows + n_cols + n_rows)
+  result$ub <- rep(1, n_rows + n_cols + n_rows)
+  result$vtypes <- c(rep("B", n_rows), rep("B", n_cols), rep("B", n_rows))
+  result$obj <- c(rep(1, n_rows), rep(0, n_cols), rep(0, n_rows))
+
+  result$A <- rbind(
+    result$A,
+    c(rep(1, n_rows), rep(0, n_cols), rep(0, n_rows)), c(
+      rep(0, n_rows), rep(1, n_cols),
+      rep(0, n_rows)
+    ),
+    rep(1, n_rows + n_cols + n_rows), c(rep(0, n_rows + n_cols), rep(1, n_rows))
+  )
+  result$rhs <- c(result$rhs, min(n_rows, n_cols), min(n_rows, n_cols), n_cols + n_rows, 1)
+  result$sense <- c(result$sense, "<=", "<=", "<=", ">=")
+
+  if (additional_constraint) {
+    result$A <- rbind(result$A, c(rep(-1, n_rows), rep(1, n_cols), rep(0, n_rows)))
+    result$rhs <- c(result$rhs, 0)
+    result$sense <- c(result$sense, "=")
+  }
+  return(result)
+}
+
+
+#
+
+
+
+
+##
+###
+###
+### AUSKOMMENTIERT::
+#
+#
+# VC.impl <- function(imp) { ## berechnet VC-Dimension eines Huellensystems, das durch ein Implikationsbasis imp gegeben ist. Achtung: Geht nicht fuer jede Basis. Konklusionen der Implikationen der Basis muessen maximimal bezueglich Mengeninklusion (bezogen auf das System aller geltenden Implikationen (nicht einer Basis)) sein
+#   m <- dim(imp$premise)[1]
+#   n <- dim(imp$premise)[2]
+#   A <- array(0, c(m, n))
+#   rhs <- rep(0, m)
+#   for (k in (1:m)) {
+#     temp <- which(imp$premise[k, ] == 1)
+#     rhs[k] <- length(temp)
+#     A[k, temp] <- 1
+#     temp <- which(imp$conclusion[k, ] == 1)
+#     A[k, temp] <- 1 / sum(temp)
+#   }
+#   return(list(A = A, rhs = rhs, lb = rep(0, n), ub = rep(1, n), vtypes = rep("B", n), sense = rep("<", m), modelsense = "max", obj = rep(1, n)))
+# }
+#
+#
+#
+# local_object_VCdims <- function(X, indexs = (1:dim(X)[1]), outputflag, timelimit, pool = FALSE, transpose = TRUE, additional.constraint = TRUE, threads = 1) {
+#   # Berechnet lokale Gegenstands-VC-dimension:
+#   # X : Kontext
+#   # indexs: Indizes derjenigen Punkte, für die die lokale Gegenstands-VC-Dimension berechnet werden soll
+#   # outputflag: Argument, das an urobi übergeben wird (zur Steuerung der Ausgabe während der Berechnung)
+#   # timelimit: Zeitlimit für die Berechnun einer einzelnen lokalen VC-Dimension
+#   # pool: Wenn True, dann werden alle Kontranominalskalen maximaler Kardinalität berechnet, ansonsten nur eine
+#   # Transpose: ob Kontext vorher transponiert werden soll: Bei Kontext mit mehr Zeilen als Spalten scheint mit transpose =TRUE die Berechnung schneller zu laufen, für mehr Spalten als Zeilen scheint transpose=FALSE oft schneller zu sein
+#   # additional.constraint: ob zusätzlicher Constraint (Anzahl Gegenstände der Kontranominalskala==Anzahl Merkmele der Kontranominalskala) mit implementiert werden soll (dadurch wird Berechnung oft leicht schneller)
+#
+#   m <- dim(X)[1]
+#   n <- dim(X)[2]
+#   ans <- list()
+#   vcdims <- rep(0, m)
+#   vccounts <- rep(0, m)
+#   for (k in indexs) {
+#     if (transpose) {
+#       temp <- extent_VC(t(X), additional.constraint = additional.constraint)
+#       temp$lb[k + n] <- 1
+#     } else {
+#       temp <- extent.VC((X))
+#       temp$lb[k] <- 1
+#     }
+#
+#
+#     if (pool) {
+#       a <- gurobi(temp, list(outputflag = outputflag, timelimit = timelimit, PoolSolutions = 100000000, PoolSearchMode = 2, Poolgap = 0.00001))
+#     } else {
+#       a <- gurobi(temp, list(outputflag = outputflag, timelimit = timelimit, threads = threads))
+#     }
+#     a <<- a
+#     ans[[k]] <- a
+#     vcdims[k] <- a$objval
+#     vccounts[k] <- length(a$pool)
+#     print(a$objval)
+#   }
+#   return(list(vcdims = vcdims, vccounts = vccounts, rest = ans))
+# }
+#
+#
+#
+#
+# local_object_VCdims.Hannah <- function(X, indexs = (1:dim(X)[1]), outputflag, timelimit, pool = FALSE, transpose = TRUE, additional.constraint = TRUE) {
+#   m <- dim(X)[1]
+#   n <- dim(X)[2]
+#   ans <- list()
+#   vcdims <- rep(0, m)
+#   vccounts <- rep(0, m)
+#   for (k in indexs) {
+#     i <- which(X[k, ] == 1)
+#     if (transpose) {
+#       temp <- extent.VC(t(X[, i]), additional.constraint = additional.constraint)
+#     } else {
+#       temp <- extent.VC(X[, i], additional.constraint = FALSE)
+#     }
+#
+#
+#     if (pool) {
+#       a <- gurobi(temp, list(outputflag = outputflag, timelimit = timelimit, PoolSolutions = 100000000, PoolSearchMode = 2, Poolgap = 0.00001))
+#     } else {
+#       a <- gurobi(temp, list(outputflag = outputflag, timelimit = timelimit))
+#     }
+#
+#
+#     vcdims[k] <- a$objval
+#     vccounts[k] <- length(a$pool)
+#     print(a$objval)
+#   }
+#   return(list(vcdims = vcdims, vccounts = vccounts, rest = ans))
+# }
+#
+#
+# projection.size <- function(indexs, S) {
+#   dim(unique(S[, indexs]))[1]
+# } # Berechnet S_A für gegebenes Mengensystem S und Projektionsmenge A gegeben durch Indizes der Elemente von A (indexs)
+#
+# is.shatterable <- function(indexs, S) {
+#   projection.size(indexs, S) == 2^length(indexs)
+# } #  Entscheidet, ob Menge A gegeben durch Indizes indexs bezogen auf S shatterable ist
+#
+#
+#
+# homogenious.context <- function(VC = 4, shift = 2, ncontranominalscales = 10 * VC, nrow = VC * 10 * VC, ncol = shift * 10 * VC + shift, rest = 0) { ##  erzeugt Kontaxt, der von den lokalen VC-Dimensionen rehct homogen ist
+#
+#
+#   ans <- runif(nrow * ncol) <= rest
+#   dim(ans) <- c(nrow, ncol)
+#
+#   KNS <- array(1, c(VC, VC))
+#   diag(KNS) <- 0
+#   t <- 1
+#   for (k in (1:ncontranominalscales)) {
+#     ans[(t:(t + VC - 1)), (((k - 1) * shift + 1):((k - 1) * shift + VC))] <- KNS
+#     t <- t + VC
+#   }
+#   return(ans)
+# }
+#
+#
+#
+#
+#
+#
+# ###  Zu ufg depth...
+# ###
+# ###
+#
+# if (FALSE) {
+#   sample_shatterable_K_objset <- function(context, K, subset = rep(0, nrow(context))) {
+#     if (sum(subset) == K) {
+#       return(list(subset = subset))
+#     }
+#     extent <- operator_closure_obj_input(subset, context)
+#     idx <- which(extent == 0)
+#     if (sum(subset) == 0) {
+#       new_subset <- subset
+#       new_subset[sample((1:nrow(context)), size = 1)] <- 1
+#
+#       return(sample_shatterable_K_objset(context, K, new_subset))
+#     }
+#
+#     for (k in sample(idx)) {
+#       # print(k)
+#       new_subset <- subset
+#       new_subset[k] <- 1
+#       if (objset_is_shatterable(new_subset, context)) {
+#         return(sample_shatterable_K_objset(context, K, new_subset))
+#       }
+#     }
+#
+#     return(NULL)
+#   }
+#
+#   objset_is_shatterable <- function(subset, context) {
+#     reduced_context <- context[which(subset == 1), ]
+#     reduced_context <- reduced_context[, which(colSums(reduced_context) == sum(subset) - 1)]
+#
+#     return(nrow(unique(t(reduced_context))) == sum(subset))
+#   }
+#
+#   # is_ufg_generator <- function(subset,context,big_context){
+#
+#
+#
+#
+#
+#   objset_is_ufg_candidate <- function(subset, context, big_context) {
+#     if (!objset_is_shatterable(subset, context)) {
+#       return(FALSE)
+#     }
+#
+#     reduced_context <- context[which(subset == 1), ]
+#     # reduced_context <- reduced_context[,which(colSums(reduced_context)==sum(subset)-1)]
+#
+#     mask <- (colSums(reduced_context) == sum(subset) - 1)
+#
+#     for (k in (1:nrow(big_context))) {
+#       t <- 0
+#       for (l in 1:nrow(reduced_context)) {
+#         if (any(reduced_context[l, ] == 0 & big_context[k, ] == 0 & mask == 1)) {
+#           t <- t + 1
+#         }
+#       }
+#       if (t == nrow(reduced_context)) {
+#         return(TRUE)
+#       }
+#     }
+#
+#     return(FALSE)
+#   }
+#
+#
+#
+#   #  objset_is_ufg_candidate(E[1,],aa)
+#
+#
+#
+#
+#
+#   sample_shatterable_K_ufg_candidate <- function(context, big_context = context, K, subset = rep(0, nrow(context)), vector = NULL, number_ignored_vectors = 0) {
+#     if (sum(subset) == K) {
+#       return(list(subset = subset, vector = vector))
+#     }
+#     extent <- operator_closure_obj_input(subset, context)
+#     idx <- which(extent == 0)
+#     if (sum(subset) == 0) {
+#       new_subset <- subset
+#       new_subset[sample((1:nrow(context)), size = 1)] <- 1
+#
+#       return(sample_shatterable_K_ufg_candidate(context, big_context, K, new_subset, vector = which(new_subset == 1)))
+#     }
+#
+#     number_ignored_vectors <- number_ignored_vectors + length(which(extent == 1 & subset == 0))
+#     for (k in sample(idx)) {
+#       # print(k)
+#       new_subset <- subset
+#       new_subset[k] <- 1
+#       if (objset_is_ufg_candidate(new_subset, context, big_context)) {
+#         return(sample_shatterable_K_ufg_candidate(context, big_context, K, new_subset, vector = c(vector, k)))
+#       }
+#     }
+#
+#     return(NULL)
+#   }
+#
+#   # while(TRUE){e=NULL;while(is.null(e)){e=sample_shatterable_K_objset(aa,K=4);if(test_if_union_free_generator(e$subset,aa)){E=unique(rbind(E,e$subset));print(dim(E))}}}
+#
+#   test_if_union_free_generator <- function(subset, context) {
+#     if (all(operator_closure_obj_input(subset, context) == subset)) {
+#       return(FALSE)
+#     }
+#     if (test_if_generator(subset, context) == FALSE) {
+#       return(FALSE)
+#     }
+#     extent <- operator_closure_obj_input(subset, context)
+#     j <- NULL
+#     t <- 0
+#     for (k in which(extent == 1)) {
+#       t <- 0
+#       for (l in which(subset == 1)) {
+#         j <- NULL
+#
+#         for (i in (1:ncol(context))) {
+#           if (context[l, i] == 0 & sum(context[which(subset == 1), i]) == sum(subset) - 1) {
+#             j <- c(j, i)
+#           }
+#         }
+#
+#
+#         if (any(context[k, j] == 0)) {
+#           t <- t + 1
+#         }
+#       }
+#       # print(c(t,sum(subset)))
+#       if (t == sum(subset)) {
+#         return(TRUE)
+#       }
+#     }
+#
+#     return(FALSE)
+#   }
+#
+#
+#   sample_shatterable_K_objset2 <- function(context, K) {
+#     i <- sample(1:nrow(context))
+#     perm_context <- context[i, ]
+#     A <- extent.VC(perm_context)
+#     A$A <- rbind(A$A, c(rep(1, nrow(context)), rep(0, ncol(context))))
+#     A$rhs <- c(A$rhs, K)
+#     A$sense <- c(A$sense, ">=")
+#     A$obj <- c(-((1:nrow(context))^0.5 + CC * runif(nrow(context))), rep(0, ncol(context)))
+#     A <<- A
+#     B <- gurobi(A)
+#     # B <<- B
+#     e <- rep(0, nrow(context))
+#     e[i] <- (B$x[(1:nrow(context))])
+#     return(e)
+#   }
+#
+#
+#
+#   sample_K_ufg_objset <- function(context, K) { ### smpled ufg-Prämisse der Kardinalität K, ACHTUNG: NICHT UNIFORM
+#     i <- sample(1:nrow(context))
+#     perm_context <- context[i, ]
+#     A <- ufg_dimension(perm_context)
+#     A$A <- rbind(A$A, c(rep(1, nrow(context)), rep(0, ncol(context)), rep(0, nrow(context))))
+#     A$rhs <- c(A$rhs, K)
+#     A$sense <- c(A$sense, ">=")
+#     A$obj <- c(-((1:nrow(context))^0.5 + CC * runif(nrow(context))), rep(0, ncol(context)), rep(0, nrow(context)))
+#     A <<- A
+#     B <- gurobi(A, list(outputflag = 0))
+#     # B <<- B
+#     e <- rep(0, nrow(context))
+#     e[i] <- (B$x[(1:nrow(context))])
+#     return(e)
+#   }
+#
+#
+#
+#   ufg_dimension <- function(X, additional.constraint = TRUE) { # Berechnet VC-Dimension eines Kontextes X
+#     m <- dim(X)[1]
+#     n <- dim(X)[2]
+#     ans <- list()
+#     ans$A <- array(0, c(2 * (m + n) + m + n + m, m + n + m))
+#     ans$rhs <- rep(0, 2 * (m + n) + m + n)
+#     ans$sense <- rep("", 2 * (m + n))
+#     t <- 1
+#     for (i in (1:m)) {
+#       j <- which(X[i, ] == 0) ## a)
+#       ans$A[t, j + m] <- 1
+#       ans$A[t, i] <- n - 1
+#       ans$rhs[t] <- n
+#       ans$sense[t] <- "<="
+#       t <- t + 1
+#
+#       ans$A[t, j + m] <- 1 ## b)
+#       ans$A[t, i] <- -1
+#       ans$rhs[t] <- 0
+#       ans$sense[t] <- ">="
+#       t <- t + 1
+#     }
+#
+#
+#
+#     for (j in (1:n)) {
+#       i <- which(X[, j] == 0) ## a)
+#       ans$A[t, i] <- 1
+#       ans$A[t, j + m] <- m - 1
+#       ans$rhs[t] <- m
+#       ans$sense[t] <- "<="
+#       t <- t + 1
+#
+#       ans$A[t, i] <- 1 ## b)
+#       ans$A[t, j + m] <- -1
+#       ans$rhs[t] <- 0
+#       ans$sense[t] <- ">="
+#       t <- t + 1
+#     }
+#
+#     for (i in (1:m)) { ## Fuer ufg: Gegenstand b mit entsprechend Nullen muss existieren
+#       j <- which(X[i, ] == 1)
+#       ans$A[t, j + m] <- -1
+#       # ans$A[t,(1:m)]=-1
+#       ans$A[t, i + m + n] <- -n
+#       ans$rhs[t] <- -n
+#       ans$sense[t] <- ">="
+#       t <- t + 1
+#     }
+#
+#     for (j in (1:n)) {
+#       i <- which(X[, j] == 0)
+#       ans$A[t, i + m + n] <- 1
+#       ans$A[t, i] <- -1
+#       ans$rhs[t] <- 0
+#       ans$sense[t] <- "<="
+#       t <- t + 1
+#     }
+#
+#
+#
+#     for (i in (1:m)) {
+#       ans$A[t, i] <- 1
+#       ans$A[t, i + m + n] <- 1
+#       ans$sense[t] <- "<="
+#       ans$rhs[t] <- 1
+#       t <- t + 1
+#     }
+#     t <- t - 1
+#
+#     ans$A <- ans$A[(1:t), ]
+#     ans$sense <- ans$sense[(1:t)]
+#     ans$rhs <- ans$rhs[(1:t)]
+#
+#
+#
+#
+#
+#     ans$modelsense <- "max"
+#     ans$lb <- rep(0, m + n + m)
+#     ans$ub <- rep(1, m + n + m)
+#     ans$vtypes <- c(rep("B", m), rep("B", n), rep("B", m))
+#     ans$obj <- c(rep(1, m), rep(0, n), rep(0, m))
+#
+#     ans$A <- rbind(ans$A, c(rep(1, m), rep(0, n), rep(0, m)), c(rep(0, m), rep(1, n), rep(0, m)), rep(1, m + n + m), c(rep(0, m + n), rep(1, m)))
+#     ans$rhs <- c(ans$rhs, min(m, n), min(m, n), n + m, 1)
+#     ans$sense <- c(ans$sense, "<=", "<=", "<=", ">=")
+#
+#     if (additional.constraint) {
+#       ans$A <- rbind(ans$A, c(rep(-1, m), rep(1, n_cols), rep(0, n_rows)))
+#       ans$rhs <- c(ans$rhs, 0)
+#       ans$sense <- c(ans$sense, "=")
+#     }
+#     return(ans)
+#   }
+#
+#
+#   # e=NULL;while(is.null(e)){e=sample_shatterable_K_objset2(aa,K=5)}
+#   #
+#   objset_is_sufg_candidate <- function(subset, context, K) { # tests if subset is enlargable to a sufg premise of size K
+#     A <- sufg_dimension(context)
+#     A$lb[which(subset == 1)] <- 1
+#     A$A <- rbind(A$A, c(rep(1, nrow(context)), rep(0, ncol(context)), rep(0, nrow(context))))
+#     A$rhs <- c(A$rhs, K)
+#     A$sense <- c(A$sense, "=")
+#     A$obj <- NULL
+#     B <- gurobi(A, list(outputflag = 0))
+#     return(B$status == "OPTIMAL")
+#   }
+#
+#
+#   sample_ufg_K_objset_recursive <- function(context, K, subset = rep(0, nrow(context)), count = rep(0, K), p = 1) {
+#     print(subset)
+#     # print(count)
+#     # if(sum(subset)==K+1){return(list(subset=old_subset,pp=p,p=prod(count[(1:(K-1))])))}
+#     extent <- operator_closure_obj_input(subset, context)
+#     idx <- which(extent == 0)
+#     # print(idx)
+#     if (sum(subset) == 0) {
+#       p <- 1 / length(idx)
+#       print(p)
+#       new_subset <- subset
+#       new_subset[sample(idx, size = 1)] <- 1
+#
+#       return(sample_ufg_K_objset_recursive(context, K, new_subset, count, p))
+#     }
+#
+#     idx2 <- NULL
+#     for (k in idx) {
+#       # while(TRUE & sum(subset)!=0){
+#       # print(k)
+#       # k=sample(idx,size=1)
+#       # if(sum(subset)>0){
+#       count[sum(subset)] <- count[sum(subset)] + 1
+#
+#       # print(count)
+#
+#
+#       new_subset <- subset
+#       new_subset[k] <- 1
+#       if (objset_is_ufg_candidate(new_subset, context, K)) {
+#         idx2 <- c(idx2, k)
+#       }
+#       # print(idx2)
+#     }
+#     print(idx)
+#     print(idx2)
+#     p <- p * 1 / length(idx2)
+#     # print(sum(subset))
+#     print(p)
+#
+#     new_subset <- subset
+#     new_subset[sample(idx2, size = 1)] <- 1
+#
+#     if (sum(subset) == K - 1) {
+#       return(list(subset = new_subset, pp = p, p = prod(count[(1:(K - 1))])))
+#     }
+#
+#
+#     return(sample_ufg_K_objset_recursive(context, K, new_subset, count, p))
+#
+#
+#
+#
+#
+#
+#     # return(NULL)
+#   }
+#
+#
+#   sample_ufg_K_objset_recursive <- function(context, K) {
+#     p <- 1
+#     Subset <- rep(0, nrow(context))
+#     Vector <- NULL
+#     for (k in (1:(K))) {
+#       counter <- 1
+#       extent <- operator_closure_obj_input(Subset, context)
+#       print(c("extent", extent))
+#       idx <- which(extent == 0)
+#       print(c("idx", idx))
+#       # counter=1
+#       # while(TRUE){
+#       idx2 <- NULL
+#       for (l in idx) {
+#         # l <- sample(idx,size=1)
+#         # print(c(l,"mm"))
+#         new_subset <- Subset
+#         new_subset[l] <- 1
+#         if (objset_is_ufg_candidate(new_subset, context, K)) {
+#           idx2 <- c(idx2, l)
+#         }
+#       }
+#
+#       print(c("idx2", idx2))
+#
+#       p <- c(p, 1 / length(idx2)) # /length(idx)#counter/length(idx)#1/counter
+#       if (length(idx2) > 1) {
+#         print("a")
+#         l <- sample(idx2, size = 1)
+#       } # <- new_subset
+#       else {
+#         print("b")
+#         l <- idx2
+#       }
+#       print(c("l", l))
+#       Subset[l] <- 1
+#       # print(Subset)
+#
+#       Vector <- c(Vector, l)
+#       print(l)
+#       print(Vector)
+#
+#
+#
+#
+#       # break
+#       # }
+#       # else{counter <- counter + 1}
+#       # }
+#     }
+#
+#     return(list(Subset = Subset, p = p, Vector = Vector))
+#   }
+#
+#   e <- sample_ufg_K_objset_recursive(aa, K = 3)
+#
+#
+#
+#
+#
+#   E <- NULL
+#   p <- NULL
+#
+#   for (k in (1:1000000)) {
+#     e <- sample_ufg_K_objset_recursive(aa, K = 3)
+#     E <- rbind(E, e$Vector)
+#     p <- rbind(p, e$p)
+#     print(c(dim(E), "#####################################################################"))
+#   }
+#
+#
+#
+#   #####
+#   pp <- rep(0, nrow(E))
+#   for (k in (1:nrow(E))) {
+#     pp[k] <- prod(p[k, (1:4)])
+#   }
+#   q <- counts(E, pp)
+#   q[, 1] <- q[, 1] / nrow(E)
+#   plot(q)
+#   lines(q[, 1], q[, 1])
+#
+#   #####
+#   # e=sample_ufg_K_objset2(aa,K=3)
+#
+#
+#   # for(k in (1:100000)){e=sample_K_ufg_objset2(aa,K=4);print(c(dim(E),"##########################"));E=rbind(E,e)}
+#   # D=rep(0,nrow(aa))
+#   # for(k in (1:nrow(E))){
+#
+#   # D=D+operator_closure_obj_input(E[k,],aa)}
+#
+#
+#   #############
+#
+#
+#   # X=combinations(10,3)-1
+#
+#   # E=array(0,c(nrow(X),10))
+#   # for(k in (1:nrow(X))){
+#
+#   # e=rep(0,10)
+#   # e[X[k,]]=1
+#   # if(objset_is_ufg_candidate){D[k]=D[k]+1
+# }
+#
+#
+# ################
+# ################
+# ################
+# ################
+# ################
+# ################
+# ################ KURIERTER TEIL
+#
+
+#
+# sample_sufg_K_objset_recursive_c <- function(context, K, N = rep(nrow(context), K), threads = 1) {
+#   # Samples an ufg premise of size K
+#   # Caution It is assumed that the large context is the given context 'context' therefore the name sufg (for small ufg)
+#   # @context: Given context
+#   # @K size of ufg premise
+#   # @N vector for the number of random draws in every step (default value is nrow(context), which means that the drawing probability for a sampled ufg premise is exactly computed in this case. Otherwise (for smaller values) this probability is estimated ( in such a way that 1/p is estimated in an unbiased way )
+#   # @threads: number of threads used by gurobi
+#
+#   # Return (vector): smpled premise set as an indicator vector ßin \{0,1\}^nrow(context)
+#
+#
+#   model <- sufg_dimension(context) ## use MILP programe for checking if a given set Subset can be enlarged to a sufg-premise of size K
+#   model$A <- rbind(model$A, c(rep(1, nrow(context)), rep(0, ncol(context)), rep(0, nrow(context)))) ## Modification of model: demand that size of sufg-premise is at least K ('==K' would be also possible:  !!!Noch checken: Ist nicht eigtll. == erforderlich?
+#   model$rhs <- c(model$rhs, K)
+#   model$sense <- c(model$sense, ">=")
+#   model$obj <- NULL ## es soll nur getestet werden, ob Subset zu einer sufg-Prämisse der Größe >=K erweiterbar ist.
+#
+#   NN <- N # unmber of draws in every step: will be modified during the sampling
+#   p_inverse <- 1 # Vector of inverse probabilities of drawing in every step
+#   Subset <- rep(0, nrow(context))
+#   Vector <- NULL ## index Vector of the premise set
+#   idx3 <- NULL
+#
+#   for (k in (1:(K))) {
+#     counter <- 1
+#     extent <- operator_closure_obj_input(Subset, context)
+#     idx <- which(extent == 0)
+#     idx2 <- NULL
+#     NN[k] <- min(N[k], length(idx))
+#     idx_sample <- sample(idx, size = NN[k])
+#     for (l in idx_sample) {
+#       new_subset <- Subset
+#       new_subset[l] <- 1
+#       model$lb[which(new_subset == 1)] <- 1
+#       model$lb[which(new_subset == 0)] <- 0
+#       model$ub[idx3] <- 0
+#       ans <- gurobi(model, list(outputflag = 0, threads = threads))
+#       if (ans$status == "OPTIMAL") {
+#         idx2 <- c(idx2, l)
+#       } else {
+#         idx3 <- c(idx3, l)
+#       }
+#     }
+#
+#     Vector <- c(Vector, idx2[1])
+#     Subset[idx2[1]] <- 1
+#     p_inverse <- c(p_inverse, length(idx) * length(idx2) / NN[k])
+#   }
+#
+#   return(list(Subset = Subset, p_inverse = p_inverse, Vector = Vector))
+# }
+#
+#
+#
+
+#
+#
+# ufg_sample_depth <- function(context, subset_sample, p_inverse) {
+#   depth <- rep(0, nrow(context))
+#   for (k in (1:nrow(subset_sample))) {
+#     extent <- operator_closure_obj_input(subset_sample[k, ], context)
+#     depth <- depth + extent * p_inverse[k]
+#   }
+#
+#   return(depth)
+# }
+#
+#
+# for (k in (1:1000)) {
+#   e <- sample_sufg_K_objset_recursive_c(X, K = 4, N = rep(4, 4))
+#   E <- rbind(E, e$Subset)
+#   p <- c(p, prod(e$p_inverse))
+#   print(k)
+# }
