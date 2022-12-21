@@ -8,3 +8,5 @@ test_that("optimize_on_context_extents works", {
   result_2=result_1
   expect_equal(result_1, result_2)
 })
+
+
