@@ -31,33 +31,33 @@ test_that("check_objset_sufg_candidate works", {
 # TODO : hierarchical nominaly scaling method: curate, comment ...
 ###################################################################
 ###################################################################
-get_hierarchical_scaling_vec <- function(data_values){
+get_hierarchical_scaling_vec <- function(dat){
 
     # computes hierarchical scaling TODO currently only 4 levels
 
-    m <- length(data_values)
+    m <- length(dat)
     w <- rep(0,m*4)
     t <- 1
     for(l in c(1,10,100,1000)){
       for(k in (1:m)){
-        w[t] <- data_values[k]%/%l
+        w[t] <- dat[k]%/%l
         t <- t+1
       }
     }
     w <- unique(w)
-    X <- NULL
+    context <- NULL
     for(W in w){
       temp <- rep(0,m)
       L <-nchar(W)
       for(k in (1:m)){
-        temp[k] <- substr(as.character(data_values[k]),1,L)==W
+        temp[k] <- substr(as.character(dat[k]),1,L)==W
       }
-      X <- cbind(X,temp)
+      context <- cbind(context,temp)
     }
 
-    colnames(X) <- w
+    colnames(context) <- w
 
-    return(X)}
+    return(context)}
 
 ############################
 ############################
