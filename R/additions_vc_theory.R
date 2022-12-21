@@ -5,7 +5,7 @@
 #####################                         ##################################
 ##################                               ###############################
 ###############                                     ############################
-# Vapnik-Chervonenkis theory in formal concept analysis ########################
+###    Vapnik-Chervonenkis theory in formal concept analysis    ################
 ###############                                     ############################
 ##################                               ###############################
 #####################                         ##################################
@@ -275,10 +275,10 @@ check_objset_sufg_candidate <- function(subset, context, s) {
 #' dimension of the context.
 #'
 #'
-
+#' @export
 compute_sufg_dimension <- function(context, additional_constraint = TRUE) {
   # Berechnet MILP Model zur Berechnung der sufg-Dimension eines Kontextes
-  #'context' (s bezieht sich auf
+  # context (s bezieht sich auf
   # small i.S.v. der kleine Kontext ist der große Kontext
   # Model ist recht aehnlich zum Model, das bei compute_extent_vc_dimension
   # berechnet wird, da ja die ufg Objekte insbesondere auch eine Kontranominal-

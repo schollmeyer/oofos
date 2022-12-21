@@ -75,7 +75,7 @@ x <- sample(x)
 
 context <- get_hierarchical_scaling_vec(x)
 
-n_test <- 7
+n_test <- 4
 result_1 <- rep(TRUE,n_test*(n_test-1))
 result_2 <- rep(TRUE,n_test*(n_test-1))
 

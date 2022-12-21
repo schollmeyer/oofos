@@ -16,9 +16,6 @@ for the MILP formulation is added which sometimes speeds up computation.}
 A MILP model that can be optimized with 'gurobi(.)'. The optimal
 value ('$objval') of the optimized model then corresponds to the (s)ufg
 dimension of the context.
-
-
-context' (s bezieht sich auf
 }
 \description{
 'compute_sufg_dimension' computes the (s)ufg-dimension of a
