@@ -1,3 +1,4 @@
+
 add_two_object_implications <- function(model, X, index1, index2) {
   m <- dim(X)[1]
   n <- dim(X)[2]
