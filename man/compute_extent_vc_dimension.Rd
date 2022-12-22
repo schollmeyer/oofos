@@ -61,6 +61,7 @@ vc$objval
 
 # [1] 3 VC dimension should be 3
 
+
 which(vc$x[(1:6)] == 1)
 
 # [1] 1 4 5 For example the set of elements 1 4 and 5 is shatterabel /

@@ -287,7 +287,8 @@ compute_sufg_dimension <- function(context, additional_constraint = TRUE) {
   n_rows <- dim(context)[1]
   n_cols <- dim(context)[2]
   result <- list()
-  result$A <- array(0, c(2 * (n_rows + n_cols) + n_rows + n_cols + n_rows, n_rows + n_cols + n_rows))
+  result$A <- array(0, c(2 * (n_rows + n_cols) + n_rows + n_cols + n_rows,
+                         n_rows + n_cols + n_rows))
   result$rhs <- rep(0, 2 * (n_rows + n_cols) + n_rows + n_cols)
   result$sense <- rep("", 2 * (n_rows + n_cols))
   t <- 1
@@ -345,7 +346,8 @@ compute_sufg_dimension <- function(context, additional_constraint = TRUE) {
 
 
 
-  for (i in seq_len(n_rows)) { ###  Objekt b aus Charakterisierung ufg darf nicht mit
+  for (i in seq_len(n_rows)) {
+    ###  Objekt b aus Charakterisierung ufg darf nicht mit
     # Gegenstand aus Kontranominalskala übereinstimmen (nur wichtig, wenn
     # einelementige UFG betrachtet wird)
     result$A[t, i] <- 1
@@ -378,11 +380,15 @@ compute_sufg_dimension <- function(context, additional_constraint = TRUE) {
     ),
     rep(1, n_rows + n_cols + n_rows), c(rep(0, n_rows + n_cols), rep(1, n_rows))
   )
-  result$rhs <- c(result$rhs, min(n_rows, n_cols), min(n_rows, n_cols), n_cols + n_rows, 1)
+  result$rhs <- c(result$rhs, min(n_rows, n_cols), min(n_rows, n_cols),
+                  n_cols + n_rows+1, 1)
+
+  ## +1 in vorletzter RHS war vorher nicht da sollte aber da sein.
   result$sense <- c(result$sense, "<=", "<=", "<=", ">=")
 
   if (additional_constraint) {
-    result$A <- rbind(result$A, c(rep(-1, n_rows), rep(1, n_cols), rep(0, n_rows)))
+    result$A <- rbind(result$A, c(rep(-1, n_rows), rep(1, n_cols),
+                                  rep(0, n_rows)))
     result$rhs <- c(result$rhs, 0)
     result$sense <- c(result$sense, "=")
   }
