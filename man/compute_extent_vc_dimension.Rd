@@ -33,10 +33,10 @@ chevron <- rbind(
   c(1, 1, 0, 0, 0, 0), c(0, 1, 0, 0, 0, 0), c(1, 1, 1, 0, 1, 1),
   c(0, 1, 0, 1, 0, 1), c(0, 0, 0, 0, 1, 1), c(0, 0, 0, 0, 0, 1)
 )
-plot_relation(chevron)
+oofos:::plot_relation(chevron)
 
 model <- compute_extent_vc_dimension(chevron)
-vc <- gurobi::gurobi(model, list(outputflag = 0))
+vc <- gurobi:::gurobi(model, list(outputflag = 0))
 vc$objval
 
 # [1] 2  Vc dimenion of the family of all intersections of pronicpal filter

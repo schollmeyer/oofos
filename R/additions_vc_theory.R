@@ -37,9 +37,20 @@
 #' @return a model that can be optimized with 'gurobi(.)'. the optimal value of
 #' the optimized model will then be an upper bound for the ufg dimension.
 #' Conjecture: this is not only an upper bound but the exact ufg dimension (i.e.)
-
-
-
+#' @examples \dontrun{ context <- ddandrda::compute_all_partial_orders(4,list=FALSE,
+#' complemented=TRUE)
+#' model <- compute_extent_vc_dimension(context)
+#' vc_dimension <- gurobi::gurobi(model)$objval
+#' vc_dimension
+#' # [1] 12  This fits to VC dimension = m(m-1) with m the number of items
+#' ufg_model <- add_ufg_constraints(model)
+#' ufg_upper_bound <- gurobi::gurobi(ufg_model)$objval
+#' ufg_upper_bound
+#' # [1] 6  Fits to ufg dimension = m(m-1)/2 with m the number of items
+#' # NOTE: We only proved ufg dimension <= m(m-1)/2 but the proof for equality
+#' # seems to be simple? ... TODO !
+#' }
+#' @export
 add_ufg_constraints <- function(model) {
   n_rows <- nrow(model$context)
   n_cols <- ncol(model$context)
@@ -98,10 +109,10 @@ add_ufg_constraints <- function(model) {
 #'   c(1, 1, 0, 0, 0, 0), c(0, 1, 0, 0, 0, 0), c(1, 1, 1, 0, 1, 1),
 #'   c(0, 1, 0, 1, 0, 1), c(0, 0, 0, 0, 1, 1), c(0, 0, 0, 0, 0, 1)
 #' )
-#' plot_relation(chevron)
+#' oofos:::plot_relation(chevron)
 #'
 #' model <- compute_extent_vc_dimension(chevron)
-#' vc <- gurobi::gurobi(model, list(outputflag = 0))
+#' vc <- gurobi:::gurobi(model, list(outputflag = 0))
 #' vc$objval
 #'
 #' # [1] 2  Vc dimenion of the family of all intersections of pronicpal filter

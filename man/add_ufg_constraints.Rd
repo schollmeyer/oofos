@@ -30,3 +30,18 @@ attribute, then '(b,a)' and 'not (a,b)' and 'not (b,a)' can not be used as a
 further distinguishing attribute for the envisaged ufg premise, cf., the
 notes in the ISPITA paper
 }
+\examples{
+\dontrun{ context <- ddandrda::compute_all_partial_orders(4,list=FALSE,
+complemented=TRUE)
+model <- compute_extent_vc_dimension(context)
+vc_dimension <- gurobi::gurobi(model)$objval
+vc_dimension
+# [1] 12  This fits to VC dimension = m(m-1) with m the number of items
+ufg_model <- add_ufg_constraints(model)
+ufg_upper_bound <- gurobi::gurobi(ufg_model)$objval
+ufg_upper_bound
+# [1] 6  Fits to ufg dimension = m(m-1)/2 with m the number of items
+# NOTE: We only proved ufg dimension <= m(m-1)/2 but the proof for equality
+# seems to be simple? ... TODO !
+}
+}

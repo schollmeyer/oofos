@@ -372,22 +372,22 @@ compute_random_context <- function(nrow = 20,
 #'     interval_order[k, l] <- (upper[k] <= lower[l])
 #'   }
 #' }
-#' plot_relation(interval_order)
+#' oofos:::plot_relation(interval_order)
 #'
 #' # plot a quasiorder
 #' q_order <- array(1 * (runif(100) >= 0.9), c(10, 10))
 #' diag(q_order) <- 1
 #' q_order[1, 2] <- q_order[2, 1] <- 1
-#' q_order <- compute_transitive_hull(q_order)
-#' plot_relation(q_order)
+#' q_order <- oofos:::compute_transitive_hull(q_order)
+#' oofos:::plot_relation(q_order)
 #'
 #' # plot the Chevron
 #' chevron <- rbind(
 #'   c(1, 1, 0, 0, 0, 0), c(0, 1, 0, 0, 0, 0), c(1, 1, 1, 0, 1, 1),
 #'   c(0, 1, 0, 1, 0, 1), c(0, 0, 0, 0, 1, 1), c(0, 0, 0, 0, 0, 1)
 #' )
-#' plot_relation(chevron)
-#' @export
+#' oofos:::plot_relation(chevron)
+#'
 plot_relation <- function(incidence) {
   # define the incidence as a formal context for the fcaR package
   fc <- fcaR::FormalContext$new(incidence[, seq_len(nrow(incidence))])

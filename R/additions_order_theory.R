@@ -200,9 +200,9 @@ compute_relation_product <- function(x, y) {
 #' relation_mat_input[1, 3] <- 1
 #' relation_mat_input[2, 1] <- 1
 #' relation_mat_input[4, 3] <- 1
-#' compute_transitive_hull(relation_mat_input)
+#' oofos:::compute_transitive_hull(relation_mat_input)
 #'
-#' @export
+#'
 compute_transitive_hull <- function(relation_mat) {
   # @relation_mat (sqared matrix): represents a relation matrix
   # Return (squared matrix): the transitive hull of the relation matrix
