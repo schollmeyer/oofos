@@ -30,20 +30,22 @@ whole data space (i.e., the small context is the large context, thus the term
 sufg (s for small) instead of ufg)
 }
 \examples{
-context <- matrix(c(1,1,0,0,1,0,1,
-                    1,0,0,0,0,1,0,
-                    0,1,0,0,0,0,0,
-                    0,1,0,1,0,0,0,
-                    0,1,0,1,0,0,0,
-                    0,0,1,1,1,0,0,
-                    0,0,0,0,0,1,0,
-                    0,0,0,0,0,1,0,
-                    0,1,0,1,0,0,0,
-                    1,0,1,0,0,1,0), nrow = 10, ncol = 7, byrow = TRUE)
+context <- matrix(c(
+  1, 1, 0, 0, 1, 0, 1,
+  1, 0, 0, 0, 0, 1, 0,
+  0, 1, 0, 0, 0, 0, 0,
+  0, 1, 0, 1, 0, 0, 0,
+  0, 1, 0, 1, 0, 0, 0,
+  0, 0, 1, 1, 1, 0, 0,
+  0, 0, 0, 0, 0, 1, 0,
+  0, 0, 0, 0, 0, 1, 0,
+  0, 1, 0, 1, 0, 0, 0,
+  1, 0, 1, 0, 0, 1, 0
+), nrow = 10, ncol = 7, byrow = TRUE)
 
 fc <- fcaR::FormalContext$new(t(context))
 
-#Implikationen:
+# Implikationen:
 
 fc$find_implications()
 fc$implications
@@ -63,34 +65,33 @@ fc$implications
 
 fc$find_concepts()
 fc$concepts$plot()
-subset <- rep(0,10)
-subset[c(7)]<- 1
-check_objset_sufg_candidate(subset,context,1)
+subset <- rep(0, 10)
+subset[c(7)] <- 1
+check_objset_sufg_candidate(subset, context, 1)
 
 # TRUE
 # passt denn {A7} -> {A8,A2,A10,A7} ist ufg Implikation
-check_objset_sufg_candidate(subset,context,2)
+check_objset_sufg_candidate(subset, context, 2)
 # TRUE
 # passt denn z.B. {A7,A3} -> {A1,... A10} ist ufg Implikation
 # objset_is_sufg_candidate(subset,context,3)
 # FALSE
 # scheint ebenfalls zu passen
-subset <- rep(0,10)
-subset[c(7,8)] <- 1
-check_objset_sufg_candidate(subset,context,2)
+subset <- rep(0, 10)
+subset[c(7, 8)] <- 1
+check_objset_sufg_candidate(subset, context, 2)
 # FALSE passt
 
-subset <- rep(0,10)
+subset <- rep(0, 10)
 
-check_objset_sufg_candidate(subset,context,3)
+check_objset_sufg_candidate(subset, context, 3)
 
-#$result
+# $result
 # [1] TRUE
 # $set
 # [1] 1 0 0 0 0 1 0 0 0 1
 
 # passt, denn die Leere Menge ist zu der ufg Praemisse {A1,A6,A10}
 # erweiterbar (siehe oben)
-
 
 }

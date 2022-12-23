@@ -55,7 +55,7 @@ model <- compute_extent_vc_dimension(1 - chevron)
 # sind genau die Umfaenge der Kontraordinalskala)
 # In this case the VC dimension is exactly the width of the contraordinal
 # context, cf., Schollmeyer 2017 TR 209, Definition & Proposition 2, p. 31).
-vc <- gurobi::gurobi(model,list(outputflag=0))
+vc <- gurobi::gurobi(model, list(outputflag = 0))
 
 vc$objval
 
