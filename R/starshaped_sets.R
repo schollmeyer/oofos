@@ -105,9 +105,9 @@ get_whole_stylized_betweenness <- function(context,
                                            ...){
   n_rows <- nrow(context)
   result <- array(0,rep(n_rows,3))
-  pb = txtProgressBar(min = 0, max = n_rows, initial = 0)
+  pb = utils::txtProgressBar(min = 0, max = n_rows, initial = 0)
   for(k in (1:n_rows)){
-    setTxtProgressBar(pb,k)
+    utils::setTxtProgressBar(pb,k)
     #if(print_progress){print(c("progress"))}
     for(l in (1:n_rows)){
       for(m in (1:n_rows)){
@@ -148,7 +148,7 @@ cut_incidence=function(incidence,width,interval=stats::quantile(unique(as.vector
   if(vc <= width){return(incidence >= interval[2])}
   f <- function(C,incidence){ width_2 <-compute_width(compute_quotient_order(compute_transitive_hull(incidence >=C)))$width;return(width_2-width)}
 
-  ans <- uniroot(f,interval=interval,incidence=incidence)
+  ans <- stats::uniroot(f,interval=interval,incidence=incidence)
 return(compute_transitive_hull(incidence>=ans$root))}
 
 
@@ -223,29 +223,27 @@ compute_widths <- function(ternary_relation){
 return(list(widths=result))
 }
 
-plot_stars <- function(starshaped_result,distance_function){
+# plot_stars <- function(starshaped_result,distance_function){
+#
+#   i <- which(starshaped_result$star==1)
+#
+#   j <- oofos::compute_maximal_elements(starshaped_result$incidence[i,i])
+#
+#
+#   i[j]
+#   print(i[j])
+#
+#
+#
+#
+#
 
-  i <- which(starshaped_result$star==1)
-
-  j <- compute_maximal_elements(starshaped_result$incidence[i,i])
-
-
-  i[j]
-  print(i[j])
+# TODO compute_maximal elements?
+# }
 
 
 
 
-
-}
-
-
-
-plot_corder <- function(corder,main=""){
-  m <- nrow(corder)
-  plot(as.relation(corder[(1:m),(1:m)]),main=main)
-
-}
 
 starshaped_subgroup_discovery_recompute <- function(models,objective){
 
@@ -318,39 +316,39 @@ model_from_qoset <- function(Q){
 
 
 
-###### stilisierte Zwischenrelationen
-
-
-sb1=function(XR,p){
-  m=dim(XR)[1]
-  n=dim(XR)[2]
-  A=array(as.integer(0),c(m,m,m))
-  B=A
-  C=A
-  D=as.matrix(dist(XR,method="minkowski",upper=TRUE,p=p))
-  MAXD=max(D)#Q=quantile(D,QQ)
-
-  for(K in (1:m)){#(1:(m-2))){
-    for(L in (1:m)){#((K+1):(m-1))){
-      for(M in (1:m)){#((L+1):m)){
-        #A[K,L,M]=max(0,D[L,K]-D[M,K],D[L,M]-D[K,M])
-        A[K,L,M]=sum(D[K,M])/(sum(D[K,L]+D[L,M]))
-        B[K,L,M]=(D[K,L]<D[K,M])#*D[K,M]/MAXD#<=Q
-
-        #temp=sign((XR[L,]-XR[K,])*(XR[M,]-XR[K,]))
-        #temp2=abs(XR[L,]-XR[K,]) < abs(XR[M,]-XR[K,])
-        #i=which(temp>=0 &temp2)
-        #A[K,L,M]=length(i)
-        #B[K,L,M]=sum(abs(temp[i]))
-
-      }}}
-  for(K in (1:m)){
-    diag(A[K,,])=1
-    diag(B[K,,])=1}
-  return(list(A=A,B=B))}
-
-
-#######
-#######
-#######
-
+# ###### stilisierte Zwischenrelationen
+#
+#
+# sb1=function(XR,p){
+#   m=dim(XR)[1]
+#   n=dim(XR)[2]
+#   A=array(as.integer(0),c(m,m,m))
+#   B=A
+#   C=A
+#   D=as.matrix(dist(XR,method="minkowski",upper=TRUE,p=p))
+#   MAXD=max(D)#Q=quantile(D,QQ)
+#
+#   for(K in (1:m)){#(1:(m-2))){
+#     for(L in (1:m)){#((K+1):(m-1))){
+#       for(M in (1:m)){#((L+1):m)){
+#         #A[K,L,M]=max(0,D[L,K]-D[M,K],D[L,M]-D[K,M])
+#         A[K,L,M]=sum(D[K,M])/(sum(D[K,L]+D[L,M]))
+#         B[K,L,M]=(D[K,L]<D[K,M])#*D[K,M]/MAXD#<=Q
+#
+#         #temp=sign((XR[L,]-XR[K,])*(XR[M,]-XR[K,]))
+#         #temp2=abs(XR[L,]-XR[K,]) < abs(XR[M,]-XR[K,])
+#         #i=which(temp>=0 &temp2)
+#         #A[K,L,M]=length(i)
+#         #B[K,L,M]=sum(abs(temp[i]))
+#
+#       }}}
+#   for(K in (1:m)){
+#     diag(A[K,,])=1
+#     diag(B[K,,])=1}
+#   return(list(A=A,B=B))}
+#
+#
+# #######
+# #######
+# #######
+#

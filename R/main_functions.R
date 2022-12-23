@@ -274,122 +274,122 @@ quality <- function(sdtask, result, NAMES = colnames(sdtask$context)) { ## berec
 }
 
 
-
-
-subgroup_discovery_fca_milp <- function(dat, target, target.class, nrep, heuristic, remove.full.columns = TRUE, clarify.cols = FALSE, reduce.cols = FALSE, weighted = FALSE, small) { # Fuehrt Subgroup Discovery durch (erzeugt nur MILP, das dann noch mit z.B. gurobi(...) gelöst werden muss
-  XX <- dat
-  XX[[target]] <- NULL
-  print(objects(XX))
-  X <- conceptual.scaling(XX)
-  print("E")
-
-
-
-  print(c("dim dat: ", dim(dat)), quote = FALSE)
-  print(c("dim X (conceptual scaling dat):     ", dim(X)), quote = FALSE)
-
-  if (remove.full.columns) {
-    X <- remove.full.cols(X)
-    print(c("dim X without full columns:         ", dim(X)), quote = FALSE)
-  }
-  if (clarify.cols) {
-    X <- col.clarify(X)
-    print(c("dim X without doubled columns:      ", dim(X)), quote = FALSE)
-  }
-  if (reduce.cols) {
-    X <- col.reduce(X)
-    print(c("dim final X (clarified and reduced):", dim(X)), quote = FALSE)
-  }
-
-
-  m <- dim(X)[1]
-  n <- dim(X)[2]
-
-  M <- dim(XX)[2]
-
-  # A=NULL
-  # A=array(0,c(2*n,m+n))
-  # t=1
-  # T=1
-  # for(k in (1:M)){
-  # K=length(unique(XX[,k]))
-  # #print(K)
-  # temp=rep(0,c(m+n))
-  # if(class(XX[,k])[1]=="factor"){
-
-  # temp[((t+m):(t+m+K-1))]=1
-  # A[t,]=temp
-  # T=T+1
-  # #A=rbind(A,temp)
-
-  # t=t+K
-  # }
-
-  # if(class(XX[,k])[1]=="ordered" | class(XX[,k])[1]=="numeric" | class(XX[,k])[1]=="integer"){
-
-  # for(l in (1:(K-1))){
-  # temp[t+m+l-1]=1
-  # temp[t+m+l]=-1
-  # A[T,]=temp
-  # T=T+1
-  # #A=rbind(A,temp)
-
-  # temp=rep(0,c(m+n))
-  # temp[t+m+l-1+K]=-1
-  # temp[t+m+l+K]=1
-  # A[T,]=temp
-  # T=T+1
-  # #=rbind(A,temp)
-  # }
-  # t=t+2*K
-  # }
-
-
-
-  # #t=t+K
-  # }
-  # T=T-1
-  # A=A[(1:T),]
-  # A=NULL
-  v <- (dat[[target]] == target.class) - (dat[[target]] != target.class) * mean(dat[[target]] == target.class) / mean(dat[[target]] != target.class)
-  if (weighted) {
-    W <- weighted.repr(X, v)
-    v <- W$yw
-
-    X <- W$Xw
-  } else {
-    W <- list(count = rep(1, dim(X)[1]))
-  }
-
-  v <<- v
-  m <- dim(X)[1]
-  n <- dim(X)[2]
-  print("building model...")
-  if (small) {
-    ans <- extent.opt(X, which(v > 0), v)
-  } else {
-    ans <- extent.opt(X, (1:m), v)
-  }
-  print("...done")
-  # M=dim(A)[1]
-  # ans$A=rbind(ans$A,A);ans$rhs=c(ans$rhs,rep(1,M));ans$sense=c(ans$sense,rep("<=",M))
-  print(system.time(temp <- heuristic(X, v, nrep = nrep)))
-  CUT <- ceiling(temp$objval)
-  print(CUT)
-
-  T <- rep(0, n + m)
-  T[(which(v > 0))] <- -W$count[which(v > 0)]
-  # ans$A=rbind(ans$A,matrix(T,nrow=1))
-  # ans$rhs=c(ans$rhs,-CUT)
-  # ans$sense=c(ans$sense,"<=")
-  ans$start <- c(temp$solution, PSI(temp$solution, context = X))
-  ans$context <- X
-  ans$NAMES <- conceptual.scaling.dim(XX)$NAMES
-  # TEMP=heuristic.implications(X,v,NREP)
-
-  # ans$A=rbind(ans$A,TEMP$A);ans$rhs=c(ans$rhs,TEMP$rhs);ans$sense=c(ans$sense,TEMP$sense)
-
-  # ans$vtypes[which(ans$start>=0.5)]="B"
-  # ans$vtypes=rep("B",length(ans$vtypes))
-  return(ans)
-}
+#
+#
+# subgroup_discovery_fca_milp <- function(dat, target, target.class, nrep, heuristic, remove.full.columns = TRUE, clarify.cols = FALSE, reduce.cols = FALSE, weighted = FALSE, small) { # Fuehrt Subgroup Discovery durch (erzeugt nur MILP, das dann noch mit z.B. gurobi(...) gelöst werden muss
+#   XX <- dat
+#   XX[[target]] <- NULL
+#   print(objects(XX))
+#   X <- conceptual.scaling(XX)
+#   print("E")
+#
+#
+#
+#   print(c("dim dat: ", dim(dat)), quote = FALSE)
+#   print(c("dim X (conceptual scaling dat):     ", dim(X)), quote = FALSE)
+#
+#   if (remove.full.columns) {
+#     X <- remove.full.cols(X)
+#     print(c("dim X without full columns:         ", dim(X)), quote = FALSE)
+#   }
+#   if (clarify.cols) {
+#     X <- col.clarify(X)
+#     print(c("dim X without doubled columns:      ", dim(X)), quote = FALSE)
+#   }
+#   if (reduce.cols) {
+#     X <- col.reduce(X)
+#     print(c("dim final X (clarified and reduced):", dim(X)), quote = FALSE)
+#   }
+#
+#
+#   m <- dim(X)[1]
+#   n <- dim(X)[2]
+#
+#   M <- dim(XX)[2]
+#
+#   # A=NULL
+#   # A=array(0,c(2*n,m+n))
+#   # t=1
+#   # T=1
+#   # for(k in (1:M)){
+#   # K=length(unique(XX[,k]))
+#   # #print(K)
+#   # temp=rep(0,c(m+n))
+#   # if(class(XX[,k])[1]=="factor"){
+#
+#   # temp[((t+m):(t+m+K-1))]=1
+#   # A[t,]=temp
+#   # T=T+1
+#   # #A=rbind(A,temp)
+#
+#   # t=t+K
+#   # }
+#
+#   # if(class(XX[,k])[1]=="ordered" | class(XX[,k])[1]=="numeric" | class(XX[,k])[1]=="integer"){
+#
+#   # for(l in (1:(K-1))){
+#   # temp[t+m+l-1]=1
+#   # temp[t+m+l]=-1
+#   # A[T,]=temp
+#   # T=T+1
+#   # #A=rbind(A,temp)
+#
+#   # temp=rep(0,c(m+n))
+#   # temp[t+m+l-1+K]=-1
+#   # temp[t+m+l+K]=1
+#   # A[T,]=temp
+#   # T=T+1
+#   # #=rbind(A,temp)
+#   # }
+#   # t=t+2*K
+#   # }
+#
+#
+#
+#   # #t=t+K
+#   # }
+#   # T=T-1
+#   # A=A[(1:T),]
+#   # A=NULL
+#   v <- (dat[[target]] == target.class) - (dat[[target]] != target.class) * mean(dat[[target]] == target.class) / mean(dat[[target]] != target.class)
+#   if (weighted) {
+#     W <- weighted.repr(X, v)
+#     v <- W$yw
+#
+#     X <- W$Xw
+#   } else {
+#     W <- list(count = rep(1, dim(X)[1]))
+#   }
+#
+#   v <<- v
+#   m <- dim(X)[1]
+#   n <- dim(X)[2]
+#   print("building model...")
+#   if (small) {
+#     ans <- extent.opt(X, which(v > 0), v)
+#   } else {
+#     ans <- extent.opt(X, (1:m), v)
+#   }
+#   print("...done")
+#   # M=dim(A)[1]
+#   # ans$A=rbind(ans$A,A);ans$rhs=c(ans$rhs,rep(1,M));ans$sense=c(ans$sense,rep("<=",M))
+#   print(system.time(temp <- heuristic(X, v, nrep = nrep)))
+#   CUT <- ceiling(temp$objval)
+#   print(CUT)
+#
+#   T <- rep(0, n + m)
+#   T[(which(v > 0))] <- -W$count[which(v > 0)]
+#   # ans$A=rbind(ans$A,matrix(T,nrow=1))
+#   # ans$rhs=c(ans$rhs,-CUT)
+#   # ans$sense=c(ans$sense,"<=")
+#   ans$start <- c(temp$solution, PSI(temp$solution, context = X))
+#   ans$context <- X
+#   ans$NAMES <- conceptual.scaling.dim(XX)$NAMES
+#   # TEMP=heuristic.implications(X,v,NREP)
+#
+#   # ans$A=rbind(ans$A,TEMP$A);ans$rhs=c(ans$rhs,TEMP$rhs);ans$sense=c(ans$sense,TEMP$sense)
+#
+#   # ans$vtypes[which(ans$start>=0.5)]="B"
+#   # ans$vtypes=rep("B",length(ans$vtypes))
+#   return(ans)
+# }

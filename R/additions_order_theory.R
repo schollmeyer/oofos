@@ -63,7 +63,7 @@ compute_example_posets <- function(n) {
   powerset_order <- compute_incidence(gtools::permutations(2, n, repeats.allowed = TRUE) - 1)
   # interval_order
   upper <- (1:n)
-  lower <- upper - runif(n) * 4.01
+  lower <- upper - stats::runif(n) * 4.01
   interval_order <- array(0, c(n, n))
   for (k in (1:n)) {
     for (l in (1:n)) {
@@ -200,9 +200,9 @@ compute_relation_product <- function(x, y) {
 #' relation_mat_input[1, 3] <- 1
 #' relation_mat_input[2, 1] <- 1
 #' relation_mat_input[4, 3] <- 1
-#' compute_transitive_hull(relation_mat_input)
+#' oofos:::compute_transitive_hull(relation_mat_input)
 #'
-#' @export
+#'
 compute_transitive_hull <- function(relation_mat) {
   # @relation_mat (sqared matrix): represents a relation matrix
   # Return (squared matrix): the transitive hull of the relation matrix

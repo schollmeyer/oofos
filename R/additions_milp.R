@@ -1,3 +1,4 @@
+
 add_two_object_implications <- function(model, X, index1, index2) {
   m <- dim(X)[1]
   n <- dim(X)[2]
@@ -129,80 +130,80 @@ add_sos_constraints <- function(model, v_max) {
 }
 
 
-add_lazy_constraints <- function(model, v_max, lazy = 1, eps = 0) {
-  m <- dim(model$context)[1]
-  n <- dim(model$context)[2]
-  O <- optimistic_estimate_of_pairs(model$context, model$obj[(1:m)])
-  I <- (O <= v_max)
-
-  graph <- igraph::as(1 - I, "graphNEL")
-  coloring <- RBGL::sequential.vertex.coloring(graph)
-  K <- coloring[[1]]
-  t <- 1
-  A <- array(as.logical(0), c(K, m + n))
-  for (k in (1:K)) {
-    indexs <- which(coloring[[2]] == k - 1)
-    if (length(indexs) > 1) {
-      A[t, indexs + m] <- 1
-
-
-      t <- t + 1
-    }
-  }
-  t <- t - 1
-  model2 <- model
-  model2$A <- rbind(model2$A, A[(1:t), ])
-  model2$rhs <- c(model$rhs, rep(1 + eps, t))
-  model2$sense <- c(model2$sense, rep("<=", t))
-  model2$lazy <- c(rep(0, dim(model$A)[1]), rep(lazy, t))
-
-
-  return(model2)
-}
-
-
-
-
-optimistic_estimate_of_pairs2 <- function(X, v, timelimit) {
-  M <- extent.opt(X, which(v > 0), v)
-
-  m <- dim(X)[1]
-  n <- dim(X)[2]
-  i <- (v > 0)
-  indexs <- (1:m)
-  ans <- array(0, c(n, n))
-  for (k in (1:n)) {
-    print(k)
-
-    idx1 <- (X[, k] == 1)
-
-    for (l in (k:n)) {
-      MM <- M
-      MM$lb[k + m] <- 1
-      MM$lb[l + m] <- 1
-
-
-      ans[k, l] <- gurobi::gurobi(MM, list(presolve = 0, outputflag = 0, timelimit = timelimit)$objbound)
-      if (k != l) {
-        ans[l, k] <- ans[k, l]
-      }
-    }
-  }
-
-  return(ans)
-}
+# add_lazy_constraints <- function(model, v_max, lazy = 1, eps = 0) {
+#   m <- dim(model$context)[1]
+#   n <- dim(model$context)[2]
+#   O <- optimistic_estimate_of_pairs(model$context, model$obj[(1:m)])
+#   I <- (O <= v_max)
+#
+#   graph <- igraph::as(1 - I, "graphNEL")
+#   coloring <- RBGL::sequential.vertex.coloring(graph)
+#   K <- coloring[[1]]
+#   t <- 1
+#   A <- array(as.logical(0), c(K, m + n))
+#   for (k in (1:K)) {
+#     indexs <- which(coloring[[2]] == k - 1)
+#     if (length(indexs) > 1) {
+#       A[t, indexs + m] <- 1
+#
+#
+#       t <- t + 1
+#     }
+#   }
+#   t <- t - 1
+#   model2 <- model
+#   model2$A <- rbind(model2$A, A[(1:t), ])
+#   model2$rhs <- c(model$rhs, rep(1 + eps, t))
+#   model2$sense <- c(model2$sense, rep("<=", t))
+#   model2$lazy <- c(rep(0, dim(model$A)[1]), rep(lazy, t))
+#
+#
+#   return(model2)
+# }
 
 
 
 
+# optimistic_estimate_of_pairs2 <- function(X, v, timelimit) {
+#   M <- extent.opt(X, which(v > 0), v)
+#
+#   m <- dim(X)[1]
+#   n <- dim(X)[2]
+#   i <- (v > 0)
+#   indexs <- (1:m)
+#   ans <- array(0, c(n, n))
+#   for (k in (1:n)) {
+#     print(k)
+#
+#     idx1 <- (X[, k] == 1)
+#
+#     for (l in (k:n)) {
+#       MM <- M
+#       MM$lb[k + m] <- 1
+#       MM$lb[l + m] <- 1
+#
+#
+#       ans[k, l] <- gurobi::gurobi(MM, list(presolve = 0, outputflag = 0, timelimit = timelimit)$objbound)
+#       if (k != l) {
+#         ans[l, k] <- ans[k, l]
+#       }
+#     }
+#   }
+#
+#   return(ans)
+# }
 
-extent_opt_feasible <- function(X, gen.index, v, binary.variables = "afap", C, add.sos.constraints) {
-  temp <- extent.opt(X = X, gen.index = gen.index, v = v, binary.variables = binary.variables)
-  if (add_sos_constraints) {
-    temp <- add_sos_constraints(temp, C)
-  }
-  temp$A <- rbind(temp$A, matrix(temp$obj, nrow = 1))
-  temp$sense <- c(temp$sense, ">=")
-  temp$rhs <- c(temp$rhs, C)
-  return(temp)
-}
+
+
+
+
+# extent_opt_feasible <- function(X, gen.index, v, binary.variables = "afap", C, add.sos.constraints) {
+#   temp <- extent.opt(X = X, gen.index = gen.index, v = v, binary.variables = binary.variables)
+#   if (add_sos_constraints) {
+#     temp <- add_sos_constraints(temp, C)
+#   }
+#   temp$A <- rbind(temp$A, matrix(temp$obj, nrow = 1))
+#   temp$sense <- c(temp$sense, ">=")
+#   temp$rhs <- c(temp$rhs, C)
+#   return(temp)
+# }
