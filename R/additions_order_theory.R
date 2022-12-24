@@ -59,8 +59,12 @@ compute_example_posets <- function(n) {
   # literature: David Kelly: On the dimension of partially ordered sets.
   # Discrete Mathematics 35 (1981) 135-156
 
-  two_dimensional_grid <- compute_incidence(gtools::permutations(n, 2, repeats.allowed = TRUE))
-  powerset_order <- compute_incidence(gtools::permutations(2, n, repeats.allowed = TRUE) - 1)
+  two_dimensional_grid <- compute_incidence(gtools::permutations(n, 2,
+    repeats.allowed = TRUE
+  ))
+  powerset_order <- compute_incidence(gtools::permutations(2, n,
+    repeats.allowed = TRUE
+  ) - 1)
   # interval_order
   upper <- (1:n)
   lower <- upper - stats::runif(n) * 4.01
@@ -74,12 +78,18 @@ compute_example_posets <- function(n) {
 
   return(list(
     chain = chain, antichain = antichain,
-    maximum_edge_poset = maximum_edge_poset, kellys_poset = kellys_poset, two_dimensional_grid = two_dimensional_grid, powerset_order = powerset_order, interval_order = interval_order
+    maximum_edge_poset = maximum_edge_poset, kellys_poset = kellys_poset,
+    two_dimensional_grid = two_dimensional_grid,
+    powerset_order = powerset_order, interval_order = interval_order
   ))
 }
 
 
-compute_incidence <- function(X) { ## erzeugt Inzidenzmatrix einer gegebenen Datentabelle (Zeilen entsprechen statistischen Einheiten und Spalten entsprechen Auspraegungen verschiedener Dimensionen. statistische Einheit x ist kleinergleich statistische Einheit y iff x_i <= y_i fuer jede Dimension i)
+compute_incidence <- function(X) {
+  # erzeugt Inzidenzmatrix einer gegebenen Datentabelle (Zeilen entsprechen
+  # statistischen Einheiten und Spalten entsprechen Auspraegungen verschiedener
+  # Dimensionen. statistische Einheit x ist kleinergleich statistische Einheit y
+  # iff x_i <= y_i fuer jede Dimension i)
   m <- dim(X)[1]
   ans <- matrix(FALSE, ncol = m, nrow = m)
   for (k in (1:m)) {
@@ -90,8 +100,8 @@ compute_incidence <- function(X) { ## erzeugt Inzidenzmatrix einer gegebenen Dat
   return(ans)
 }
 
-# TODO MILP version von width plus beides geneinander testen. Achtung: bei nicht-posets kann
-# ergebnis unterschiedlich sein.
+# TODO MILP version von width plus beides geneinander testen. Achtung: bei
+# nicht-posets kann ergebnis unterschiedlich sein.
 
 # TODO :? principalfilter VC dim (ist bei distrib verb identisch zu odim,...)
 
@@ -136,7 +146,10 @@ compute_width <- function(incidence) {
   incidence <<- incidence
 
   diag(incidence) <- 0
-  graph_incidence <- rbind(cbind(0 * incidence, incidence), cbind(0 * incidence, 0 * incidence))
+  graph_incidence <- rbind(
+    cbind(0 * incidence, incidence),
+    cbind(0 * incidence, 0 * incidence)
+  )
   graph <- igraph::graph_from_adjacency_matrix(graph_incidence)
   igraph::V(graph)$type <- c(rep(FALSE, n_rows), rep(TRUE, n_rows))
   ans <- igraph::max_bipartite_match(graph)
@@ -201,7 +214,6 @@ compute_relation_product <- function(x, y) {
 #' relation_mat_input[2, 1] <- 1
 #' relation_mat_input[4, 3] <- 1
 #' oofos:::compute_transitive_hull(relation_mat_input)
-#'
 #'
 compute_transitive_hull <- function(relation_mat) {
   # @relation_mat (sqared matrix): represents a relation matrix

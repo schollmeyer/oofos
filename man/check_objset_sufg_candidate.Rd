@@ -21,8 +21,8 @@ otherwise it is FALSE. The entry set is the set to which 'subset' can be
 enlarged, given as a 0-1-vector.
 }
 \description{
-'check_objset_sufg_candidate' checks if a given set of objects is
-extendable to a ufg-premise of size s.
+'check_objset_sufg_candidate' checks if a given set of objects
+is extendable to a ufg-premise of size s.
 If one wants to check if a given set'subset' is itself an ufg-premise, then
 one can simply set s=|subset|.
 Note that we assume here that the underlying context 'context' represents the
@@ -53,8 +53,8 @@ fc$implications
 # aus der kanonischen Implikationsbasis ist die ufg Basis schwer abzuleiten,
 # einfacher ist es, denn Begriffsverband anzuschauen. Z.b. ist es einfach
 # abzulesen, dass {A1,A6,A10} -> {A1,A2,.., A10}
-# gilt, da das Infimum von A1,A6,A10 das kleinste Elemente ist und damit unter
-# Gegenstaenden liegt (ACHTUNG: Im Bild wird der Verband von t(context)
+# gilt, da das Infimum von A1,A6,A10 das kleinste Elemente ist und damit
+# unter Gegenstaenden liegt (ACHTUNG: Im Bild wird der Verband von t(context)
 # und nicht context berechnet (dann werden im plot die Begriffe mit den
 # entrechenden Gegenstaenden A1,...A10 bezeichnet und man kann die
 # Gegenstandsimplikationen einfach ablesen.

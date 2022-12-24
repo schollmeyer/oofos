@@ -245,7 +245,7 @@ compute_objective <- function(dat, target, target_class, weights = rep(1, length
   }
   i <- which(dat[[target]] == target_class)
   v <- rep(0, length(dat[[target]]))
-  print(length(v))
+
   v[i] <- weights[i] / sum(weights[i])
   v[-i] <- -weights[-i] / sum(weights[-i])
 
@@ -260,15 +260,15 @@ compute_objective <- function(dat, target, target_class, weights = rep(1, length
 ###
 #  subgroup discovery
 
-quality <- function(sdtask, result, NAMES = colnames(sdtask$context)) { ## berechnet Piatetsky-Shapiro-Qualitätsfunktion für bereits geloestes Model (Variable result). Variable sdtask ist erzeugtes Modell aus Funktion subgroup.discovery.fca.milp
-  m <- sdtask$m
+compute_quality <- function(sdtask, result, NAMES = colnames(sdtask$context)) { ## berechnet Piatetsky-Shapiro-Qualitätsfunktion für bereits geloestes Model (Variable result). Variable sdtask ist erzeugtes Modell aus Funktion subgroup.discovery.fca.milp
+  m <- sdtask$n_rows
 
-  idx <- which(result$x[(1:m)] > 0.5)
-  jdx <- which(result$x[-(1:m)] > 0.5)
-  n0 <- length(which(sdtask$obj[(1:m)] > 0))
+  idx <- which(result$x[seq_len(sdtask$n_rows)] > 0.5)
+  jdx <- which(result$x[-(1:sdtask$n_rows)] > 0.5)
+  n0 <- length(which(sdtask$obj[seq_len(sdtask$n_rows)] > 0))
   n <- length(idx)
-  p <- length(which(sdtask$obj[(1:m)] > 0 & result$x[(1:m)] > 0.5)) / n
-  p0 <- length(which(sdtask$obj > 0)) / m
+  p <- length(which(sdtask$obj[seq_len(sdtask$n_rows)] > 0 & result$x[seq_len(sdtask$n_rows)] > 0.5)) / n
+  p0 <- length(which(sdtask$obj > 0)) / sdtask$n_rows
   rho <- sqrt(n / m) * (p - p0) / sqrt((1 - n / m) * p0 * (1 - p0))
   return(list(n = n, n0 = n0, p = p, p0 = p0, ps = n * (p - p0), rho = rho, obj = result$objval, argmax = NAMES[jdx]))
 }

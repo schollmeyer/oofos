@@ -43,9 +43,12 @@
 #' can be obtained from the model with '$x'. This vector is a 0-1 vector of
 #' length number_objects + number_attributes which represents the objects
 #' concatenated with the attributes.
-#' @examples \dontrun{ context <- ddandrda::compute_all_partial_orders(4,list=FALSE,
-#'  complemented=TRUE)
-#'  model <- compute_extent_vc_dimension(context)
+#' @examples \dontrun{
+#' context <- ddandrda::compute_all_partial_orders(4,
+#'   list = FALSE,
+#'   complemented = TRUE
+#' )
+#' model <- compute_extent_vc_dimension(context)
 #' vc_dimension <- gurobi::gurobi(model)$objval
 #' vc_dimension
 #' # [1] 12  This fits to VC dimension = m(m-1) with m the number of items
@@ -56,7 +59,7 @@
 #' # NOTE: We only proved ufg dimension <= m(m-1)/2 but the proof for equality
 #' # seems to be simple? ... TODO !
 #'
-#' ufg_premise <- which(gurobi::gurobi(ufg_model)$x[seq_len(nrow(context))]==1)
+#' ufg_premise <- which(gurobi::gurobi(ufg_model)$x[seq_len(nrow(context))] == 1)
 #' ufg_premise
 #' # [1]   2  35  41  99 120 168 partial orders 2,35,41,99,120 and 168 build a
 #' # ufg premise of maximal cardinality (thus, here the ufg dimension is 6)
@@ -236,8 +239,8 @@ compute_extent_vc_dimension <- function(context, additional_constraint = TRUE) {
 #' Check if subset is enlargable to a sufg premise of size s
 #'
 #'
-#' @description 'check_objset_sufg_candidate' checks if a given set of objects is
-#' extendable to a ufg-premise of size s.
+#' @description 'check_objset_sufg_candidate' checks if a given set of objects
+#' is extendable to a ufg-premise of size s.
 #' If one wants to check if a given set'subset' is itself an ufg-premise, then
 #' one can simply set s=|subset|.
 #' Note that we assume here that the underlying context 'context' represents the
@@ -282,8 +285,8 @@ compute_extent_vc_dimension <- function(context, additional_constraint = TRUE) {
 #' # aus der kanonischen Implikationsbasis ist die ufg Basis schwer abzuleiten,
 #' # einfacher ist es, denn Begriffsverband anzuschauen. Z.b. ist es einfach
 #' # abzulesen, dass {A1,A6,A10} -> {A1,A2,.., A10}
-#' # gilt, da das Infimum von A1,A6,A10 das kleinste Elemente ist und damit unter
-#' # Gegenstaenden liegt (ACHTUNG: Im Bild wird der Verband von t(context)
+#' # gilt, da das Infimum von A1,A6,A10 das kleinste Elemente ist und damit
+#' # unter Gegenstaenden liegt (ACHTUNG: Im Bild wird der Verband von t(context)
 #' # und nicht context berechnet (dann werden im plot die Begriffe mit den
 #' # entrechenden Gegenstaenden A1,...A10 bezeichnet und man kann die
 #' # Gegenstandsimplikationen einfach ablesen.

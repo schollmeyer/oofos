@@ -24,6 +24,25 @@ test_that("compute_extent_vc_dimension works", {
 
 })
 
+test_that("ad_ufg_contraints works", {
+  example_posets <- compute_example_posets(8)
+  context <- NULL
+  for(k in seq_len(length(example_posets))){
+    temp <- example_posets[[k]]
+    if(nrow(temp)==8 & ncol(temp)==8){
+      context <- rbind(context, c(as.vector(temp), 1-as.vector(temp)))
+    }
+  }
+    model <- compute_extent_vc_dimension(context)
+    result_1 <- gurobi::gurobi(model)$objval
+    model_2 <- add_ufg_constraints(model)
+    result_2 <- gurobi::gurobi(model_2)$objval
+    expect_equal(result_1 >= result_2,TRUE)
+
+
+
+})
+
 
 
 test_that("check_objset_sufg_candidate works", {

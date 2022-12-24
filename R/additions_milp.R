@@ -43,18 +43,25 @@ add_two_object_implications <- function(model, X, index1, index2) {
 }
 
 
-add_two_attribute_implications <- function(model, X) {
-  m <- dim(X)[1]
-  n <- dim(X)[2]
+add_two_attribute_implications <- function(model) {
+  m <- dim(model$context)[1]
+  n <- dim(model$context)[2]
   t <- 1
 
   ans <- array(0, c(choose(n, 2), m + n))
   for (k in (1:(n - 1))) {
-    idx1 <- (X[, k] == 1)
+    idx1 <- (model$context[, k] == 1)
 
     for (l in ((k + 1):n)) {
-      idx2 <- (X[, l] == 1)
-      i <- which(colSums(X[idx1 & idx2, ]) == sum(idx1 & idx2))
+      idx2 <- (model$context[, l] == 1)
+      #print(idx1)
+      #print(idx2)
+      idx <- idx1 & idx2
+      #print(sum(idx))
+      temp <- model$context[idx, ]
+      dim(temp) <- c(sum(idx),n)
+      #print(dim(temp))
+      i <- which(colSums(temp) == sum(idx1 & idx2)) #model$context[idx1 & idx2, ]
 
       if (length(i) > 2) {
         ans[t, i + m] <- -1 / (length(i) - 2)

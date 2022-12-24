@@ -12,12 +12,12 @@ test_that("add_two_object_implications  works", {
 
 test_that("add_two_attribute_implications  works", {
   n_obj <- 30
-  context <- compute_random_context(n_obj,7,p=0.5,seed=NULL)
-  objective <- runif(n_obj)-0.5
-  model <- optimize_on_context_extents(context,(1:n_obj),objective)
+  context <- compute_example_contexts()$chords#compute_random_context(n_obj,7,p=0.5,seed=NULL)
+  objective <- runif(nrow(context))-0.5
+  model <- optimize_on_context_extents(context,seq_len(nrow(context)),objective)
   result_1 <- gurobi::gurobi(model,list(outputflag=0))$objval
-  #model_2 <- add_two_attribute_implications(model,context)
-  #result_2 <- gurobi::gurobi(model_2,list(outputflag=0))$objval
+  model_2 <- add_two_attribute_implications(model)
+  result_2 <- gurobi::gurobi(model_2,list(outputflag=0))$objval
   # TODO
   result_2 <- result_1
   expect_equal(result_1,result_2)

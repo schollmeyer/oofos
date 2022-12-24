@@ -24,5 +24,4 @@ relation_mat_input[2, 1] <- 1
 relation_mat_input[4, 3] <- 1
 oofos:::compute_transitive_hull(relation_mat_input)
 
-
 }

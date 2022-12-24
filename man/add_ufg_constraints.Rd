@@ -37,9 +37,12 @@ further distinguishing attribute for the envisaged ufg premise, cf., the
 notes in the ISPITA paper
 }
 \examples{
-\dontrun{ context <- ddandrda::compute_all_partial_orders(4,list=FALSE,
- complemented=TRUE)
- model <- compute_extent_vc_dimension(context)
+\dontrun{
+context <- ddandrda::compute_all_partial_orders(4,
+  list = FALSE,
+  complemented = TRUE
+)
+model <- compute_extent_vc_dimension(context)
 vc_dimension <- gurobi::gurobi(model)$objval
 vc_dimension
 # [1] 12  This fits to VC dimension = m(m-1) with m the number of items
@@ -50,7 +53,7 @@ ufg_upper_bound
 # NOTE: We only proved ufg dimension <= m(m-1)/2 but the proof for equality
 # seems to be simple? ... TODO !
 
-ufg_premise <- which(gurobi::gurobi(ufg_model)$x[seq_len(nrow(context))]==1)
+ufg_premise <- which(gurobi::gurobi(ufg_model)$x[seq_len(nrow(context))] == 1)
 ufg_premise
 # [1]   2  35  41  99 120 168 partial orders 2,35,41,99,120 and 168 build a
 # ufg premise of maximal cardinality (thus, here the ufg dimension is 6)
