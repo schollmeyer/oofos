@@ -3,7 +3,7 @@
 \name{compute_extent_vc_dimension}
 \alias{compute_extent_vc_dimension}
 \title{Computes a MILP model for the computation of the VC-dimension of a formal
-contetx}
+context.}
 \usage{
 compute_extent_vc_dimension(context, additional_constraint = TRUE)
 }
@@ -14,17 +14,28 @@ compute_extent_vc_dimension(context, additional_constraint = TRUE)
 formulation for computing th VC dimension. If set to 'TRUE' then it is
 explicitly demanded that the number of the objects and the number of the
 attributes that are involved in the maximum contranominal scale (which is
-directlyconnected to a shatterable subset of maximal cardinality, cf., TODO
+directly connected to a shatterable subset of maximal cardinality, cf., TODO
 ) are identical.}
 }
 \value{
 a MILP model that can be optimized with 'gurobi(.)'. The VC dimension
 is then given bei the maximum value ('$objval') of the optimized model.
+The contranominal scale that represents the shatterable set of maximal
+cardinality can be obtained from the model with '$x'. This vector is a 0-1
+vector of length number_objects + number_attributes which represents
+the objects concatenated with the attributes.
 }
 \description{
 'compute_extent_vc_dimension' builds a MILP model for the
 computation of the Vapnik-Chervonenkis dimension of the family of all extents
-of the concept lattice of a formal context.
+of the concept lattice of a formal context. The variables of the MILP model
+are a 0-1 vector of length number_objects + number_attributes. The first
+'number_objects' variables model the objects (variable x_i is 1 if object
+i is in the contranominal scale that represents the shatterable set of
+maximal cardinality) and the last 'number_attributes ' variables represent
+the attributes (variable x_{j+number_objects} is 1 if attribute j is in the
+contranominal scale that represents the shatterable set of maximal
+cardinality).
 }
 \examples{
 

@@ -36,10 +36,16 @@
 #'
 #' @return a model that can be optimized with 'gurobi(.)'. the optimal value of
 #' the optimized model will then be an upper bound for the ufg dimension.
-#' Conjecture: this is not only an upper bound but the exact ufg dimension (i.e.)
+#' Conjecture: this is not only an upper bound but the exact ufg dimension
+#'
+#' The contranominal scale that represents the shatterable set of maximal
+#' cardinality, that is possibly also an ufg premise - attribute pair,
+#' can be obtained from the model with '$x'. This vector is a 0-1 vector of
+#' length number_objects + number_attributes which represents the objects
+#' concatenated with the attributes.
 #' @examples \dontrun{ context <- ddandrda::compute_all_partial_orders(4,list=FALSE,
-#' complemented=TRUE)
-#' model <- compute_extent_vc_dimension(context)
+#'  complemented=TRUE)
+#'  model <- compute_extent_vc_dimension(context)
 #' vc_dimension <- gurobi::gurobi(model)$objval
 #' vc_dimension
 #' # [1] 12  This fits to VC dimension = m(m-1) with m the number of items
@@ -49,6 +55,11 @@
 #' # [1] 6  Fits to ufg dimension = m(m-1)/2 with m the number of items
 #' # NOTE: We only proved ufg dimension <= m(m-1)/2 but the proof for equality
 #' # seems to be simple? ... TODO !
+#'
+#' ufg_premise <- which(gurobi::gurobi(ufg_model)$x[seq_len(nrow(context))]==1)
+#' ufg_premise
+#' # [1]   2  35  41  99 120 168 partial orders 2,35,41,99,120 and 168 build a
+#' # ufg premise of maximal cardinality (thus, here the ufg dimension is 6)
 #' }
 #' @export
 add_ufg_constraints <- function(model) {
@@ -83,11 +94,18 @@ add_ufg_constraints <- function(model) {
 
 
 #' Computes a MILP model for the computation of the VC-dimension of a formal
-#' contetx
+#' context.
 #'
 #' @description 'compute_extent_vc_dimension' builds a MILP model for the
 #' computation of the Vapnik-Chervonenkis dimension of the family of all extents
-#' of the concept lattice of a formal context.
+#' of the concept lattice of a formal context. The variables of the MILP model
+#' are a 0-1 vector of length number_objects + number_attributes. The first
+#' 'number_objects' variables model the objects (variable x_i is 1 if object
+#' i is in the contranominal scale that represents the shatterable set of
+#' maximal cardinality) and the last 'number_attributes ' variables represent
+#' the attributes (variable x_{j+number_objects} is 1 if attribute j is in the
+#' contranominal scale that represents the shatterable set of maximal
+#' cardinality).
 #'
 #' @param context is the underlying formal context.
 #'
@@ -95,11 +113,15 @@ add_ufg_constraints <- function(model) {
 #' formulation for computing th VC dimension. If set to 'TRUE' then it is
 #' explicitly demanded that the number of the objects and the number of the
 #' attributes that are involved in the maximum contranominal scale (which is
-#' directlyconnected to a shatterable subset of maximal cardinality, cf., TODO
+#' directly connected to a shatterable subset of maximal cardinality, cf., TODO
 #' ) are identical.
 #'
 #' @return a MILP model that can be optimized with 'gurobi(.)'. The VC dimension
 #' is then given bei the maximum value ('$objval') of the optimized model.
+#' The contranominal scale that represents the shatterable set of maximal
+#' cardinality can be obtained from the model with '$x'. This vector is a 0-1
+#' vector of length number_objects + number_attributes which represents
+#' the objects concatenated with the attributes.
 #'
 #'
 #' @examples
