@@ -173,14 +173,34 @@ cut_incidence <- function(incidence, width, interval = stats::quantile(
 }
 
 
-
-
-
-
-
-
-starshaped_subgroup_discovery <- function(stylized_betweenness, objective,
-                                          local_vc_dim,
+#' Perform a starshaped subgroup discovery
+#'
+#' @description 'discover_starshaped_subgroups' performs a starshaped subgroup
+#' discovery, see Schollmeyer et al. 2023. An objective function (e.g., the
+#' Shapiro- Piatetsky quality function) is maximized over the family of all
+#' subgroups that are starshaped w.r.t. a 'fuzzy' betweennes relation
+#'
+#' TODO : explain VC trimming...
+#'
+#' @param stylized_betweenness is the fuzzy betweennness relation.
+#'
+#' @param objective is the (linear) objective function to optimize given as an
+#' objective vector of the same length as the number of objects.
+#'
+#' @param local_vc_dimension Is the local VC dimension: Given a centerpoint
+#' c, the VC dimension of the subfamily of all starshaped sets with centerpoint
+#' c is controlled with this parameter. If local_vc_dimension is set to Inf,
+#' then the complexity of the family of all starshaped sets is not reduced at
+#' all.
+#'
+#' @param params is a list with further arguments that are passed to the gurobi
+#' optimizer. By default the outputflag of the gurobi solver is set to 0 (this
+#' means that not optimization details are printed during the optimization).
+#'
+#' @return a list with the following entries: TODO
+#' @export
+discover_starshaped_subgroups <- function(stylized_betweenness, objective,
+                                          local_vc_dimension,
                                           params = list(Outputflag = 0)) {
   if (dim(stylized_betweenness)[1] != dim(stylized_betweenness)[2] |
     dim(stylized_betweenness)[1] != dim(stylized_betweenness)[3] |
@@ -200,11 +220,11 @@ starshaped_subgroup_discovery <- function(stylized_betweenness, objective,
   for (k in (1:n_rows)) { ## quantify over all starcenters
 
 
-    if (local_vc_dim == Inf) {
+    if (local_vc_dimension == Inf) {
       incidence <- (stylized_betweenness[k, , ] >=
         max(stylized_betweenness[k, , ])) * 1
     } else {
-      incidence <- cut_incidence(stylized_betweenness[k, , ], local_vc_dim)
+      incidence <- cut_incidence(stylized_betweenness[k, , ], local_vc_dimension)
     }
 
 
@@ -230,11 +250,11 @@ starshaped_subgroup_discovery <- function(stylized_betweenness, objective,
 
 
 
-  if (local_vc_dim == Inf) {
+  if (local_vc_dimension == Inf) {
     incidence <- (stylized_betweenness[i, , ] >=
       max(stylized_betweenness[k, , ])) * 1
   } else {
-    incidence <- cut_incidence(stylized_betweenness[i, , ], local_vc_dim)
+    incidence <- cut_incidence(stylized_betweenness[i, , ], local_vc_dimension)
   }
 
 
@@ -291,32 +311,47 @@ compute_widths <- function(ternary_relation) {
 
 
 
-starshaped_subgroup_discovery_recompute <- function(models, objective) {
-  ans <- -Inf
-  for (k in (1:length(models))) {
-    model <- models[[k]]
+discover_starshaped_subgroups_recompute <- function(ssd_result, objective) {
+  result <- -Inf
+  for (k in seq_len(length(ssd_result$models))) {
+    model <- ssd_result$models[[k]]
     model$obj <- objective
-    ans <- max(ans, gurobi::gurobi(model, param = list(outputflag = 0))$objval)
+    result <- max(result, gurobi::gurobi(model, param = list(outputflag = 0))$objval)
   }
 
-  return(ans)
+  return(result)
 }
 
 
-starshaped_subgroup_discovery_h0 <- function(models, params =
+discover_starshaped_subgroups_h0 <- function(ssd_result, params =
                                                list(outputflag = 0)) {
-  v <- sample(models[[1]]$obj)
+  v <- sample(ssd_result$models[[1]]$obj)
 
-  ans <- -Inf
-  for (k in (1:length(models))) {
-    model <- models[[k]]
+  result <- -Inf
+  for (k in seq_len(length(ssd_result$models))) {
+    model <- ssd_result$models[[k]]
     model$obj <- v
-    ans <- max(ans, gurobi::gurobi(model, params = params)$objval)
+    result <- max(result, gurobi::gurobi(model, params = params)$objval)
   }
 
-  return(ans)
+  return(result)
 }
 
+#' @export
+compute_starshaped_distr_test <- function(ssd_result, n_rep=1000,
+                                          plot_progress=TRUE){
+  objvalues <- rep(0,n_rep)
+  for(k in seq_len(n_rep)){
+    objvalues[k] <-discover_starshaped_subgroups_h0(ssd_result)
+    p_value <- mean(objvalues[seq_len(k)] <= ssd_result$objval)
+    if(plot_progress==TRUE & k > 2){
+      plot(ecdf(objvalues[seq_len(k)]), main=p_value,verticals=TRUE)
+      abline(v=p_value)
+
+    }
+  }
+
+}
 
 
 get_model_from_quasiorder <- function(quasiorder) {
