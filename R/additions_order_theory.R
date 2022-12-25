@@ -1,11 +1,22 @@
 
+compute_maximal_elements <- function(relation_mat) {
+  mat <- relation_mat
+  diag(mat) <- 1
+  mask <- !duplicated(mat)&!duplicated(t(mat))
+  index <- which(mask)
+  mat <- mat[index,index]
+  diag(mat) <- 0
+  return(index[which(rowSums(mat)==0)])
+}
+
 compute_cover_relation <- function(incidence) {
   # computes the cover relation of a poset
   # If the relation incidence is transitive and antysmmetric bot not reflexive,
   # then the cover relation of the reflexive hull of incidence is computed.
   diag(incidence) <- 1
   n_rows <- nrow(incidence)
-  incidence <- as.logical(incidence - compute_relation_product(incidence - diag(rep(1, n_rows)), incidence - diag(rep(1, n_rows))))
+  incidence <- as.logical(incidence - compute_relation_product(
+    incidence - diag(rep(1, n_rows)), incidence - diag(rep(1, n_rows))))
   dim(incidence) <- c(n_rows, n_rows)
   diag(incidence) <- 0
   return(incidence)
@@ -13,15 +24,17 @@ compute_cover_relation <- function(incidence) {
 
 compute_cover_ordered_quoset <- function(incidence) {
   # helper function that computes a cover relation of a quasiordered set
-  # where the incidence matrix has to be already ordered in increasing columnsums
-  # This function is used by the function 'compute_pseudoreduction'
+  # where the incidence matrix has to be already ordered in increasing
+  # columnsums. This function is used by the function 'compute_pseudoreduction'
   incidence_1 <- incidence * lower.tri(incidence)
   incidence_2 <- incidence * upper.tri(incidence)
-  result <- pmax(compute_cover_relation(incidence_1), compute_cover_relation(incidence_2))
+  result <- pmax(compute_cover_relation(incidence_1),
+                 compute_cover_relation(incidence_2))
   return(result)
 }
 
-
+# TODO : checken ob das nicht doch eine MINIMALE /ECHTE transitive reduktion
+# ist
 compute_pseudoreduction <- function(incidence) {
   # computes a transitive pseudoreduction of an arbitrary homogeneous
   # relation (result is not necessarly minimal w.r.t. set inclusion and
@@ -157,7 +170,19 @@ compute_width <- function(incidence) {
 }
 
 
-
+compute_width_milp <- function(incidence){
+  n_rows <- nrow(incidence)
+  diag(incidence) <- 0
+  model <- list(A=array(0,c(n_rows,n_rows)), rhs=rep(1,n_rows),
+                sense=rep("<=",n_rows),vtypes=rep("B",n_rows),
+                obj=rep(1,n_rows),modelsense="max")
+  for(k in seq_len(n_rows)){
+    model$A[k,which(incidence[k,]==1)]=1
+    model$A[k,k] <- sum(incidence[k,])
+    model$rhs[k] <- sum(incidence[k,])
+  }
+  result <- gurobi::gurobi(model,list(outputflag=0))
+return(list(width=result$objval,antichain=result$x))}
 
 
 

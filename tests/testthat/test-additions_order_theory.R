@@ -7,6 +7,19 @@ test_that("compute_width works", {
   expect_equal(compute_width(example_posets$powerset_order)$width, 70)
 })
 
+test_that("compute_width_milp works", {
+example_posets <- compute_example_posets(8)
+result_1 <- compute_width(example_posets[[6]])
+result_2 <- compute_width_milp(example_posets[[6]])
+expect_equal(result_1$width,result_2$width)
+result_1 <- compute_width(example_posets[[7]])
+result_2 <- compute_width_milp(example_posets[[7]])
+expect_equal(result_1$width,result_2$width)
+result_1 <- compute_width(example_posets[[5]])
+result_2 <- compute_width_milp(example_posets[[5]])
+expect_equal(result_1$width,result_2$width)
+
+})
 
 test_that("compute_pseudoreduction works", {
   for (n in c(5, 10, 15, 20)) {

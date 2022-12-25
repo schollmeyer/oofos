@@ -1,61 +1,64 @@
 ##########################################
-########			     	              ########
-#######						                 #######
+######## 			     	              ########
+####### 						                 #######
 ######     starshaped sets          ######
 #######                            #######
-########				                  ########
+######## 				                  ########
 ##########################################
 
-get_random_ternary_relation <- function(n,prob,reflexive=FALSE,transitive=FALSE){
-
-  result <- (stats::runif(n^3)>=prob)*1
-  dim(result) <- rep(n,3)
-  for(k in (1:n)){
-   if(reflexive){diag(result[k,,])=1}
-    if(transitive){result[k,,] <- compute_transitive_hull(result[k,,])}
+get_random_ternary_relation <- function(n, prob, reflexive = FALSE, transitive = FALSE) {
+  result <- (stats::runif(n^3) >= prob) * 1
+  dim(result) <- rep(n, 3)
+  for (k in (1:n)) {
+    if (reflexive) {
+      diag(result[k, , ]) <- 1
+    }
+    if (transitive) {
+      result[k, , ] <- compute_transitive_hull(result[k, , ])
+    }
   }
   return(result)
-
 }
 
-get_betweenness_from_p_order <- function(p_order){
+get_betweenness_from_p_order <- function(p_order) {
   n_rows <- nrow(p_order)
-  result <- array(0,c(rep(n_rows,3)))
-  for(k in seq_len(n_rows)){
-    for(l in seq_len(n_rows)){
-      for(m in seq_len(n_rows)){
-        result[k,l,m] <- (p_order[k,l] & p_order[l,m]) |
-                          (p_order[m,l] & p_order[l,k])
+  result <- array(0, c(rep(n_rows, 3)))
+  for (k in seq_len(n_rows)) {
+    for (l in seq_len(n_rows)) {
+      for (m in seq_len(n_rows)) {
+        result[k, l, m] <- (p_order[k, l] & p_order[l, m]) |
+          (p_order[m, l] & p_order[l, k])
       }
     }
   }
-return(result)
-
+  return(result)
 }
 
-#compute_examples_starhaped_bet
-check_if_starshaped <- function(set, ternary_relation){
-  if(all(set==0)){return(FALSE)}
-  n_rows <- nrow(ternary_relation)
-  for(k in which(set==1)){
-
-    if(check_if_center_point(k,set,ternary_relation)){return(TRUE)}
+# compute_examples_starhaped_bet
+check_if_starshaped <- function(set, ternary_relation) {
+  if (all(set == 0)) {
+    return(FALSE)
   }
-return(FALSE)}
-
-check_if_center_point <- function(point, set,ternary_relation){
   n_rows <- nrow(ternary_relation)
-  for(k in which(set==1)){
+  for (k in which(set == 1)) {
+    if (check_if_center_point(k, set, ternary_relation)) {
+      return(TRUE)
+    }
+  }
+  return(FALSE)
+}
 
-    indexs <- which(ternary_relation[point,,k]==1)
+check_if_center_point <- function(point, set, ternary_relation) {
+  n_rows <- nrow(ternary_relation)
+  for (k in which(set == 1)) {
+    indexs <- which(ternary_relation[point, , k] == 1)
 
-    if(any(set[indexs]==0)){return(FALSE)}
-
+    if (any(set[indexs] == 0)) {
+      return(FALSE)
+    }
   }
 
   return(TRUE)
-
-
 }
 
 #' Compute the canoncical (stylized) betweennes relation between objects of a formal context
@@ -90,33 +93,36 @@ check_if_center_point <- function(point, set,ternary_relation){
 #' n x n x n where n is the number of rows of the context. Higher values
 #' of an entry correspond to a larger degree of betweenness.
 #' @export
-compute_stylized_betweenness <- function(g,h,i,context, attribute_weights=colMeans(context)){
-
-  common_attributes <- which(g==1 & i==1)
-  if(length(common_attributes)==0){return(1)}
-  ans <- 1-max((1-h[common_attributes])*attribute_weights[common_attributes])
+compute_stylized_betweenness <- function(g, h, i, context, attribute_weights = colMeans(context)) {
+  common_attributes <- which(g == 1 & i == 1)
+  if (length(common_attributes) == 0) {
+    return(1)
+  }
+  ans <- 1 - max((1 - h[common_attributes]) * attribute_weights[common_attributes])
   return(ans)
-
 }
 
 get_whole_stylized_betweenness <- function(context,
                                            stylized_betweenness_function
-                                           =compute_stylized_betweenness,
-                                           ...){
+                                           = compute_stylized_betweenness,
+                                           ...) {
   n_rows <- nrow(context)
-  result <- array(0,rep(n_rows,3))
-  pb = utils::txtProgressBar(min = 0, max = n_rows, initial = 0)
-  for(k in (1:n_rows)){
-    utils::setTxtProgressBar(pb,k)
-    #if(print_progress){print(c("progress"))}
-    for(l in (1:n_rows)){
-      for(m in (1:n_rows)){
-        result[k,l,m] <- stylized_betweenness_function(context[k,],context[l,],context[m,],context, ...)
+  result <- array(0, rep(n_rows, 3))
+  pb <- utils::txtProgressBar(min = 0, max = n_rows, initial = 0)
+  for (k in (1:n_rows)) {
+    utils::setTxtProgressBar(pb, k)
+    # if(print_progress){print(c("progress"))}
+    for (l in (1:n_rows)) {
+      for (m in (1:n_rows)) {
+        result[k, l, m] <- stylized_betweenness_function(
+          context[k, ], context[l, ],
+          context[m, ], context, ...
+        )
       }
     }
   }
   close(pb)
-return(result)
+  return(result)
 }
 
 #' Compute the quotient order of a quasiorder
@@ -131,25 +137,40 @@ return(result)
 #' @return the incidence matrix of the quotient order
 #'
 #' @export
-compute_quotient_order <- function(incidence){
+compute_quotient_order <- function(incidence) {
   diag(incidence) <- 1
   incidence <- compute_transitive_hull(incidence)
-  index <- which(!duplicated(incidence)&!duplicated(t(incidence)))
-  result <- incidence[index,index]
-  dim(result) <- rep(length(index),2)
-return(result)}
+  index <- which(!duplicated(incidence) & !duplicated(t(incidence)))
+  result <- incidence[index, index]
+  dim(result) <- rep(length(index), 2)
+  return(result)
+}
 
 
 
 
 
-cut_incidence=function(incidence,width,interval=stats::quantile(unique(as.vector(incidence)),c(0,1))){
-  vc <- compute_width(compute_quotient_order(compute_transitive_hull(incidence >= interval[2])))$width
-  if(vc <= width){return(incidence >= interval[2])}
-  f <- function(C,incidence){ width_2 <-compute_width(compute_quotient_order(compute_transitive_hull(incidence >=C)))$width;return(width_2-width)}
+cut_incidence <- function(incidence, width, interval = stats::quantile(
+                            unique(as.vector(incidence)), c(0, 1)
+                          )) {
+  vc <- compute_width(compute_quotient_order(
+    compute_transitive_hull(incidence >= interval[2])
+  ))$width
+  if (vc <= width) {
+    return(incidence >= interval[2])
+  }
+  f <- function(C, incidence) {
+    width_2 <- compute_width(
+      compute_quotient_order(compute_transitive_hull(
+        incidence >= C
+      ))
+    )$width
+    return(width_2 - width)
+  }
 
-  ans <- stats::uniroot(f,interval=interval,incidence=incidence)
-return(compute_transitive_hull(incidence>=ans$root))}
+  ans <- stats::uniroot(f, interval = interval, incidence = incidence)
+  return(compute_transitive_hull(incidence >= ans$root))
+}
 
 
 
@@ -158,69 +179,94 @@ return(compute_transitive_hull(incidence>=ans$root))}
 
 
 
-starshaped_subgroup_discovery  <- function(stylized_betweenness,objective,local_vc_dim,params=list(Outputflag=0)){
-
-  if (dim(stylized_betweenness)[1] != dim(stylized_betweenness)[2] | dim(stylized_betweenness)[1] != dim(stylized_betweenness)[3] | dim(stylized_betweenness)[2] != dim(stylized_betweenness)[3]){print("dimension mismatch")}
-  m <- nrow(stylized_betweenness)
-  model <- list(modelsense="max",obj=objective,lb=rep(0,m),ub=rep(1,m))
+starshaped_subgroup_discovery <- function(stylized_betweenness, objective,
+                                          local_vc_dim,
+                                          params = list(Outputflag = 0)) {
+  if (dim(stylized_betweenness)[1] != dim(stylized_betweenness)[2] |
+    dim(stylized_betweenness)[1] != dim(stylized_betweenness)[3] |
+    dim(stylized_betweenness)[2] != dim(stylized_betweenness)[3]) {
+    print("dimension mismatch")
+  }
+  n_rows <- nrow(stylized_betweenness)
+  model <- list(
+    modelsense = "max", obj = objective, lb = rep(0, n_rows),
+    ub = rep(1, n_rows)
+  )
   solutions <- list()
-  objvals <- rep(0,m)
-  stars <- array(0,c(m,m))
+  objvals <- rep(0, n_rows)
+  stars <- array(0, c(n_rows, n_rows))
 
-  models=list()
-  for(k in (1:m)){  ## quantify over all starcenters
-
-
-    if (local_vc_dim == Inf) { incidence <- (stylized_betweenness[k,,] >= max(stylized_betweenness[k,,]))*1}
-    else{ incidence <- cut_incidence(stylized_betweenness[k,,],local_vc_dim) }
+  models <- list()
+  for (k in (1:n_rows)) { ## quantify over all starcenters
 
 
-    model <- model_from_qoset(t(incidence))
-    if(is.null(model)){model=list(A=matrix(0,nrow=1,ncol=m),rhs=1,sense="<=")}
+    if (local_vc_dim == Inf) {
+      incidence <- (stylized_betweenness[k, , ] >=
+        max(stylized_betweenness[k, , ])) * 1
+    } else {
+      incidence <- cut_incidence(stylized_betweenness[k, , ], local_vc_dim)
+    }
+
+
+    model <- get_model_from_quasiorder(t(incidence))
+    if (is.null(model)) {
+      model <- list(A = matrix(0, nrow = 1, ncol = n_rows), rhs = 1, sense = "<=")
+    }
     model$obj <- objective
-    model$lb <- rep(0,m)
-    model$ub <-rep(1,m)
+    model$lb <- rep(0, n_rows)
+    model$ub <- rep(1, n_rows)
     # force centerpoint to be in the set
     model$lb[k] <- 1
     model$modelsense <- "max"
 
-    b <- gurobi::gurobi(model,params=params)
+    b <- gurobi::gurobi(model, params = params)
     solutions[[k]] <- b
     objvals[k] <- b$objval
-    stars[k,] <- b$x
+    stars[k, ] <- b$x
 
-    models[[k]] =model
-
-
+    models[[k]] <- model
   }
   i <- which.max(objvals)
 
 
 
-  if (local_vc_dim == Inf) { incidence <- (stylized_betweenness[i,,] >= max(stylized_betweenness[k,,]))*1}
-  else{incidence <- cut_incidence(stylized_betweenness[i,,],local_vc_dim)}
+  if (local_vc_dim == Inf) {
+    incidence <- (stylized_betweenness[i, , ] >=
+      max(stylized_betweenness[k, , ])) * 1
+  } else {
+    incidence <- cut_incidence(stylized_betweenness[i, , ], local_vc_dim)
+  }
 
 
-  model <- model_from_qoset(t(incidence))
-  if(is.null(model)){model=list(A=matrix(0,nrow=1,ncol=m),rhs=1,sense="<=")}
+  model <- get_model_from_quasiorder(t(incidence))
+  if (is.null(model)) {
+    model <- list(A = matrix(0, nrow = 1, ncol = n_rows), rhs = 1, sense = "<=")
+  }
   model$obj <- objective
-  model$lb <- rep(0,m)
-  model$ub <-rep(1,m)
+  model$lb <- rep(0, n_rows)
+  model$ub <- rep(1, n_rows)
   # force centerpoint to be in the set
   model$lb[k] <- 1
   model$modelsense <- "max"
-  b <- gurobi::gurobi(model,params=params)
-return(list(models=models,obj=objective,solutions=solutions,objvals=objvals,stars=stars,objval=objvals[i],star=stars[i,],center_id =i,fuzzy_incidence=stylized_betweenness[i,,] , incidence = incidence,model=model) )}
+  b <- gurobi::gurobi(model, params = params)
+  return(list(
+    models = models, obj = objective, solutions = solutions,
+    objvals = objvals, stars = stars, objval = objvals[i],
+    star = stars[i, ], center_id = i,
+    fuzzy_incidence = stylized_betweenness[i, , ],
+    incidence = incidence, model = model
+  ))
+}
 
 
-compute_widths <- function(ternary_relation){
+compute_widths <- function(ternary_relation) {
   # TODO : Antiketten auch berechnen und ausgeben (Achtung mit Faktorisierung)
   n_rows <- nrow(ternary_relation)
-  result <- rep(0,n_rows)
-  for(k in seq_len(n_rows)){
-    result[k] <- compute_width(ternary_relation[k,,])$width
+  result <- rep(0, n_rows)
+  for (k in seq_len(n_rows)) {
+    result[k] <- compute_width(ternary_relation[k, , ])$width
   }
-return(list(widths=result))
+  return(list(widths = result))
 }
 
 # plot_stars <- function(starshaped_result,distance_function){
@@ -245,73 +291,83 @@ return(list(widths=result))
 
 
 
-starshaped_subgroup_discovery_recompute <- function(models,objective){
-
-
-
+starshaped_subgroup_discovery_recompute <- function(models, objective) {
   ans <- -Inf
-  for(k in (1: length(models))){
-    M <- models[[k]]
-    M$obj <- objective
-    ans <- max(ans,gurobi::gurobi(M,param=list(outputflag=0))$objval)
+  for (k in (1:length(models))) {
+    model <- models[[k]]
+    model$obj <- objective
+    ans <- max(ans, gurobi::gurobi(model, param = list(outputflag = 0))$objval)
   }
 
-  return(ans)}
+  return(ans)
+}
 
 
-starshaped_subgroup_discovery_h0 <- function(models,params=list(outputflag=0)){
-
+starshaped_subgroup_discovery_h0 <- function(models, params =
+                                               list(outputflag = 0)) {
   v <- sample(models[[1]]$obj)
 
   ans <- -Inf
-  for(k in (1: length(models))){
-    M <- models[[k]]
-    M$obj <- v
-    ans <- max(ans,gurobi::gurobi(M,params=params)$objval)
+  for (k in (1:length(models))) {
+    model <- models[[k]]
+    model$obj <- v
+    ans <- max(ans, gurobi::gurobi(model, params = params)$objval)
   }
 
-  return(ans)}
+  return(ans)
+}
 
 
 
-model_from_qoset <- function(Q){
+get_model_from_quasiorder <- function(quasiorder) {
+  # constructs linear program for the optimization over all upsets of
+  # a quasiordered set quasiorder
 
-  ## constructs linear program for the optimization over all upsets of a quasiordered set Q
-
-  QQ <- compute_pseudoreduction(Q)
-  m  <- sum(QQ)
-  n  <- dim(QQ)[1]
-  A  <- array(as.integer(0),c(m,n))
-  t  <- 1
-  sense <- rep("<=",m)
-  for(k in (1:(n-1))){
-    for(l in ((k+1):n)){
-      if(QQ[k,l]==1 &QQ[l,k]==0){
-        A[t,k]=1;A[t,l]=-1
-        t=t+1
+  reduction <- compute_pseudoreduction(quasiorder)
+  n_constraints <- sum(reduction)
+  n_rows <- dim(reduction)[1]
+  constr_mat <- array(as.integer(0), c(n_constraints, n_rows))
+  t <- 1
+  sense <- rep("<=", n_constraints)
+  for (k in (1:(n_rows - 1))) {
+    for (l in ((k + 1):n_rows)) {
+      if (reduction[k, l] == 1 & reduction[l, k] == 0) {
+        constr_mat[t, k] <- 1
+        constr_mat[t, l] <- -1
+        t <- t + 1
       }
 
-      if(QQ[k,l]==0 &QQ[l,k]==1){
-        A[t,k]=-1;A[t,l]=1
-        t=t+1
+      if (reduction[k, l] == 0 & reduction[l, k] == 1) {
+        constr_mat[t, k] <- -1
+        constr_mat[t, l] <- 1
+        t <- t + 1
       }
 
-      if(QQ[k,l]==1 &QQ[l,k]==1){
-        A[t,k]=1;A[t,l]=-1
-        sense[t]="="
-        t=t+1
+      if (reduction[k, l] == 1 & reduction[l, k] == 1) {
+        constr_mat[t, k] <- 1
+        constr_mat[t, l] <- -1
+        sense[t] <- "="
+        t <- t + 1
       }
     }
   }
-  t <- t-1
+  t <- t - 1
 
-  if(t==0){return(NULL)}
-  A <- A[(1:t),]
+  if (t == 0) {
+    return(NULL)
+  }
+  constr_mat <- constr_mat[(1:t), ]
 
-  if(t==1){dim(A)=c(1,length(A))}
+  if (t == 1) {
+    dim(constr_mat) <- c(1, length(constr_mat))
+  }
 
-  ans <- list(A=A,rhs=rep(0,t),sense=sense[(1:t)],lb=rep(0,n),ub=rep(1,n))
-  return(ans)}
+  ans <- list(
+    A = constr_mat, rhs = rep(0, t), sense = sense[(1:t)], lb = rep(0, n_rows),
+    ub = rep(1, n_rows)
+  )
+  return(ans)
+}
 
 
 
