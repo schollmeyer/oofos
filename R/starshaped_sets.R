@@ -343,14 +343,23 @@ compute_starshaped_distr_test <- function(ssd_result, n_rep=1000,
   objvalues <- rep(0,n_rep)
   for(k in seq_len(n_rep)){
     objvalues[k] <-discover_starshaped_subgroups_h0(ssd_result)
-    p_value <- mean(objvalues[seq_len(k)] <= ssd_result$objval)
+    x <- objvalues[seq_len(k)]
+    p_value <- mean(x >= ssd_result$objval)
     if(plot_progress==TRUE & k > 2){
-      plot(ecdf(objvalues[seq_len(k)]), main=p_value,verticals=TRUE)
-      abline(v=p_value)
+      plot(stats::ecdf(x),do.points=F,col.01line = NULL,
+           main=paste("observed value:",
+                      round(ssd_result$objval,4),
+                      "; p-palue:",round(p_value,4),"; n:", k),verticals=TRUE,
+           xlab="test statistic",xlim=c(min(c(x,ssd_result$objval)),max(c(x,ssd_result$objval))))
+      abline(v=ssd_result$objval)
+
+      f <- density(x)
+
+      lines(f$x,f$y/max(f$y),col="grey")
 
     }
   }
-
+return(list(objvalues=objvalues,p_value=p_value))
 }
 
 
