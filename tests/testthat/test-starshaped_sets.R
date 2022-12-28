@@ -1,5 +1,60 @@
+test_that("properties betweenness works", {
+  context <- compute_random_context(10,10)
+  context <- cbind(context,1-context)
+  context <- unique(context)
+  betweenness <- get_non_stylized_betweenness(context)
+  expect_equal(check_cond_antisymmetry(betweenness),TRUE)
+  expect_equal(check_conditional_reflexivity(betweenness),TRUE)
+  expect_equal(check_outer_symmetry(betweenness),TRUE)
+
+})
+
+test_that("get_stylized_btweenness works", {
+  context <- compute_random_context(10,8)
+  betweenness_1 <- get_whole_stylized_betweenness(context)
+  betweenness_2 <- get_stylized_betweenness(context)
+  betweenness_3 <- get_non_stylized_betweenness(context)
+  expect_equal(all(betweenness_1==betweenness_2),TRUE)
+  expect_equal(all(betweenness_3 == 1*(betweenness_1 >= 1)),TRUE)
+})
+
+test_that("fit_ks_distribution works", {
+x  <- rep(0,1000)
+
+for(k in seq_len(1000)){
+
+  x[k] <- (ks.test(rnorm(100),pnorm)$statistic)
+}
+suppressWarnings( result <- fit_ks_distribution(x,FALSE))
+
+expect_equal(result$value<=0.00001
+,TRUE)
+
+})
+
+test_that("compute_starshaped_distr_test works", {
+  betweenness <- get_betweenness_from_poset(compute_example_posets(6)$two_dimensional_grid)
+  n_rows <- nrow(betweenness)
+
+  objective <- sample(c(0,1),size=n_rows,replace=TRUE)
+  objective <- compute_objective(data.frame(objective), target="objective",
+                                 target_class=0)
+
+
+  discovery <- discover_starshaped_subgroups(betweenness,objective,local_vc_dimension=Inf)
+  test <- compute_starshaped_distr_test(discovery,n_rep=50)
+
+  expect_equal((abs(test$p_value-test$p_value_parametric)<=0.15),TRUE)
+
+
+
+})
+
+
+
+
 test_that("discover_starshaped_subgroups works", {
-  betweenness <- get_betweenness_from_p_order(
+  betweenness <- get_betweenness_from_poset(
     compute_example_posets(6)$two_dimensional_grid
   )
   objective <- stats::rnorm(nrow(betweenness))
@@ -7,6 +62,7 @@ test_that("discover_starshaped_subgroups works", {
   expect_equal(check_if_starshaped(result$star, betweenness), TRUE)
   result_2 <- discover_starshaped_subgroups(betweenness, objective, 8)
   result$objval > result_2$objval
+
 
   ternary_relation <- runif(20^3)
   dim(ternary_relation) <- rep(20, 3)
@@ -17,7 +73,7 @@ test_that("discover_starshaped_subgroups works", {
 
 
   n <- 3
-  betweenness <- get_betweenness_from_p_order(
+  betweenness <- get_betweenness_from_poset(
     compute_example_posets(n)$two_dimensional_grid
   )
   objective <- stats::rnorm(nrow(betweenness))

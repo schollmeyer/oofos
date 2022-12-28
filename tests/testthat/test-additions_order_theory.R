@@ -1,3 +1,10 @@
+test_that("compute_maximal_elements works", {
+
+  poset <- compute_example_posets(8)$kellys_poset
+  result <- compute_maximal_elements(poset)
+  expect_equal(all(result == (9:16)),TRUE)
+})
+
 test_that("compute_width works", {
   example_posets <- compute_example_posets(8)
   expect_equal(compute_width(example_posets$chain)$width, 1)

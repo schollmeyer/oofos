@@ -6,6 +6,34 @@
 ######## 				                  ########
 ##########################################
 
+check_outer_symmetry <- function(betweenness){
+  n_rows <- nrow(betweenness)
+  for(l in seq_len(n_rows)){
+    if(any( betweenness[,l,] != t(betweenness[,l,]))){return(FALSE)}
+  }
+return(TRUE)
+}
+
+check_cond_antisymmetry <- function(betweenness){
+  n_rows <- nrow(betweenness)
+  for(k in seq_len(n_rows)){
+    mat <-betweenness[k,,]
+    diag(mat) <-0
+    if(any(pmin(mat,t(mat))==1)){return(FALSE)}
+  }
+return(TRUE)
+}
+
+check_conditional_reflexivity <- function(betweenness){
+
+  n_rows <- nrow(betweenness)
+  for(k in seq_len(n_rows)){
+    if(any(diag(betweenness[k,,])==0) | any(diag(betweenness[k,,])==0) |
+       any(diag(betweenness[,,k])==0)){return(FALSE)}
+  }
+  return(TRUE)
+}
+
 get_random_ternary_relation <- function(n, prob, reflexive = FALSE, transitive = FALSE) {
   result <- (stats::runif(n^3) >= prob) * 1
   dim(result) <- rep(n, 3)
@@ -20,7 +48,9 @@ get_random_ternary_relation <- function(n, prob, reflexive = FALSE, transitive =
   return(result)
 }
 
-get_betweenness_from_p_order <- function(p_order) {
+get_betweenness_from_poset <- function(p_order) {
+
+  ## TODO : conditional REFLEXIVITY!!
   n_rows <- nrow(p_order)
   result <- array(0, c(rep(n_rows, 3)))
   for (k in seq_len(n_rows)) {
@@ -124,6 +154,50 @@ get_whole_stylized_betweenness <- function(context,
   close(pb)
   return(result)
 }
+
+get_non_stylized_betweenness <- function(context){
+  n_rows <- nrow(context)
+  betweenness <- array(0,rep(n_rows,3))
+  pb <- utils::txtProgressBar(min = 0, max = n_rows, initial = 0)
+  for(k in seq_len(n_rows)){
+    utils::setTxtProgressBar(pb, k)
+    for(m in  seq_len(n_rows)){
+      temp <- pmin(context[k,],context[m,])
+      for(l in seq_len(n_rows)){
+        betweenness[k,l,m] <- all(temp <=context[l,])
+      }
+    }
+  }
+
+  close(pb)
+  return(betweenness)
+
+}
+
+get_stylized_betweenness <- function(context){
+    n_rows <- nrow(context)
+    n_cols <- ncol(context)
+    col_means <- colMeans(context)
+
+    betweenness <- array(0,rep(n_rows,3))
+    pb <- utils::txtProgressBar(min = 0, max = n_rows, initial = 0)
+    for(k in seq_len(n_rows)){
+      utils::setTxtProgressBar(pb, k)
+      for(m in  seq_len(n_rows)){
+        temp <- rep(0,n_cols)
+        i <- which(context[k,]==1 & context[m,]==1)
+        temp[i] <- col_means[i]
+        for(l in seq_len(n_rows)){
+          betweenness[k,l,m] <- max(temp - context[l,])
+        }
+      }
+    }
+
+  close(pb)
+return(1-betweenness)
+
+}
+
 
 #' Compute the quotient order of a quasiorder
 #'
@@ -340,28 +414,76 @@ discover_starshaped_subgroups_h0 <- function(ssd_result, params =
 #' @export
 compute_starshaped_distr_test <- function(ssd_result, n_rep=1000,
                                           plot_progress=TRUE){
+
+  if(n_rep <=2){print("Be serious!");return(NULL)}
   objvalues <- rep(0,n_rep)
   for(k in seq_len(n_rep)){
     objvalues[k] <-discover_starshaped_subgroups_h0(ssd_result)
     x <- objvalues[seq_len(k)]
     p_value <- mean(x >= ssd_result$objval)
+    if(k >2){suppressWarnings(fit <- fit_ks_distribution(x))
+    p_value_parametric <- stats::pbeta(ssd_result$objval, fit$par[1],
+                                fit$par[2],fit$par[3],lower.tail=FALSE)}
+
     if(plot_progress==TRUE & k > 2){
-      plot(stats::ecdf(x),do.points=F,col.01line = NULL,
+      plot(stats::ecdf(x),do.points=FALSE,col.01line = NULL,
            main=paste("observed value:",
                       round(ssd_result$objval,4),
-                      "; p-palue:",round(p_value,4),"; n:", k),verticals=TRUE,
-           xlab="test statistic",xlim=c(min(c(x,ssd_result$objval)),max(c(x,ssd_result$objval))))
-      abline(v=ssd_result$objval)
-
-      f <- density(x)
-
-      lines(f$x,f$y/max(f$y),col="grey")
-
+                      "; p-palue:",round(p_value,4),"; param. p-value:",
+                      round(p_value_parametric,4),"; n:", k),verticals=TRUE,
+           xlab="test statistic",ylab="cdf (black), density (grey)",
+           xlim=c(0,1.05*max(c(x,ssd_result$objval))))
+      graphics::abline(v=ssd_result$objval,col="darkblue")
+      graphics::abline(v=stats::median(x),col="darkgreen",lty=2)
+      sort_x <- seq(0,1,length.out=1000)
+      density_parametric <- stats::dbeta(sort_x,fit$par[1],fit$par[2],fit$par[3])
+      graphics::lines(sort_x,density_parametric/max(density_parametric),col="darkgreen")
+      cdf_parametric <- stats::pbeta(sort_x,fit$par[1],fit$par[2],fit$par[3])
+      graphics::lines(sort_x,cdf_parametric,col="darkgreen")
+      f <- stats::density(x)
+      graphics::lines(f$x,f$y/max(f$y),col="grey")
     }
   }
-return(list(objvalues=objvalues,p_value=p_value))
+return(list(objvalues=objvalues,p_value=p_value,p_value_parametric=p_value_parametric))
 }
 
+#' Approximate the distribution of a Kolmogorov-Smirnov types test statistic by
+#' the (noncentral) beta distribution
+#' @description TODO
+#' @param objvalues sampled values of a Kolomogorov Sminrov type test statistic
+#'
+#' @param plot_result If true the empirical distribution function of the
+#' 'objvalues'-values together with the cdf of the fitted beta distribution is
+#' plotted.
+#' description
+#'
+#' @references Zhang, J., Wu, Y. Beta Approximation to the Distribution of
+#' Kolmogorov-Smirnov Statistic. Annals of the Institute of Statistical
+#' Mathematics 54, 577–584 (2002). https://doi.org/10.1023/A:1022463111224
+#'
+fit_ks_distribution <- function(objvalues, plot_result=FALSE){
+  n_objvalues <- length(objvalues)
+  cdf <- stats::ecdf(objvalues)
+  x <- seq(0,1,0.001)
+  y <- cdf(x)
+  weights <- rep(1,length(x))
+  weights[which(y<=0.5)] <- 0.5
+  weights[which(y>=0.95)] <- 1.5
+  weights <- weights/sum(weights)
+  loss <- function(par,x,y,weights){
+    y_hat <- stats::pbeta(q=x, shape1=par[1], shape2=par[2], ncp =par[3])
+    return(mean(weights*(y-y_hat)^2))
+  }
+  result <- stats::optim(par=c(1,1,0), fn=loss,  x=x,y=y, weights =weights,
+                  control=list(maxit=1000000))
+  if(plot_result){
+    y_hat <- stats::pbeta(q=x, shape1=result$par[1], shape2=result$par[2],
+                   ncp =result$par[3])
+    plot(stats::ecdf(objvalues), do.points=FALSE,col.01line = NULL,
+         verticals=TRUE)
+    graphics::lines(x,y_hat,col="darkblue")
+  }
+  return(result)}
 
 get_model_from_quasiorder <- function(quasiorder) {
   # constructs linear program for the optimization over all upsets of
@@ -451,4 +573,4 @@ get_model_from_quasiorder <- function(quasiorder) {
 # #######
 # #######
 # #######
-#
+
