@@ -6,35 +6,41 @@
 ######## 				                  ########
 ##########################################
 
-check_outer_symmetry <- function(betweenness){
+check_outer_symmetry <- function(betweenness) {
   n_rows <- nrow(betweenness)
-  for(l in seq_len(n_rows)){
-    if(any( betweenness[,l,] != t(betweenness[,l,]))){return(FALSE)}
-  }
-return(TRUE)
-}
-
-check_cond_antisymmetry <- function(betweenness){
-  n_rows <- nrow(betweenness)
-  for(k in seq_len(n_rows)){
-    mat <-betweenness[k,,]
-    diag(mat) <-0
-    if(any(pmin(mat,t(mat))==1)){return(FALSE)}
-  }
-return(TRUE)
-}
-
-check_conditional_reflexivity <- function(betweenness){
-
-  n_rows <- nrow(betweenness)
-  for(k in seq_len(n_rows)){
-    if(any(diag(betweenness[k,,])==0) | any(diag(betweenness[k,,])==0) |
-       any(diag(betweenness[,,k])==0)){return(FALSE)}
+  for (l in seq_len(n_rows)) {
+    if (any(betweenness[, l, ] != t(betweenness[, l, ]))) {
+      return(FALSE)
+    }
   }
   return(TRUE)
 }
 
-get_random_ternary_relation <- function(n, prob, reflexive = FALSE, transitive = FALSE) {
+check_cond_antisymmetry <- function(betweenness) {
+  n_rows <- nrow(betweenness)
+  for (k in seq_len(n_rows)) {
+    mat <- betweenness[k, , ]
+    diag(mat) <- 0
+    if (any(pmin(mat, t(mat)) == 1)) {
+      return(FALSE)
+    }
+  }
+  return(TRUE)
+}
+
+check_conditional_reflexivity <- function(betweenness) {
+  n_rows <- nrow(betweenness)
+  for (k in seq_len(n_rows)) {
+    if (any(diag(betweenness[k, , ]) == 0) | any(diag(betweenness[k, , ]) == 0) |
+      any(diag(betweenness[, , k]) == 0)) {
+      return(FALSE)
+    }
+  }
+  return(TRUE)
+}
+
+get_random_ternary_relation <- function(n, prob, reflexive = FALSE,
+                                        transitive = FALSE) {
   result <- (stats::runif(n^3) >= prob) * 1
   dim(result) <- rep(n, 3)
   for (k in (1:n)) {
@@ -49,7 +55,6 @@ get_random_ternary_relation <- function(n, prob, reflexive = FALSE, transitive =
 }
 
 get_betweenness_from_poset <- function(p_order) {
-
   ## TODO : conditional REFLEXIVITY!!
   n_rows <- nrow(p_order)
   result <- array(0, c(rep(n_rows, 3)))
@@ -91,7 +96,8 @@ check_if_center_point <- function(point, set, ternary_relation) {
   return(TRUE)
 }
 
-#' Compute the canoncical (stylized) betweennes relation between objects of a formal context
+#' Compute the canoncical (stylized) betweennes relation between objects of a
+#' formal context
 #'
 #' @description 'compute_stylized_betweenness' computes the canonical (stylized)
 #' betweennes relation between objects of a formal context: Given three
@@ -123,12 +129,14 @@ check_if_center_point <- function(point, set, ternary_relation) {
 #' n x n x n where n is the number of rows of the context. Higher values
 #' of an entry correspond to a larger degree of betweenness.
 #' @export
-compute_stylized_betweenness <- function(g, h, i, context, attribute_weights = colMeans(context)) {
+compute_stylized_betweenness <- function(g, h, i, context, attribute_weights =
+                                           colMeans(context)) {
   common_attributes <- which(g == 1 & i == 1)
   if (length(common_attributes) == 0) {
     return(1)
   }
-  ans <- 1 - max((1 - h[common_attributes]) * attribute_weights[common_attributes])
+  ans <- 1 - max((1 - h[common_attributes]) *
+    attribute_weights[common_attributes])
   return(ans)
 }
 
@@ -155,47 +163,45 @@ get_whole_stylized_betweenness <- function(context,
   return(result)
 }
 
-get_non_stylized_betweenness <- function(context){
+get_non_stylized_betweenness <- function(context) {
   n_rows <- nrow(context)
-  betweenness <- array(0,rep(n_rows,3))
+  betweenness <- array(0, rep(n_rows, 3))
   pb <- utils::txtProgressBar(min = 0, max = n_rows, initial = 0)
-  for(k in seq_len(n_rows)){
+  for (k in seq_len(n_rows)) {
     utils::setTxtProgressBar(pb, k)
-    for(m in  seq_len(n_rows)){
-      temp <- pmin(context[k,],context[m,])
-      for(l in seq_len(n_rows)){
-        betweenness[k,l,m] <- all(temp <=context[l,])
+    for (m in seq_len(n_rows)) {
+      temp <- pmin(context[k, ], context[m, ])
+      for (l in seq_len(n_rows)) {
+        betweenness[k, l, m] <- all(temp <= context[l, ])
       }
     }
   }
 
   close(pb)
   return(betweenness)
-
 }
 
-get_stylized_betweenness <- function(context){
-    n_rows <- nrow(context)
-    n_cols <- ncol(context)
-    col_means <- colMeans(context)
+get_stylized_betweenness <- function(context) {
+  n_rows <- nrow(context)
+  n_cols <- ncol(context)
+  col_means <- colMeans(context)
 
-    betweenness <- array(0,rep(n_rows,3))
-    pb <- utils::txtProgressBar(min = 0, max = n_rows, initial = 0)
-    for(k in seq_len(n_rows)){
-      utils::setTxtProgressBar(pb, k)
-      for(m in  seq_len(n_rows)){
-        temp <- rep(0,n_cols)
-        i <- which(context[k,]==1 & context[m,]==1)
-        temp[i] <- col_means[i]
-        for(l in seq_len(n_rows)){
-          betweenness[k,l,m] <- max(temp - context[l,])
-        }
+  betweenness <- array(0, rep(n_rows, 3))
+  pb <- utils::txtProgressBar(min = 0, max = n_rows, initial = 0)
+  for (k in seq_len(n_rows)) {
+    utils::setTxtProgressBar(pb, k)
+    for (m in seq_len(n_rows)) {
+      temp <- rep(0, n_cols)
+      i <- which(context[k, ] == 1 & context[m, ] == 1)
+      temp[i] <- col_means[i]
+      for (l in seq_len(n_rows)) {
+        betweenness[k, l, m] <- max(temp - context[l, ])
       }
     }
+  }
 
   close(pb)
-return(1-betweenness)
-
+  return(1 - betweenness)
 }
 
 
@@ -282,6 +288,8 @@ discover_starshaped_subgroups <- function(stylized_betweenness, objective,
     print("dimension mismatch")
   }
   n_rows <- nrow(stylized_betweenness)
+  used_betweenness <- array(0,rep(n_rows,3))
+  max_value <- max(stylized_betweenness)
   model <- list(
     modelsense = "max", obj = objective, lb = rep(0, n_rows),
     ub = rep(1, n_rows)
@@ -289,22 +297,31 @@ discover_starshaped_subgroups <- function(stylized_betweenness, objective,
   solutions <- list()
   objvals <- rep(0, n_rows)
   stars <- array(0, c(n_rows, n_rows))
-
+  runtimes <- list()
   models <- list()
-  for (k in (1:n_rows)) { ## quantify over all starcenters
-
+  pb <- utils::txtProgressBar(min = 0, max = n_rows, initial = 0)
+  for (k in seq_len(n_rows)) { ## quantify over all starcenters
+    utils::setTxtProgressBar(pb, k)
 
     if (local_vc_dimension == Inf) {
       incidence <- (stylized_betweenness[k, , ] >=
-        max(stylized_betweenness[k, , ])) * 1
+        max_value) * 1
     } else {
-      incidence <- cut_incidence(stylized_betweenness[k, , ], local_vc_dimension)
+      incidence <- cut_incidence(
+        stylized_betweenness[k, , ],
+        local_vc_dimension
+      )
     }
+
+    used_betweenness[k,,] <- incidence
 
 
     model <- get_model_from_quasiorder(t(incidence))
     if (is.null(model)) {
-      model <- list(A = matrix(0, nrow = 1, ncol = n_rows), rhs = 1, sense = "<=")
+      model <- list(
+        A = matrix(0, nrow = 1, ncol = n_rows), rhs = 1,
+        sense = "<="
+      )
     }
     model$obj <- objective
     model$lb <- rep(0, n_rows)
@@ -315,6 +332,7 @@ discover_starshaped_subgroups <- function(stylized_betweenness, objective,
 
     b <- gurobi::gurobi(model, params = params)
     solutions[[k]] <- b
+    runtimes[[k]] <- b$runtime
     objvals[k] <- b$objval
     stars[k, ] <- b$x
 
@@ -343,12 +361,14 @@ discover_starshaped_subgroups <- function(stylized_betweenness, objective,
   model$lb[k] <- 1
   model$modelsense <- "max"
   b <- gurobi::gurobi(model, params = params)
+  close(pb)
   return(list(
     models = models, obj = objective, solutions = solutions,
     objvals = objvals, stars = stars, objval = objvals[i],
     star = stars[i, ], center_id = i,
     fuzzy_incidence = stylized_betweenness[i, , ],
-    incidence = incidence, model = model
+    incidence = incidence, model = model, runtimes=runtimes, used_betweenness =
+      used_betweenness
   ))
 }
 
@@ -390,7 +410,9 @@ discover_starshaped_subgroups_recompute <- function(ssd_result, objective) {
   for (k in seq_len(length(ssd_result$models))) {
     model <- ssd_result$models[[k]]
     model$obj <- objective
-    result <- max(result, gurobi::gurobi(model, param = list(outputflag = 0))$objval)
+    result <- max(result, gurobi::gurobi(model, param = list(
+      outputflag = 0
+    ))$objval)
   }
 
   return(result)
@@ -410,41 +432,84 @@ discover_starshaped_subgroups_h0 <- function(ssd_result, params =
 
   return(result)
 }
-
+#' Compute a statistical significance test for a starshaped subgroup discovery
+#'
+#' @description 'compute_starshaped_distr_test' performs a statistical
+#' significance test to assess if the largest differences of relative
+#' frequencies over all starshaped subgroups that was found in a starshaped
+#' subgroup discovery is statistically significantly diefferent from zero.
+#'
+#' @param ssd_result is the result of a starshaped subgroup discovery that was
+#' computed with the function 'discover_starshaped_subgroups'.
+#' @param n_rep is the number of permutations in the observation-randomization
+#' test.
+#'
+#' @param plot_progress if TRUE (default) then the progress of the
+#' observation-randomization test is plot by drawing the empirical distribution
+#' function of the currently computed resampled objective values. Additionally,
+#' nonparametric and parametric estimates of the p-value based on the currently
+#' computed resamples are printed. TODO : beta genauer
+#'
+#' @return A list with entries 'objvalues': the resampled objective values,
+#' 'p_value'  the (nonparametrically) estimated p-value of the
+#' observation-randomization test, 'p_value_parametric': a parametric estimate
+#' of the p-value based on a beta-approximation of the distribution of the
+#' resampled objective values.
+#'
+#'
 #' @export
-compute_starshaped_distr_test <- function(ssd_result, n_rep=1000,
-                                          plot_progress=TRUE){
-
-  if(n_rep <=2){print("Be serious!");return(NULL)}
-  objvalues <- rep(0,n_rep)
-  for(k in seq_len(n_rep)){
-    objvalues[k] <-discover_starshaped_subgroups_h0(ssd_result)
+compute_starshaped_distr_test <- function(ssd_result, n_rep = 1000,
+                                          plot_progress = TRUE) {
+  if (n_rep <= 2) {
+    print("Be serious!")
+    return(NULL)
+  }
+  objvalues <- rep(0, n_rep)
+  for (k in seq_len(n_rep)) {
+    objvalues[k] <- discover_starshaped_subgroups_h0(ssd_result)
     x <- objvalues[seq_len(k)]
     p_value <- mean(x >= ssd_result$objval)
-    if(k >2){suppressWarnings(fit <- fit_ks_distribution(x))
-    p_value_parametric <- stats::pbeta(ssd_result$objval, fit$par[1],
-                                fit$par[2],fit$par[3],lower.tail=FALSE)}
+    if (k > 2) {
+      suppressWarnings(fit <- fit_ks_distribution(x))
 
-    if(plot_progress==TRUE & k > 2){
-      plot(stats::ecdf(x),do.points=FALSE,col.01line = NULL,
-           main=paste("observed value:",
-                      round(ssd_result$objval,4),
-                      "; p-palue:",round(p_value,4),"; param. p-value:",
-                      round(p_value_parametric,4),"; n:", k),verticals=TRUE,
-           xlab="test statistic",ylab="cdf (black), density (grey)",
-           xlim=c(0,1.05*max(c(x,ssd_result$objval))))
-      graphics::abline(v=ssd_result$objval,col="darkblue")
-      graphics::abline(v=stats::median(x),col="darkgreen",lty=2)
-      sort_x <- seq(0,1,length.out=1000)
-      density_parametric <- stats::dbeta(sort_x,fit$par[1],fit$par[2],fit$par[3])
-      graphics::lines(sort_x,density_parametric/max(density_parametric),col="darkgreen")
-      cdf_parametric <- stats::pbeta(sort_x,fit$par[1],fit$par[2],fit$par[3])
-      graphics::lines(sort_x,cdf_parametric,col="darkgreen")
+      p_value_parametric <- stats::pbeta(ssd_result$objval, fit$par[1],
+        fit$par[2], fit$par[3],
+        lower.tail = FALSE
+      )
+    }
+
+    if (plot_progress == TRUE & k > 2) {
+      plot(stats::ecdf(x),
+        do.points = FALSE, col.01line = NULL,
+        main = paste(
+          "observed value:",
+          round(ssd_result$objval, 4),
+          "; p-palue:", round(p_value, 4), "; param. p-value:",
+          round(p_value_parametric, 4), "; n:", k
+        ), verticals = TRUE,
+        xlab = "test statistic", ylab = "cdf (black), density (grey)",
+        xlim = c(0, 1.05 * max(c(x, ssd_result$objval)))
+      )
+      graphics::abline(v = ssd_result$objval, col = "darkblue")
+      graphics::abline(v = stats::median(x), col = "darkgreen", lty = 2)
+      sort_x <- seq(0, 1, length.out = 1000)
+      density_parametric <- stats::dbeta(
+        sort_x, fit$par[1], fit$par[2],
+        fit$par[3]
+      )
+      graphics::lines(sort_x, density_parametric / max(density_parametric),
+        col = "darkgreen"
+      )
+      cdf_parametric <- stats::pbeta(sort_x, fit$par[1], fit$par[2], fit$par[3])
+      graphics::lines(sort_x, cdf_parametric, col = "darkgreen")
       f <- stats::density(x)
-      graphics::lines(f$x,f$y/max(f$y),col="grey")
+      graphics::lines(f$x, f$y / max(f$y), col = "grey")
     }
   }
-return(list(objvalues=objvalues,p_value=p_value,p_value_parametric=p_value_parametric))
+  return(list(
+    objvalues = objvalues, p_value = p_value, p_value_parametric =
+      p_value_parametric
+  ))
 }
 
 #' Approximate the distribution of a Kolmogorov-Smirnov types test statistic by
@@ -462,29 +527,36 @@ return(list(objvalues=objvalues,p_value=p_value,p_value_parametric=p_value_param
 #' Kolmogorov-Smirnov Statistic. Annals of the Institute of Statistical
 #' Mathematics 54, 577–584 (2002). https://doi.org/10.1023/A:1022463111224
 #'
-fit_ks_distribution <- function(objvalues, plot_result=FALSE){
+fit_ks_distribution <- function(objvalues, plot_result = FALSE) {
   n_objvalues <- length(objvalues)
   cdf <- stats::ecdf(objvalues)
-  x <- seq(0,1,0.001)
+  x <- seq(0, 1, 0.001)
   y <- cdf(x)
-  weights <- rep(1,length(x))
-  weights[which(y<=0.5)] <- 0.5
-  weights[which(y>=0.95)] <- 1.5
-  weights <- weights/sum(weights)
-  loss <- function(par,x,y,weights){
-    y_hat <- stats::pbeta(q=x, shape1=par[1], shape2=par[2], ncp =par[3])
-    return(mean(weights*(y-y_hat)^2))
+  weights <- rep(1, length(x))
+  weights[which(y <= 0.5)] <- 0.5
+  weights[which(y >= 0.95)] <- 1.5
+  weights <- weights / sum(weights)
+  loss <- function(par, x, y, weights) {
+    y_hat <- stats::pbeta(q = x, shape1 = par[1], shape2 = par[2], ncp = par[3])
+    return(mean(weights * (y - y_hat)^2))
   }
-  result <- stats::optim(par=c(1,1,0), fn=loss,  x=x,y=y, weights =weights,
-                  control=list(maxit=1000000))
-  if(plot_result){
-    y_hat <- stats::pbeta(q=x, shape1=result$par[1], shape2=result$par[2],
-                   ncp =result$par[3])
-    plot(stats::ecdf(objvalues), do.points=FALSE,col.01line = NULL,
-         verticals=TRUE)
-    graphics::lines(x,y_hat,col="darkblue")
+  result <- stats::optim(
+    par = c(1, 1, 0), fn = loss, x = x, y = y, weights = weights,
+    control = list(maxit = 1000000,method="L-BFGS-B",lower=c(0,0,0))
+  )
+  if (plot_result) {
+    y_hat <- stats::pbeta(
+      q = x, shape1 = result$par[1], shape2 = result$par[2],
+      ncp = result$par[3]
+    )
+    plot(stats::ecdf(objvalues),
+      do.points = FALSE, col.01line = NULL,
+      verticals = TRUE
+    )
+    graphics::lines(x, y_hat, col = "darkblue")
   }
-  return(result)}
+  return(result)
+}
 
 get_model_from_quasiorder <- function(quasiorder) {
   # constructs linear program for the optimization over all upsets of
@@ -574,4 +646,3 @@ get_model_from_quasiorder <- function(quasiorder) {
 # #######
 # #######
 # #######
-

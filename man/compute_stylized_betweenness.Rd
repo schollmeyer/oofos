@@ -2,7 +2,8 @@
 % Please edit documentation in R/starshaped_sets.R
 \name{compute_stylized_betweenness}
 \alias{compute_stylized_betweenness}
-\title{Compute the canoncical (stylized) betweennes relation between objects of a formal context}
+\title{Compute the canoncical (stylized) betweennes relation between objects of a
+formal context}
 \usage{
 compute_stylized_betweenness(
   g,
