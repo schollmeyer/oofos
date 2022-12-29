@@ -457,6 +457,7 @@ return(list(objvalues=objvalues,p_value=p_value,p_value_parametric=p_value_param
 #' plotted.
 #' description
 #'
+#'
 #' @references Zhang, J., Wu, Y. Beta Approximation to the Distribution of
 #' Kolmogorov-Smirnov Statistic. Annals of the Institute of Statistical
 #' Mathematics 54, 577–584 (2002). https://doi.org/10.1023/A:1022463111224
