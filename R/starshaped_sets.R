@@ -323,6 +323,7 @@ discover_starshaped_subgroups <- function(stylized_betweenness, objective,
         sense = "<="
       )
     }
+    model$A <- slam::as.simple_triplet_matrix(model$A)
     model$obj <- objective
     model$lb <- rep(0, n_rows)
     model$ub <- rep(1, n_rows)
@@ -484,8 +485,8 @@ compute_starshaped_distr_test <- function(ssd_result, n_rep = 1000,
         main = paste(
           "observed value:",
           round(ssd_result$objval, 4),
-          "; p-palue:", round(p_value, 4), "; param. p-value:",
-          round(p_value_parametric, 4), "; n:", k
+          "p-palue:", round(p_value, 4), "\n; param. p-value:",
+          round(p_value_parametric, 4), "; n:", k, "\nmedian:", round(stats::median(x),4)
         ), verticals = TRUE,
         xlab = "test statistic", ylab = "cdf (black), density (grey)",
         xlim = c(0, 1.05 * max(c(x, ssd_result$objval)))
@@ -504,8 +505,12 @@ compute_starshaped_distr_test <- function(ssd_result, n_rep = 1000,
       graphics::lines(sort_x, cdf_parametric, col = "darkgreen")
       f <- stats::density(x)
       graphics::lines(f$x, f$y / max(f$y), col = "grey")
+      # TODO :result_temp <<- list(objvalues = x, p_value = p_value,
+      #                           p_value_parametric =
+       #   p_value_parametric)
     }
   }
+  #rm(result_temp)
   return(list(
     objvalues = objvalues, p_value = p_value, p_value_parametric =
       p_value_parametric

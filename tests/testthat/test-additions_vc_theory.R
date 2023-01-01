@@ -24,7 +24,7 @@ test_that("compute_extent_vc_dimension works", {
 
 })
 
-test_that("ad_ufg_contraints works", {
+test_that("add_ufg_contraints works", {
   example_posets <- compute_example_posets(8)
   context <- NULL
   for(k in seq_len(length(example_posets))){

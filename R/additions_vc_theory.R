@@ -502,7 +502,66 @@ compute_sufg_dimension <- function(context, additional_constraint = TRUE) {
 }
 
 
-#
+#### Neuer versuch smplen von ufg Praemisse mit VC Model+ add_ufg_constraints:
+#'
+#'
+#' @export
+sample_ufg_K_objset_recursive <- function(context, K, N = rep(nrow(context), K), threads = 1,model=NULL) {
+  # Samples an ufg premise of size K
+  # Caution It is assumed that the large context is the given context 'context' therefore the name sufg (for small ufg)
+  # @context: Given context
+  # @K size of ufg premise
+  # @N vector for the number of random draws in every step (default value is nrow(context), which means that the drawing probability for a sampled ufg premise is exactly computed in this case. Otherwise (for smaller values) this probability is estimated ( in such a way that 1/p is estimated in an unbiased way )
+  # @threads: number of threads used by gurobi
+
+  # Return (vector): smpled premise set as an indicator vector ßin \{0,1\}^nrow(context)
+  if(is.null(model)){
+    model <- compute_extent_vc_dimension(context)
+    model <- add_ufg_constraints(model)
+    #model <- sufg_dimension(context) ## use MILP programe for checking if a given set Subset can be enlarged to a sufg-premise of size K
+    model$A <- rbind(model$A, c(rep(1, nrow(context)), rep(0, ncol(context)))) ## Modification of model: demand that size of sufg-premise is at least K ('==K' would be also possible:  !!!Noch checken: Ist nicht eigtll. == erforderlich?
+    model$rhs <- c(model$rhs, K)
+    model$sense <- c(model$sense, ">=")
+    model$obj <- NULL ## es soll nur getestet werden, ob Subset zu einer sufg-Prämisse der Größe >=K erweiterbar ist.
+  }
+  NN <- N # unmber of draws in every step: will be modified during the sampling
+  p_inverse <- 1 # Vector of inverse probabilities of drawing in every step
+  Subset <- rep(0, nrow(context))
+  Vector <- NULL ## index Vector of the premise set
+  idx3 <- NULL
+
+  for (k in (1:(K))) {
+    counter <- 1
+    extent <- operator_closure_obj_input(Subset, context)
+    idx <- which(extent == 0)
+    idx2 <- NULL
+    NN[k] <- min(N[k], length(idx))
+    idx_sample <- sample(idx, size = NN[k])
+    for (l in idx_sample) {
+      new_subset <- Subset
+      new_subset[l] <- 1
+      model$lb[which(new_subset == 1)] <- 1
+      model$lb[which(new_subset == 0)] <- 0
+      model$ub[idx3] <- 0
+      ans <- gurobi::gurobi(model, list(outputflag = 1, threads = threads))
+      if (ans$status == "OPTIMAL") {
+        idx2 <- c(idx2, l)
+      } else {
+        idx3 <- c(idx3, l)
+      }
+    }
+
+    Vector <- c(Vector, idx2[1])
+    Subset[idx2[1]] <- 1
+    p_inverse <- c(p_inverse, length(idx) * length(idx2) / NN[k])
+  }
+
+  return(list(Subset = Subset, p_inverse = p_inverse, Vector = Vector,model=model))
+}
+
+
+
+
 
 
 
