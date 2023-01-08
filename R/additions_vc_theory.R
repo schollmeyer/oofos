@@ -14,6 +14,9 @@
 ################################################################################
 
 
+## Alle Sachen zur ufg dimension etc. sind hier nur zwischengeparkt. TODO :
+#schauen, was wo hin kommt und was ueberhaupt noetig / sinnvoll ist
+
 #' Add constraint to a VC dimension computation model to compute a better upper
 #' bound for the ufg dimension
 #'
@@ -519,7 +522,7 @@ sample_ufg_K_objset_recursive <- function(context, K, N = rep(nrow(context), K),
     model <- compute_extent_vc_dimension(context)
     model <- add_ufg_constraints(model)
     #model <- sufg_dimension(context) ## use MILP programe for checking if a given set Subset can be enlarged to a sufg-premise of size K
-    model$A <- rbind(model$A, c(rep(1, nrow(context)), rep(0, ncol(context)))) ## Modification of model: demand that size of sufg-premise is at least K ('==K' would be also possible:  !!!Noch checken: Ist nicht eigtll. == erforderlich?
+    model$A <- rbind(model$A, c(rep(0, nrow(context)), rep(1, ncol(context)))) ## Modification of model: demand that size of sufg-premise is at least K ('==K' would be also possible:  !!!Noch checken: Ist nicht eigtll. == erforderlich?
     model$rhs <- c(model$rhs, K)
     model$sense <- c(model$sense, ">=")
     model$obj <- NULL ## es soll nur getestet werden, ob Subset zu einer sufg-Prämisse der Größe >=K erweiterbar ist.
@@ -532,7 +535,7 @@ sample_ufg_K_objset_recursive <- function(context, K, N = rep(nrow(context), K),
 
   for (k in (1:(K))) {
     counter <- 1
-    extent <- operator_closure_obj_input(Subset, context)
+    extent <- operator_closure_obj_input(Subset, (context))
     idx <- which(extent == 0)
     idx2 <- NULL
     NN[k] <- min(N[k], length(idx))
@@ -543,7 +546,7 @@ sample_ufg_K_objset_recursive <- function(context, K, N = rep(nrow(context), K),
       model$lb[which(new_subset == 1)] <- 1
       model$lb[which(new_subset == 0)] <- 0
       model$ub[idx3] <- 0
-      ans <- gurobi::gurobi(model, list(outputflag = 1, threads = threads))
+      ans <- gurobi::gurobi(model, list(outputflag = 0, threads = threads))
       if (ans$status == "OPTIMAL") {
         idx2 <- c(idx2, l)
       } else {
@@ -561,7 +564,113 @@ sample_ufg_K_objset_recursive <- function(context, K, N = rep(nrow(context), K),
 
 
 
+sample_ufg_K_attribute_set <- function(context, K, N = rep(ncol(context), K), threads = 1,model=NULL) {
+  # Samples an ufg premise of size K
+  # Caution It is assumed that the large context is the given context 'context' therefore the name sufg (for small ufg)
+  # @context: Given context
+  # @K size of ufg premise
+  # @N vector for the number of random draws in every step (default value is nrow(context), which means that the drawing probability for a sampled ufg premise is exactly computed in this case. Otherwise (for smaller values) this probability is estimated ( in such a way that 1/p is estimated in an unbiased way )
+  # @threads: number of threads used by gurobi
 
+  # Return (vector): smpled premise set as an indicator vector ßin \{0,1\}^nrow(context)
+  n_rows <- nrow(context)
+  if(is.null(model)){
+    model <- compute_extent_vc_dimension(context)
+    model <- add_ufg_constraints(model)
+    #model <- sufg_dimension(context) ## use MILP programe for checking if a given set Subset can be enlarged to a sufg-premise of size K
+    model$A <- rbind(model$A, c(rep(0, nrow(context)), rep(1, ncol(context)))) ## Modification of model: demand that size of sufg-premise is at least K ('==K' would be also possible:  !!!Noch checken: Ist nicht eigtll. == erforderlich?
+    model$rhs <- c(model$rhs, K)
+    model$sense <- c(model$sense, ">=")
+    model$obj <- NULL ## es soll nur getestet werden, ob Subset zu einer sufg-Prämisse der Größe >=K erweiterbar ist.
+  }
+  NN <- N # unmber of draws in every step: will be modified during the sampling
+  p_inverse <- 1 # Vector of inverse probabilities of drawing in every step
+  Subset <- rep(0, ncol(context))
+  Vector <- NULL ## index Vector of the premise set
+  idx3 <- NULL
+
+  for (k in (1:(K))) {
+    counter <- 1
+    intent <- operator_closure_attr_input(Subset, (context))
+    idx <- which(intent == 0)
+    idx2 <- NULL
+    NN[k] <- min(N[k], length(idx))
+    idx_sample <- sample(idx, size = NN[k])
+    for (l in idx_sample) {
+      new_subset <- Subset
+      new_subset[l] <- 1
+      model$lb[n_rows+which(new_subset == 1)] <- 1
+      model$lb[n_rows + which(new_subset == 0)] <- 0
+      model$ub[n_rows + idx3] <- 0
+      ans <- gurobi::gurobi(model, list(outputflag = 0, threads = threads))
+      if (ans$status == "OPTIMAL") {
+        idx2 <- c(idx2, l)
+      } else {
+        idx3 <- c(idx3, l)
+      }
+    }
+
+    Vector <- c(Vector, idx2[1])
+    Subset[idx2[1]] <- 1
+    p_inverse <- c(p_inverse, length(idx) * length(idx2) / NN[k])
+  }
+
+  return(list(Subset = Subset, p_inverse = p_inverse, Vector = Vector,model=model))
+}
+
+
+### Zeugs von Weihnachten
+
+test_explictly_ufg_p_order <- function(subset,p_order_context){
+  ## ????? if(sum(subset)==1){return(FALSE)}
+  subset_size <- sum(subset)
+  ans <- operator_closure_obj_input(subset,p_order_context)
+  for( index in which(subset==1)){
+    subset_new <- subset; subset_new[index]=0
+    ans <- pmin(ans, 1- operator_closure_obj_input(subset_new,p_order_context))
+    if(all(ans==0)){return(FALSE)}
+  }
+  return(any(ans==1))
+}
+
+
+## Nur mal rumprobiert um einen Eindruck zu bekommen...
+compute_sample_ufg_depth <- function(context,
+                                     partial_order_context =
+                                     ddandrda::compute_all_partial_orders(
+                                     sqrt(ncol(context)/2), list=FALSE,
+                                     complemented=TRUE),n_rep=100,
+                                     ufg_size_interval = c(2,8)){
+  k <- 1
+  whole_context <- rbind(context,partial_order_context)
+
+  result <- array(0,c(nrow(whole_context) , ufg_size_interval[2]-ufg_size_interval[1]+1))
+  colnames(result) <- seq(ufg_size_interval[1],ufg_size_interval[2])
+  cardinalities <- choose(nrow(context),seq(ufg_size_interval[1],ufg_size_interval[2]))
+  probabilities <- cardinalities/sum(cardinalities)
+  probabilities <- probabilities*0 +1
+  probabilities <- probabilities/sum(probabilities)
+  print(c("porbabilities for chossing ufg premises of size:", ufg_size_interval, " :", probabilities))
+  while(TRUE){
+
+    size <- sample(seq(ufg_size_interval[1],ufg_size_interval[2]),size=1,prob = probabilities)
+    index <- sample(seq_len(nrow(context)),size=size)
+    subset <-rep(0,nrow(whole_context))
+    subset[index] <- 1
+    if(test_explictly_ufg_p_order(subset,whole_context)){
+      extent <- operator_closure_obj_input(subset,whole_context)
+      extent[index] <-0
+
+      result[,size-ufg_size_interval[1]+1] <- result[,size-ufg_size_interval[1]+1] +extent
+      print(c(k,"size:",size))
+      k=k+1
+
+    }
+result <<- result
+    if(k > n_rep){return(result)}
+  }
+
+}
 
 
 
