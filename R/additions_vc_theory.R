@@ -672,7 +672,33 @@ result <<- result
 
 }
 
+####
 
+
+#context2 <- rbind(context,P5)
+#i <- which(!duplicated(context2))
+#whole_context <- context2[i,]
+#n_row_context <- nrow(context)
+
+
+enumerate_all_ufg_premises <- function(subset,whole_context,n_row_context){
+  extent <- operator_closure_obj_input(subset,whole_context[seq_len(n_row_context),])
+  index <- which(extent==0)
+  index <- index[which(index > max(which(subset==1)))]
+  if(length(index)==0){stop}
+  for(k in index){
+    subset_new <- subset;subset_new[k] <- 1
+    subset_new_whole_context <- c(subset_new, rep(0,nrow(whole_context)-n_row_context))
+    if(sum(subset_new)==1 | test_explictly_ufg_p_order(subset_new_whole_context,whole_context)){
+      res <<- rbind(res,subset_new)
+      t <<- t+1
+      print(t)
+      enumerate_all_ufg_premises(subset_new,context,n_row_context)
+    }
+  }
+
+  stop
+}
 
 
 ##
