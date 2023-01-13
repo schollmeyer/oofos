@@ -1,4 +1,26 @@
 test_that("compute_extent_vc_dimension works", {
+ p5 <- ddandrda::compute_all_partial_orders(5,list=FALSE,complemented=TRUE)
+ i <- sample(seq_len(nrow(p5)))
+ p5 <- p5[i,]
+ n_col_context <-14
+
+ result_1 <- enumerate_ufg_premises(p5,14)
+
+
+ subsets <- gtools::permutations(2,14,repeats.allowed=TRUE)-1
+
+ number_ufgs <- 0
+ for(k in seq_len(nrow(subsets))){
+   if(test_explicitly_ufg_p_order( c(subsets[k,],rep(0,4231-14)), p5)){
+     print(which(subsets[k,]==1))
+     number_ufgs <- number_ufgs + 1
+   }
+ }
+
+})
+
+
+test_that("compute_extent_vc_dimension works", {
 
   context <- diag(rep(1,10))
   model <- compute_extent_vc_dimension(context)

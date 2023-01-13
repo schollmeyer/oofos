@@ -621,16 +621,19 @@ sample_ufg_K_attribute_set <- function(context, K, N = rep(ncol(context), K), th
 
 ### Zeugs von Weihnachten
 
-test_explictly_ufg_p_order <- function(subset,p_order_context){
+test_explicitly_ufg_p_order <- function(subset,p_order_context){
   ## ????? if(sum(subset)==1){return(FALSE)}
   subset_size <- sum(subset)
-  ans <- operator_closure_obj_input(subset,p_order_context)
+  ufg_prove_candidates <- operator_closure_obj_input(subset,p_order_context)
+  ufg_prove_candidates[which(subset==1)] <- 0
   for( index in which(subset==1)){
     subset_new <- subset; subset_new[index]=0
-    ans <- pmin(ans, 1- operator_closure_obj_input(subset_new,p_order_context))
-    if(all(ans==0)){return(FALSE)}
+    ufg_prove_candidates <- pmin(ufg_prove_candidates,
+                                 1- operator_closure_obj_input(subset_new,
+                                                               p_order_context))
+    if(all(ufg_prove_candidates==0)){return(FALSE)}
   }
-  return(any(ans==1))
+  return(any(ufg_prove_candidates==1))
 }
 
 
@@ -681,7 +684,7 @@ result <<- result
 #n_row_context <- nrow(context)
 
 
-enumerate_all_ufg_premises <- function(subset,whole_context,n_row_context){
+enumerate_all_ufg_premises_basic <- function(subset,whole_context,n_row_context){
   extent <- operator_closure_obj_input(subset,whole_context[seq_len(n_row_context),])
   index <- which(extent==0)
   index <- index[which(index > max(which(subset==1)))]
@@ -690,14 +693,103 @@ enumerate_all_ufg_premises <- function(subset,whole_context,n_row_context){
     subset_new <- subset;subset_new[k] <- 1
     subset_new_whole_context <- c(subset_new, rep(0,nrow(whole_context)-n_row_context))
     if(sum(subset_new)==1 | test_explictly_ufg_p_order(subset_new_whole_context,whole_context)){
-      res <<- rbind(res,subset_new)
-      t <<- t+1
-      print(t)
-      enumerate_all_ufg_premises(subset_new,context,n_row_context)
+      #res <<- rbind(res,subset_new)
+
+      #res[counter,] <<- subset_new#rbind(res,subset_new)
+      #counter <<- counter+1
+
+    #  counter <<- counter+1
+    #  print(counter)
+      enumerate_all_ufg_premises_basic(subset_new,whole_context,n_row_context)
     }
   }
 
   stop
+}
+
+
+#' Enumerate all ufg premises of a complemented poset context
+#'
+#' @description TODO
+#'
+#'
+#' @param whole_context is the whole context that describes the whole space of complemented
+#' partial orders.
+#'
+#' @param n_row_context is the number of objects in the observed data sample.
+#' It is assumed that the first 'n_row_context' row of the ccontext
+#' 'whole_context' represent the observed partial orders.
+#' @param n_ufgs is an upper bound for the number of ufg premises. This is needed to
+#' allocate enough memory for the result.
+#'
+#' @return Amtraix where every row represents an ufg premise by giving the
+#' indices of the partial orders from the context 'whole_context'. Since
+#' different ufg premises can have different cardinalities, for ufg premises
+#' with smaller cardinalities the corresponding vectors are filled with zeros
+#'
+#'
+#'
+#' @export
+enumerate_ufg_premises <- function(whole_context, n_row_context,
+                                   n_ufgs=10000000){
+  n_items <- sqrt(ncol(whole_context)/2)
+  upper_bound_ufg_dimension <- n_items*(n_items-1)/2
+  result <- array(0,c(n_ufgs, upper_bound_ufg_dimension))
+  counter <- 1
+  subset <- rep(0,n_row_context)
+
+  w <- 0.5^(seq_len(n_row_context))
+  sets <- rep(0,n_ufgs)
+
+  #sets <- list()
+
+
+
+enum_ufg_premises_recursive <- function(subset,whole_context,n_row_context){
+  extent <- operator_closure_obj_input(subset,whole_context[seq_len(n_row_context),])
+
+  mask <- rep(1,n_row_context)
+  for(k in which(subset==1)){
+
+    subset_new <- subset; subset_new[k] <- 0
+    intent <- compute_psi(subset_new,whole_context[seq_len(n_row_context),])
+    idx <- which(whole_context[k,]==0&intent==1)
+    if(length(idx)>=2){
+    idx2 <- which(rowSums(whole_context[seq_len(n_row_context),idx])==0)
+    mask[idx2] <- 0}
+    if(length(idx)==1){
+      mask[which(whole_context[seq_len(n_row_context),idx]==0)] <- 0
+    }
+
+
+  }
+
+  index <- which(extent==0 & mask==1)
+  #print(which(extent==0 & mask==0))
+  #index <- index[which(index > max(which(subset==1)))]
+  if(length(index)==0  | sum(subset*w) %in% sets[seq_len(n_row_context)]){stop}
+  for(k in index){
+    subset_new <- subset;subset_new[k] <- 1
+    subset_new_whole_context <- c(subset_new, rep(0,nrow(whole_context)-n_row_context))
+    if(  sum(subset_new)==1 | (!( sum(subset_new*w) %in% sets[seq_len(n_row_context)] ))){
+         #(! (any(sets %in% list(which(subset_new==1)) ))) ){
+
+    if(sum(subset_new)==1 |  test_explicitly_ufg_p_order(subset_new_whole_context,whole_context)){
+     result[counter,seq_len(sum(subset_new))] <<- which(subset_new==1)#rbind(res,subset_new)
+     sets[counter] <<- sum(subset_new*w)
+     #sets[[counter]] <<- which(subset_new==1)
+     counter <<- counter+1
+      if(counter %% 1000 == 0) {print(counter)}
+     #print(counter)
+      enum_ufg_premises_recursive(subset_new,whole_context,n_row_context)
+    }
+  }
+}
+  stop
+}
+
+enum_ufg_premises_recursive(subset,whole_context,n_row_context)
+return(result[seq_len(counter-1),])
 }
 
 
