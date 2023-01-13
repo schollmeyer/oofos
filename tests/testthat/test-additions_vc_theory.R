@@ -1,5 +1,5 @@
-test_that("compute_extent_vc_dimension works", {
- p5 <- ddandrda::compute_all_partial_orders(5,list=FALSE,complemented=TRUE)
+test_that("enumerate_ufg_premises works", {
+ p5 <- compute_all_partial_orders(5,list=FALSE,complemented=TRUE)
  i <- sample(seq_len(nrow(p5)))
  p5 <- p5[i,]
  n_col_context <-14
@@ -12,11 +12,11 @@ test_that("compute_extent_vc_dimension works", {
  number_ufgs <- 0
  for(k in seq_len(nrow(subsets))){
    if(test_explicitly_ufg_p_order( c(subsets[k,],rep(0,4231-14)), p5)){
-     print(which(subsets[k,]==1))
+     #print(which(subsets[k,]==1))
      number_ufgs <- number_ufgs + 1
    }
  }
-
+expect_equal(number_ufgs+14,nrow(result_1))
 })
 
 

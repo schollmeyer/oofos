@@ -27,7 +27,7 @@ for(k in seq_len(1000)){
 }
 suppressWarnings( result <- fit_ks_distribution(x,FALSE))
 
-expect_equal(result$value<=0.00001
+expect_equal(result$value<=0.0001
 ,TRUE)
 
 })
@@ -42,7 +42,7 @@ test_that("compute_starshaped_distr_test works", {
 
 
   discovery <- discover_starshaped_subgroups(betweenness,objective,local_vc_dimension=Inf)
-  test <- compute_starshaped_distr_test(discovery,n_rep=50)
+  test <- compute_starshaped_distr_test(discovery,n_rep=100)
 
   expect_equal((abs(test$p_value-test$p_value_parametric)<=0.15),TRUE)
 

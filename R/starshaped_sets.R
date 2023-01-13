@@ -545,9 +545,9 @@ fit_ks_distribution <- function(objvalues, plot_result = FALSE) {
     y_hat <- stats::pbeta(q = x, shape1 = par[1], shape2 = par[2], ncp = par[3])
     return(mean(weights * (y - y_hat)^2))
   }
+  # TODO : Optimierung besser machen !!!
   result <- stats::optim(
-    par = c(1, 1, 0), fn = loss, x = x, y = y, weights = weights,
-    control = list(maxit = 1000000,method="L-BFGS-B",lower=c(0,0,0))
+    par = c(1.1, 1.1, 0), fn = loss, x = x, y = y, weights = weights,  control = list(maxit = 10000000,method="L-BFGS-B",lower=c(0,0,0))
   )
   if (plot_result) {
     y_hat <- stats::pbeta(

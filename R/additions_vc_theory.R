@@ -653,14 +653,14 @@ compute_sample_ufg_depth <- function(context,
   probabilities <- cardinalities/sum(cardinalities)
   probabilities <- probabilities*0 +1
   probabilities <- probabilities/sum(probabilities)
-  print(c("porbabilities for chossing ufg premises of size:", ufg_size_interval, " :", probabilities))
+  print(c("porbabilities for choosing ufg premises of size:", ufg_size_interval, " :", probabilities))
   while(TRUE){
 
     size <- sample(seq(ufg_size_interval[1],ufg_size_interval[2]),size=1,prob = probabilities)
     index <- sample(seq_len(nrow(context)),size=size)
     subset <-rep(0,nrow(whole_context))
     subset[index] <- 1
-    if(test_explictly_ufg_p_order(subset,whole_context)){
+    if(test_explicitly_ufg_p_order(subset,whole_context)){
       extent <- operator_closure_obj_input(subset,whole_context)
       extent[index] <-0
 
@@ -692,7 +692,7 @@ enumerate_all_ufg_premises_basic <- function(subset,whole_context,n_row_context)
   for(k in index){
     subset_new <- subset;subset_new[k] <- 1
     subset_new_whole_context <- c(subset_new, rep(0,nrow(whole_context)-n_row_context))
-    if(sum(subset_new)==1 | test_explictly_ufg_p_order(subset_new_whole_context,whole_context)){
+    if(sum(subset_new)==1 | test_explicitly_ufg_p_order(subset_new_whole_context,whole_context)){
       #res <<- rbind(res,subset_new)
 
       #res[counter,] <<- subset_new#rbind(res,subset_new)
@@ -767,14 +767,14 @@ enum_ufg_premises_recursive <- function(subset,whole_context,n_row_context){
   index <- which(extent==0 & mask==1)
   #print(which(extent==0 & mask==0))
   #index <- index[which(index > max(which(subset==1)))]
-  if(length(index)==0  | sum(subset*w) %in% sets[seq_len(n_row_context)]){stop}
+  if(length(index)==0  | sum(subset * w) %in% sets[seq_len(n_row_context)]){stop}
   for(k in index){
     subset_new <- subset;subset_new[k] <- 1
     subset_new_whole_context <- c(subset_new, rep(0,nrow(whole_context)-n_row_context))
-    if(  sum(subset_new)==1 | (!( sum(subset_new*w) %in% sets[seq_len(n_row_context)] ))){
+    if(  sum(subset_new)==1 | (!( sum(subset_new*w) %in% sets[seq_len(counter)] ))){
          #(! (any(sets %in% list(which(subset_new==1)) ))) ){
 
-    if(sum(subset_new)==1 |  test_explicitly_ufg_p_order(subset_new_whole_context,whole_context)){
+    if(sum(subset_new)==1 |  ((!( sum(subset_new*w) %in% sets[seq_len(counter)] )) & test_explicitly_ufg_p_order(subset_new_whole_context,whole_context))){
      result[counter,seq_len(sum(subset_new))] <<- which(subset_new==1)#rbind(res,subset_new)
      sets[counter] <<- sum(subset_new*w)
      #sets[[counter]] <<- which(subset_new==1)
