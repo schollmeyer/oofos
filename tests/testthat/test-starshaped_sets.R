@@ -69,6 +69,7 @@ test_that("discover_starshaped_subgroups works", {
   objective <- rnorm(20)
   result_1 <- discover_starshaped_subgroups(ternary_relation, objective, Inf)
   result_2 <- discover_starshaped_subgroups(ternary_relation, objective, 8)
+  expect_equal(result_1$objval >= result_2$objval, TRUE)
   expect_equal(result_1$objval > result_2$objval, TRUE)
 
 

@@ -739,7 +739,10 @@ enumerate_ufg_premises <- function(whole_context, n_row_context,
   subset <- rep(0,n_row_context)
 
   w <- 0.5^(seq_len(n_row_context))
-  sets <- rep(0,n_ufgs)
+  sets <- as.character("",n_ufgs)
+  sets2 <- as.character("",n_ufgs)
+  counter2 <- 1
+
 
   #sets <- list()
 
@@ -752,6 +755,7 @@ enum_ufg_premises_recursive <- function(subset,whole_context,n_row_context){
   for(k in which(subset==1)){
 
     subset_new <- subset; subset_new[k] <- 0
+
     intent <- compute_psi(subset_new,whole_context[seq_len(n_row_context),])
     idx <- which(whole_context[k,]==0&intent==1)
     if(length(idx)>=2){
@@ -767,22 +771,30 @@ enum_ufg_premises_recursive <- function(subset,whole_context,n_row_context){
   index <- which(extent==0 & mask==1)
   #print(which(extent==0 & mask==0))
   #index <- index[which(index > max(which(subset==1)))]
-  if(length(index)==0  | sum(subset * w) %in% sets[seq_len(n_row_context)]){stop}
+  if(length(index)==0  | paste(which(subset==1),collapse=";") %in% sets[seq_len(n_row_context)]){stop}
   for(k in index){
     subset_new <- subset;subset_new[k] <- 1
+    #if( (paste(which(subset_new==1),collapse=";") %in% sets2 )){print("ff");print(which(subset_new==1));print(sets2);hallo[7]=6;break}
+    #if( !(paste(which(subset_new==1),collapse=";") %in% sets2 )){
     subset_new_whole_context <- c(subset_new, rep(0,nrow(whole_context)-n_row_context))
-    if(  sum(subset_new)==1 | (!( sum(subset_new*w) %in% sets[seq_len(counter)] ))){
+    if(  sum(subset_new)==1 | (!(  paste(which(subset_new==1),collapse=";") %in% sets[seq_len(counter)] ))){
          #(! (any(sets %in% list(which(subset_new==1)) ))) ){
 
-    if(sum(subset_new)==1 |  ((!( sum(subset_new*w) %in% sets[seq_len(counter)] )) & test_explicitly_ufg_p_order(subset_new_whole_context,whole_context))){
+    if(sum(subset_new)==1 |   test_explicitly_ufg_p_order(subset_new_whole_context,whole_context)){
      result[counter,seq_len(sum(subset_new))] <<- which(subset_new==1)#rbind(res,subset_new)
-     sets[counter] <<- sum(subset_new*w)
+     sets[counter] <<- paste(which(subset_new==1),collapse=";")
      #sets[[counter]] <<- which(subset_new==1)
      counter <<- counter+1
-      if(counter %% 1000 == 0) {print(counter)}
+     # if(counter %% 1000 == 0) {print(counter)}
      #print(counter)
       enum_ufg_premises_recursive(subset_new,whole_context,n_row_context)
     }
+     # else{
+      #  sets2[counter2] <<- paste(which(subset_new==1),collapse=";")
+       # counter2 <<- counter2 + 1
+       # }
+
+
   }
 }
   stop
