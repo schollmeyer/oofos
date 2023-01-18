@@ -1,5 +1,5 @@
 test_that("enumerate_ufg_premises works", {
- p5 <- compute_all_partial_orders(5,list=FALSE,complemented=TRUE)
+ p5 <- ddandrda::compute_all_partial_orders(5,list=FALSE,complemented=TRUE)
  i <- sample(seq_len(nrow(p5)))
  p5 <- p5[i,]
  n_col_context <-14
@@ -17,7 +17,23 @@ test_that("enumerate_ufg_premises works", {
    }
  }
 expect_equal(number_ufgs+14,nrow(result_1))
+
+while(TRUE){
+  subset <- rep(0,nrow(P))
+  index <- sample(seq_len(nrow(p5)),size=sample((4:6),size=1))
+  subset[index] <- 1
+  if(test_explicitly_ufg_p_order(subset,P)){break}
+}
+ans <- FALSE
+for(k in index){
+  subset_new <- subset; subset_new[k] <-0
+  if(oofos:::test_explicitly_ufg_p_order(subset_new,P)){ans <- TRUE}
+
+}
+expect_equal(ans,TRUE)
+
 })
+
 
 
 test_that("compute_extent_vc_dimension works", {
