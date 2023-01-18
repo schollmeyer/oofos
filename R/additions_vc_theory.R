@@ -638,6 +638,7 @@ test_explicitly_ufg_p_order <- function(subset,p_order_context){
 
 
 ## Nur mal rumprobiert um einen Eindruck zu bekommen...
+
 compute_sample_ufg_depth <- function(context,
                                      partial_order_context =
                                      ddandrda::compute_all_partial_orders(
@@ -785,7 +786,7 @@ enum_ufg_premises_recursive <- function(subset,whole_context,n_row_context){
      sets[counter] <<- paste(which(subset_new==1),collapse=";")
      #sets[[counter]] <<- which(subset_new==1)
      counter <<- counter+1
-     # if(counter %% 1000 == 0) {print(counter)}
+      if(counter %% 1000 == 0) {print(counter)}
      #print(counter)
       enum_ufg_premises_recursive(subset_new,whole_context,n_row_context)
     }
