@@ -2,12 +2,12 @@ test_that("enumerate_ufg_premises works", {
  p5 <- ddandrda::compute_all_partial_orders(5,list=FALSE,complemented=TRUE)
  i <- sample(seq_len(nrow(p5)))
  p5 <- p5[i,]
- n_col_context <-14
+ n_col_context <-16
 
- result_1 <- enumerate_ufg_premises(p5,14)
+ result_1 <- enumerate_ufg_premises(p5,16)
 
 
- subsets <- gtools::permutations(2,14,repeats.allowed=TRUE)-1
+ subsets <- gtools::permutations(2,16,repeats.allowed=TRUE)-1
 
  number_ufgs <- 0
  for(k in seq_len(nrow(subsets))){
@@ -16,7 +16,7 @@ test_that("enumerate_ufg_premises works", {
      number_ufgs <- number_ufgs + 1
    }
  }
-expect_equal(number_ufgs+14,nrow(result_1))
+expect_equal(number_ufgs+16,nrow(result_1))
 
 
 while(TRUE){

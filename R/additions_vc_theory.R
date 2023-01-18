@@ -740,7 +740,7 @@ enumerate_ufg_premises <- function(whole_context, n_row_context,
   subset <- rep(0,n_row_context)
 
   w <- 0.5^(seq_len(n_row_context))
-  sets <- as.character("",n_ufgs)
+  sets <- as.character("_",n_ufgs)
   sets2 <- as.character("",n_ufgs)
   counter2 <- 1
 
@@ -772,7 +772,7 @@ enum_ufg_premises_recursive <- function(subset,whole_context,n_row_context){
   index <- which(extent==0 & mask==1)
   #print(which(extent==0 & mask==0))
   #index <- index[which(index > max(which(subset==1)))]
-  if(length(index)==0  | paste(which(subset==1),collapse=";") %in% sets[seq_len(n_row_context)]){stop}
+  if(length(index)==0  | paste(which(subset==1),collapse=";") %in% sets[seq_len(counter)]){stop}
   for(k in index){
     subset_new <- subset;subset_new[k] <- 1
     #if( (paste(which(subset_new==1),collapse=";") %in% sets2 )){print("ff");print(which(subset_new==1));print(sets2);hallo[7]=6;break}
