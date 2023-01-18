@@ -18,6 +18,7 @@ test_that("enumerate_ufg_premises works", {
  }
 expect_equal(number_ufgs+14,nrow(result_1))
 
+
 while(TRUE){
   subset <- rep(0,nrow(P))
   index <- sample(seq_len(nrow(p5)),size=sample((4:6),size=1))
