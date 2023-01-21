@@ -19,18 +19,26 @@ test_that("enumerate_ufg_premises works", {
 expect_equal(number_ufgs+16,nrow(result_1))
 
 
+
+for(k in (1:100)){
 while(TRUE){
-  subset <- rep(0,nrow(P))
-  index <- sample(seq_len(nrow(p5)),size=sample((4:6),size=1))
+  subset <- rep(0,nrow(p5))
+  index <- sample(seq_len(nrow(p5)),size=sample((3:6),size=1))
   subset[index] <- 1
-  if(test_explicitly_ufg_p_order(subset,P)){break}
+  if(test_explicitly_ufg_p_order(subset,p5)){break}
 }
+
 ans <- FALSE
-for(k in index){
-  subset_new <- subset; subset_new[k] <-0
-  if(oofos:::test_explicitly_ufg_p_order(subset_new,P)){ans <- TRUE}
+for(l in index){
+  subset_new <- subset; subset_new[l] <-0
+  if(test_explicitly_ufg_p_order(subset_new,p5)){ans <- TRUE}
 
 }
+  if(ans==FALSE){break}
+
+}
+
+
 expect_equal(ans,TRUE)
 
 })

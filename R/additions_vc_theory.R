@@ -733,6 +733,9 @@ enumerate_all_ufg_premises_basic <- function(subset,whole_context,n_row_context)
 #' @export
 enumerate_ufg_premises <- function(whole_context, n_row_context,
                                    n_ufgs=10000000){
+
+  '%fin%' <- fastmatch::'%fin%'
+
   n_items <- sqrt(ncol(whole_context)/2)
   upper_bound_ufg_dimension <- n_items*(n_items-1)/2
   result <- array(0,c(n_ufgs, upper_bound_ufg_dimension))
