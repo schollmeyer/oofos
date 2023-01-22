@@ -33,11 +33,11 @@ expect_equal(result$value<=0.0001
 })
 
 test_that("compute_starshaped_distr_test works", {
-  betweenness <- get_betweenness_from_poset(compute_example_posets(6)$two_dimensional_grid)
+  betweenness <- get_betweenness_from_poset(compute_example_posets(9)$two_dimensional_grid)
   n_rows <- nrow(betweenness)
 
-  objective <- sample(c(0,1),size=n_rows,replace=TRUE)
-  objective <- compute_objective(data.frame(objective), target="objective",
+  response <- sample(c(0,1),size=n_rows,replace=TRUE)
+  objective <- compute_objective(data.frame(response), target="response",
                                  target_class=0)
 
 

@@ -87,13 +87,22 @@ compute_example_posets <- function(n) {
       interval_order[k, l] <- (upper[k] <= lower[l])
     }
   }
+  p5 <- ddandrda::compute_all_partial_orders(5,list=FALSE,complemented=FALSE)
+  index <- sample(seq_len(nrow(p5)),size=1)
+  random_p_order_1 <- p5[index,]; dim(random_p_order_1) <- c(5,5)
+  index <- sample(seq_len(nrow(p5)),size=1)
+  random_p_order_2 <- p5[index,]; dim(random_p_order_2) <- c(5,5)
+  index <- sample(seq_len(nrow(p5)),size=1)
+  random_p_order_3 <- p5[index,]; dim(random_p_order_3) <- c(5,5)
 
 
   return(list(
     chain = chain, antichain = antichain,
     maximum_edge_poset = maximum_edge_poset, kellys_poset = kellys_poset,
     two_dimensional_grid = two_dimensional_grid,
-    powerset_order = powerset_order, interval_order = interval_order
+    powerset_order = powerset_order, interval_order = interval_order,
+    random_p_order_1 = random_p_order_1, random_p_order_2 = random_p_order_2,
+    random_p_order_3 = random_p_order_1
   ))
 }
 
