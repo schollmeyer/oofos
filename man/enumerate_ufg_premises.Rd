@@ -4,7 +4,12 @@
 \alias{enumerate_ufg_premises}
 \title{Enumerate all ufg premises of a complemented poset context}
 \usage{
-enumerate_ufg_premises(whole_context, n_row_context, n_ufgs = 1e+07)
+enumerate_ufg_premises(
+  whole_context,
+  n_row_context,
+  n_ufgs = 1e+07,
+  print_progress = TRUE
+)
 }
 \arguments{
 \item{whole_context}{is the whole context that describes the whole space of complemented
@@ -16,6 +21,8 @@ It is assumed that the first 'n_row_context' row of the ccontext
 
 \item{n_ufgs}{is an upper bound for the number of ufg premises. This is needed to
 allocate enough memory for the result.}
+
+\item{print_progress}{If TRUE, the progress of the enumeration will printet.}
 }
 \value{
 Amtraix where every row represents an ufg premise by giving the

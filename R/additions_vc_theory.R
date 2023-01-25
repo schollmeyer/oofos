@@ -96,7 +96,7 @@ add_ufg_constraints <- function(model) {
 }
 
 
-
+# TODO : add constraints_partial_order
 
 
 #' Computes a MILP model for the computation of the VC-dimension of a formal
@@ -621,7 +621,7 @@ sample_ufg_K_attribute_set <- function(context, K, N = rep(ncol(context), K), th
 
 ### Zeugs von Weihnachten
 
-test_explicitly_ufg_p_order <- function(subset,p_order_context){
+test_explicitly_ufg_p_order <- function(subset,p_order_context,print_q =FALSE){
   ## ????? if(sum(subset)==1){return(FALSE)}
   subset_size <- sum(subset)
   ufg_prove_candidates <- operator_closure_obj_input(subset,p_order_context)
@@ -632,6 +632,9 @@ test_explicitly_ufg_p_order <- function(subset,p_order_context){
                                  1- operator_closure_obj_input(subset_new,
                                                                p_order_context))
     if(all(ufg_prove_candidates==0)){return(FALSE)}
+  }
+  if(print_q){
+    print(which(ufg_prove_candidates==1))
   }
   return(any(ufg_prove_candidates==1))
 }
@@ -723,6 +726,9 @@ enumerate_all_ufg_premises_basic <- function(subset,whole_context,n_row_context)
 #' @param n_ufgs is an upper bound for the number of ufg premises. This is needed to
 #' allocate enough memory for the result.
 #'
+#' @param print_progress If TRUE, the progress of the enumeration will printet.
+#'
+#'
 #' @return Amtraix where every row represents an ufg premise by giving the
 #' indices of the partial orders from the context 'whole_context'. Since
 #' different ufg premises can have different cardinalities, for ufg premises
@@ -732,13 +738,13 @@ enumerate_all_ufg_premises_basic <- function(subset,whole_context,n_row_context)
 #'
 #' @export
 enumerate_ufg_premises <- function(whole_context, n_row_context,
-                                   n_ufgs=10000000){
+                                   n_ufgs=10000000, print_progress=TRUE){
 
   '%fin%' <- fastmatch::'%fin%'
 
   n_items <- sqrt(ncol(whole_context)/2)
   upper_bound_ufg_dimension <- n_items*(n_items-1)/2
-  result <- array(0,c(n_ufgs, upper_bound_ufg_dimension))
+  result <- list()#array(0,c(n_ufgs, upper_bound_ufg_dimension))
   counter <- 1
   subset <- rep(0,n_row_context)
 
@@ -746,6 +752,8 @@ enumerate_ufg_premises <- function(whole_context, n_row_context,
   sets <- as.character("_",n_ufgs)
   sets2 <- as.character("",n_ufgs)
   counter2 <- 1
+
+  simple_ufg_index <- NULL
 
 
   #sets <- list()
@@ -785,11 +793,13 @@ enum_ufg_premises_recursive <- function(subset,whole_context,n_row_context){
          #(! (any(sets %in% list(which(subset_new==1)) ))) ){
 
     if(sum(subset_new)==1 |   test_explicitly_ufg_p_order(subset_new_whole_context,whole_context)){
-     result[counter,seq_len(sum(subset_new))] <<- which(subset_new==1)#rbind(res,subset_new)
-     sets[counter] <<- paste(which(subset_new==1),collapse=";")
+     subset_new_index <- which(subset_new==1)
+      result[[counter]] <<- subset_new_index#[counter,seq_len(sum(subset_new))] <<- which(subset_new==1)#rbind(res,subset_new)
+     sets[counter] <<- paste(subset_new_index,collapse=";")
+     if(length(subset_new_index)==1){simple_ufg_index <<- c(simple_ufg_index,counter)}
      #sets[[counter]] <<- which(subset_new==1)
      counter <<- counter+1
-      if(counter %% 1000 == 0) {print(counter)}
+      if(print_progress & counter %% 1000 == 0) {print(counter)}
      #print(counter)
       enum_ufg_premises_recursive(subset_new,whole_context,n_row_context)
     }
@@ -805,11 +815,48 @@ enum_ufg_premises_recursive <- function(subset,whole_context,n_row_context){
 }
 
 enum_ufg_premises_recursive(subset,whole_context,n_row_context)
-return(result[seq_len(counter-1),])
+print(counter)
+result <- result[-counter]
+result <- result[-simple_ufg_index]
+return(result)
 }
 
 
-##
+####
+
+####
+
+####
+
+get_weighted_representation <- function(x,y = rep(1,dim(x)[1])){
+  ## computes weigthed representation of a data matrix x with duplicated rows,
+  ##  returns unique(x) together with counts: how often appears the column,
+  # mean_y: mean of y in the set of the duplicated columns
+  xd <- data.frame(cbind(x,y))
+  names(xd)[1] <- "v1"
+  p <- dim(x)[2]
+  result=as.matrix(plyr::ddply(xd,names(xd[(1:p)]),dplyr::summarise,count=length(v1),mean.y=mean(y),sum.y=sum(y)))
+  colnames(result[,(1:p)]) <- colnames(x)
+  return(list(x_weighted=result[,(1:p)], y_weighted=result[,p+3],mean_y=result[,p+2],counts=result[,p+1]))}
+
+compute_ufg_depth <- function(data_context, evaluation_context , ufg_list, counts){
+
+  n_list <- length(ufg_list)
+  result <- rep(0, nrow(evaluation_context))
+  number_ufgs <-0
+  for( k in seq_len(n_list)){
+    subset <- rep(0, nrow(data_context)); subset[ufg_list[[k]]] <- 1
+    intent <- compute_psi(subset,data_context)
+    extent <- compute_phi(intent, evaluation_context)
+    result[which(extent==1)] <- result[which(extent==1)] + prod(counts[ufg_list[[k]]])
+    number_ufgs <- number_ufgs + prod(counts[ufg_list[[k]]])
+
+  }
+print(number_ufgs)
+
+ return(result/number_ufgs)
+
+}
 ###
 ###
 ### AUSKOMMENTIERT::

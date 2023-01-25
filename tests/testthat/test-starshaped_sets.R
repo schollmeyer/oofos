@@ -33,18 +33,33 @@ expect_equal(result$value<=0.0001
 })
 
 test_that("compute_starshaped_distr_test works", {
-  betweenness <- get_betweenness_from_poset(compute_example_posets(9)$two_dimensional_grid)
+  betweenness <- get_betweenness_from_poset(compute_example_posets(15,powerset_order=FALSE)$two_dimensional_grid)
   n_rows <- nrow(betweenness)
+  widths <-compute_widths(betweenness)
 
-  response <- sample(c(0,1),size=n_rows,replace=TRUE)
+
+  index <- rep(0,n_rows)
+  center_id <- sample(seq_len(n_rows),size=1)
+  for(k in (1:8)){
+     boundary_id <- sample(seq_len(n_rows),size =1)
+     index[which(betweenness[center_id,,boundary_id]==1)] <-1
+  }
+  probs <- rep(1,n_rows)
+  probs[which(index==1)] <- 10
+  probs <- probs/sum(probs)
+
+  positives <- sample(seq_len(n_rows),size=n_rows,replace=TRUE,prob=probs)
+  response <- rep(0,n_rows)
+  response[positives] <- 1
+
   objective <- compute_objective(data.frame(response), target="response",
-                                 target_class=0)
+                                 target_class=1)
 
 
   discovery <- discover_starshaped_subgroups(betweenness,objective,local_vc_dimension=Inf)
   test <- compute_starshaped_distr_test(discovery,n_rep=100)
 
-  expect_equal((abs(test$p_value-test$p_value_parametric)<=0.15),TRUE)
+  expect_equal((abs(test$p_value-test$p_value_parametric)<=0.05),TRUE)
 
 
 

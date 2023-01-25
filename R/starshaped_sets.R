@@ -489,7 +489,7 @@ compute_starshaped_distr_test <- function(ssd_result, n_rep = 1000,
           round(p_value_parametric, 4), "; n:", k, "\nmedian:", round(stats::median(x),4)
         ), verticals = TRUE,
         xlab = "test statistic", ylab = "cdf (black), density (grey)",
-        xlim = c(0, 1.05 * max(c(x, ssd_result$objval)))
+        xlim = c(0.95*min(x), 1.05 * max(c(x, ssd_result$objval)))
       )
       graphics::abline(v = ssd_result$objval, col = "darkblue")
       graphics::abline(v = stats::median(x), col = "darkgreen", lty = 2)
@@ -539,7 +539,8 @@ fit_ks_distribution <- function(objvalues, plot_result = FALSE) {
   y <- cdf(x)
   weights <- rep(1, length(x))
   weights[which(y <= 0.5)] <- 0.5
-  weights[which(y >= 0.95)] <- 1.5
+  weights[which(y >= 0.95)] <- 2
+  weights[which(y >= 0.975)] <- 4
   weights <- weights / sum(weights)
   loss <- function(par, x, y, weights) {
     y_hat <- stats::pbeta(q = x, shape1 = max(10^-10,par[1]), shape2 = max(10^-10,par[2]), ncp = max(10^-10,par[3]))

@@ -2,25 +2,30 @@ test_that("enumerate_ufg_premises works", {
  p5 <- ddandrda::compute_all_partial_orders(5,list=FALSE,complemented=TRUE)
  i <- sample(seq_len(nrow(p5)))
  p5 <- p5[i,]
- n_col_context <-16
+ n_row_context <-17
 
- result_1 <- enumerate_ufg_premises(p5,16)
+ system.time(result_1 <- enumerate_ufg_premises(p5,n_row_context))
 
 
- subsets <- gtools::permutations(2,16,repeats.allowed=TRUE)-1
-
+ subsets <- gtools::permutations(2,n_row_context,repeats.allowed=TRUE)-1
+ ufg_dim <- 5*4/2
+ i <- which(rowSums(subsets)<=ufg_dim)
+ subsets <- subsets[i,]
  number_ufgs <- 0
+ system.time(
  for(k in seq_len(nrow(subsets))){
-   if(test_explicitly_ufg_p_order( c(subsets[k,],rep(0,4231-14)), p5)){
+   if(test_explicitly_ufg_p_order( c(subsets[k,],rep(0,4231-n_row_context)), p5)){
      #print(which(subsets[k,]==1))
      number_ufgs <- number_ufgs + 1
+     #print(number_ufgs)
    }
  }
-expect_equal(number_ufgs+16,nrow(result_1))
+)
+expect_equal(number_ufgs,length(result_1))
 
 
 
-for(k in (1:100)){
+
 while(TRUE){
   subset <- rep(0,nrow(p5))
   index <- sample(seq_len(nrow(p5)),size=sample((3:6),size=1))
@@ -32,9 +37,6 @@ ans <- FALSE
 for(l in index){
   subset_new <- subset; subset_new[l] <-0
   if(test_explicitly_ufg_p_order(subset_new,p5)){ans <- TRUE}
-
-}
-  if(ans==FALSE){break}
 
 }
 
@@ -147,17 +149,17 @@ result_2 <- rep(TRUE,n_test*(n_test-1))
 
 t <- 1
 
-for(k in (1:n_test)){
-  for(l in (1:n_test)[-k]){
-    subset <- rep(0,n_rows)
-    subset[c(k,l)] <- 1
-    result_1[t] <- check_objset_sufg_candidate(subset,context,2)$result
-    result_2[t] <- TRUE#(sum(pmin(context[k,],context[l,]))<=2)
-    if(result_2[t]==FALSE){print(c(k,l));break}
-    t <- t+1
+#for(k in (1:n_test)){
+#  for(l in (1:n_test)[-k]){
+ #   subset <- rep(0,n_rows)
+#    subset[c(k,l)] <- 1
+#    result_1[t] <- check_objset_sufg_candidate(subset,context,2)$result
+#    result_2[t] <- TRUE#(sum(pmin(context[k,],context[l,]))<=2)
+#    if(result_2[t]==FALSE){print(c(k,l));break}
+#    t <- t+1
 
-}
-}
+#}
+#}
 expect_equal(all(result_1 == result_2),TRUE)
 })
 

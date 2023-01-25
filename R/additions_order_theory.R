@@ -51,7 +51,7 @@ compute_pseudoreduction <- function(incidence) {
 }
 
 
-compute_example_posets <- function(n) {
+compute_example_posets <- function(n,powerset_order=TRUE) {
   antichain <- diag(rep(1, n))
   chain <- upper.tri(antichain)
   diag(chain) <- 1
@@ -75,9 +75,11 @@ compute_example_posets <- function(n) {
   two_dimensional_grid <- compute_incidence(gtools::permutations(n, 2,
     repeats.allowed = TRUE
   ))
+  if(powerset_order==TRUE){
   powerset_order <- compute_incidence(gtools::permutations(2, n,
     repeats.allowed = TRUE
-  ) - 1)
+  ) - 1)}
+  else{powerset_order <- NULL}
   # interval_order
   upper <- (1:n)
   lower <- upper - stats::runif(n) * 4.01
