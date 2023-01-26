@@ -14,12 +14,14 @@ Suggests:
 Config/testthat/edition: 3
 Imports: 
     ddandrda,
+    dplyr,
     fastmatch,
     fcaR,
     gtools,
     gurobi,
     igraph,
     Matrix,
+    plyr,
     RBGL,
     slam,
     stats,

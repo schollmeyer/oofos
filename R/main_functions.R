@@ -36,6 +36,30 @@
 #' result <- gurobi::gurobi(model)
 #' result$objval}
 #'
+#'
+#' context <- matrix(c(1,1,0,0,1,0,1,
+#' 1,0,0,0,0,1,0,
+#' 0,1,0,0,0,0,0,
+#' 0,1,0,1,0,0,0,
+#' 0,1,0,1,0,0,0,
+#' 0,0,1,1,1,0,0,
+#' 0,0,0,0,0,1,0,
+#' 0,0,0,0,0,1,0,
+#' 0,1,0,1,0,0,0,
+#' 1,0,1,0,0,1,0), nrow = 10, ncol = 7, byrow = TRUE)
+#'
+#' objective <- c(1,2,3,4,5,6,7,8,9,10) - 5.5
+#' model <- optimize_on_context_extents(context,(1:10),objective)
+#' result <- gurobi::gurobi(model)
+#'
+#' result$x
+#' # 0 0 0 0 0 1 0 0 0 1 0 0 1 0 0 0 0
+#'
+#' result$objval
+#' # [1] 5
+#'
+#'
+#'
 #' @export
 optimize_on_context_extents <- function(context,
                                         gen_index = seq_len(nrow(context)),

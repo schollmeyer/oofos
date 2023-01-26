@@ -544,7 +544,7 @@ fit_ks_distribution <- function(objvalues, plot_result = FALSE) {
   weights <- weights / sum(weights)
   loss <- function(par, x, y, weights) {
     y_hat <- stats::pbeta(q = x, shape1 = max(10^-10,par[1]), shape2 = max(10^-10,par[2]), ncp = max(10^-10,par[3]))
-    if(any(is.na(y_hat))){print(par);break}
+    #if(any(is.na(y_hat))){print(par);break}
     return(mean(weights * (y - y_hat)^2))
   }
   # TODO : Optimierung besser machen !!!
