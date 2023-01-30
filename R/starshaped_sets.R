@@ -359,7 +359,7 @@ discover_starshaped_subgroups <- function(stylized_betweenness, objective,
   model$lb <- rep(0, n_rows)
   model$ub <- rep(1, n_rows)
   # force centerpoint to be in the set
-  model$lb[k] <- 1
+  model$lb[i] <- 1
   model$modelsense <- "max"
   b <- gurobi::gurobi(model, params = params)
   close(pb)

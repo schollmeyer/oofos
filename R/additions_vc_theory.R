@@ -340,6 +340,7 @@ check_objset_sufg_candidate <- function(subset, context, s) {
   # immer als nicht ufg behandelt werden, da muesste ich nochmal drueber
   # nachdenken
   # tests if subset is enlargable to a sufg premise of size K
+  # TODO :  mat zu moel o.ae. unten
   mat <- compute_sufg_dimension(context)
   mat$lb[which(subset == 1)] <- 1
   mat$A <- rbind(mat$A, c(

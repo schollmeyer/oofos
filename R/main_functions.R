@@ -298,6 +298,114 @@ compute_quality <- function(sdtask, result, NAMES = colnames(sdtask$context)) { 
 }
 
 
+
+
+
+
+
+optim_on_context_extents_h0 <- function(model, params =
+                                               list(outputflag = 0)) {
+  obj_new <- sample(model$obj[seq_len(nrow(model$context))])
+  model$obj[seq_len(nrow(model$context))] <- obj_new
+  result <- gurobi::gurobi(model, params = params)$objval
+  return(result)
+}
+
+#' Compute a statistical significance test for an optimization over context
+#' extents
+#'
+#' TODO : whole description
+#'
+#' @description 'compute_starshaped_distr_test' performs a statistical
+#' significance test to assess if the largest differences of relative
+#' frequencies over all starshaped subgroups that was found in a starshaped
+#' subgroup discovery is statistically significantly diefferent from zero.
+#'
+#' @param ssd_result is the result of a starshaped subgroup discovery that was
+#' computed with the function 'discover_starshaped_subgroups'.
+#' @param n_rep is the number of permutations in the observation-randomization
+#' test.
+#'
+#' @param plot_progress if TRUE (default) then the progress of the
+#' observation-randomization test is plot by drawing the empirical distribution
+#' function of the currently computed resampled objective values. Additionally,
+#' nonparametric and parametric estimates of the p-value based on the currently
+#' computed resamples are printed. TODO : beta genauer
+#'
+#' @return A list with entries 'objvalues': the resampled objective values,
+#' 'p_value'  the (nonparametrically) estimated p-value of the
+#' observation-randomization test, 'p_value_parametric': a parametric estimate
+#' of the p-value based on a beta-approximation of the distribution of the
+#' resampled objective values.
+#'
+#'
+#' @export
+compute_extent_optim_test <- function(model, n_rep = 1000,
+                                          plot_progress = TRUE) {
+  if (n_rep <= 2) {
+    print("Be serious!")
+    return(NULL)
+  }
+  objvalues <- rep(0, n_rep)
+  for (k in seq_len(n_rep)) {
+    objvalues[k] <- optim_on_context_extents_h0(model)
+    x <- objvalues[seq_len(k)]
+    p_value <- mean(x >= model$objval)
+    if (k > 2) {
+      suppressWarnings(fit <- fit_ks_distribution(x))
+
+      p_value_parametric <- stats::pbeta(model$objval, fit$par[1],
+                                         fit$par[2], fit$par[3],
+                                         lower.tail = FALSE
+      )
+    }
+
+    if (plot_progress == TRUE & k > 2) {
+      plot(stats::ecdf(x),
+           do.points = FALSE, col.01line = NULL,
+           main = paste(
+             "observed value:",
+             round(model$objval, 4),
+             "p-palue:", round(p_value, 4), "\n; param. p-value:",
+             round(p_value_parametric, 4), "; n:", k, "\nmedian:", round(stats::median(x),4)
+           ), verticals = TRUE,
+           xlab = "test statistic", ylab = "cdf (black), density (grey)",
+           xlim = c(0.95*min(x), 1.05 * max(c(x, model$objval)))
+      )
+      graphics::abline(v = model$objval, col = "darkblue")
+      graphics::abline(v = stats::median(x), col = "darkgreen", lty = 2)
+      sort_x <- seq(0, 1, length.out = 1000)
+      density_parametric <- stats::dbeta(
+        sort_x, fit$par[1], fit$par[2],
+        fit$par[3]
+      )
+      graphics::lines(sort_x, density_parametric / max(density_parametric),
+                      col = "darkgreen"
+      )
+      cdf_parametric <- stats::pbeta(sort_x, fit$par[1], fit$par[2], fit$par[3])
+      graphics::lines(sort_x, cdf_parametric, col = "darkgreen")
+      f <- stats::density(x)
+      graphics::lines(f$x, f$y / max(f$y), col = "grey")
+      # TODO :result_temp <<- list(objvalues = x, p_value = p_value,
+      #                           p_value_parametric =
+      #   p_value_parametric)
+    }
+  }
+  #rm(result_temp)
+  return(list(
+    objvalues = objvalues, p_value = p_value, p_value_parametric =
+      p_value_parametric
+  ))
+}
+
+
+
+
+
+
+
+
+
 #
 #
 # subgroup_discovery_fca_milp <- function(dat, target, target.class, nrep, heuristic, remove.full.columns = TRUE, clarify.cols = FALSE, reduce.cols = FALSE, weighted = FALSE, small) { # Fuehrt Subgroup Discovery durch (erzeugt nur MILP, das dann noch mit z.B. gurobi(...) gelöst werden muss

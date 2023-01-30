@@ -2,6 +2,7 @@
 
 export(add_ufg_constraints)
 export(check_objset_sufg_candidate)
+export(compute_extent_optim_test)
 export(compute_extent_vc_dimension)
 export(compute_objective)
 export(compute_quotient_order)

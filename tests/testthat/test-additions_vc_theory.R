@@ -143,23 +143,25 @@ x <- sample(x)
 
 context <- get_hierarchical_scaling_vec(x)
 
+# TODO: Was soll das
+
 n_test <- 4
 result_1 <- rep(TRUE,n_test*(n_test-1))
 result_2 <- rep(TRUE,n_test*(n_test-1))
 
 t <- 1
 
-#for(k in (1:n_test)){
-#  for(l in (1:n_test)[-k]){
- #   subset <- rep(0,n_rows)
-#    subset[c(k,l)] <- 1
-#    result_1[t] <- check_objset_sufg_candidate(subset,context,2)$result
-#    result_2[t] <- TRUE#(sum(pmin(context[k,],context[l,]))<=2)
-#    if(result_2[t]==FALSE){print(c(k,l));break}
-#    t <- t+1
+for(k in (1:n_test)){
+ for(l in (1:n_test)[-k]){
+  subset <- rep(0,n_rows)
+   subset[c(k,l)] <- 1
+   result_1[t] <- check_objset_sufg_candidate(subset,context,2)$result
+   result_2[t] <- TRUE#(sum(pmin(context[k,],context[l,]))<=2)
+   if(result_2[t]==FALSE){print(c(k,l));break}
+   t <- t+1
 
-#}
-#}
+}
+}
 expect_equal(all(result_1 == result_2),TRUE)
 })
 
