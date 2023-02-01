@@ -762,6 +762,10 @@ enumerate_ufg_premises <- function(whole_context, n_row_context,
 
 
 enum_ufg_premises_recursive <- function(subset,whole_context,n_row_context){
+  data_list <- convert_context_to_list(whole_context[seq_len(n_row_context),
+                                       seq_len(ncol(whole_context)/2)],
+                                       complemented=FALSE)
+
   extent <- operator_closure_obj_input(subset,whole_context[seq_len(n_row_context),])
 
   mask <- rep(1,n_row_context)
@@ -793,7 +797,8 @@ enum_ufg_premises_recursive <- function(subset,whole_context,n_row_context){
     if(  sum(subset_new)==1 | (!(  paste(which(subset_new==1),collapse=";") %in% sets[seq_len(counter)] ))){
          #(! (any(sets %in% list(which(subset_new==1)) ))) ){
 
-    if(sum(subset_new)==1 |   test_explicitly_ufg_p_order(subset_new_whole_context,whole_context)){
+    # if(sum(subset_new)==1 |   test_explicitly_ufg_p_order(subset_new_whole_context,whole_context)){
+    if(sum(subset_new)==1 |   test_ufg_porder(data_list[which(subset_new==1)])){
      subset_new_index <- which(subset_new==1)
       result[[counter]] <<- subset_new_index#[counter,seq_len(sum(subset_new))] <<- which(subset_new==1)#rbind(res,subset_new)
      sets[counter] <<- paste(subset_new_index,collapse=";")
