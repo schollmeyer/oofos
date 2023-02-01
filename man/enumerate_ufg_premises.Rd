@@ -4,23 +4,17 @@
 \alias{enumerate_ufg_premises}
 \title{Enumerate all ufg premises of a complemented poset context}
 \usage{
-enumerate_ufg_premises(
-  whole_context,
-  n_row_context,
-  n_ufgs = 1e+07,
-  print_progress = TRUE
-)
+enumerate_ufg_premises(whole_context, n_row_context, print_progress = TRUE)
 }
 \arguments{
-\item{whole_context}{is the whole context that describes the whole space of complemented
-partial orders.}
+\item{whole_context}{is the whole context that describes the whole space of
+complemented partial orders. In the current implementation it is not needed
+to supply the whole context of all partial orders, instead it is enough to
+supply only th orders obtained in the data sample}
 
 \item{n_row_context}{is the number of objects in the observed data sample.
-It is assumed that the first 'n_row_context' row of the ccontext
+It is assumed that the first 'n_row_context' rows of the context
 'whole_context' represent the observed partial orders.}
-
-\item{n_ufgs}{is an upper bound for the number of ufg premises. This is needed to
-allocate enough memory for the result.}
 
 \item{print_progress}{If TRUE, the progress of the enumeration will printet.}
 }
@@ -31,5 +25,6 @@ different ufg premises can have different cardinalities, for ufg premises
 with smaller cardinalities the corresponding vectors are filled with zeros
 }
 \description{
-TODO
+'enumerate_ufg_premises' enumerates all ufg premises for a set
+of partial order given as a complemented context
 }

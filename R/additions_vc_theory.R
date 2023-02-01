@@ -641,135 +641,87 @@ test_explicitly_ufg_p_order <- function(subset,p_order_context,print_q =FALSE){
 }
 
 
-## Nur mal rumprobiert um einen Eindruck zu bekommen...
-
-compute_sample_ufg_depth <- function(context,
-                                     partial_order_context =
-                                     ddandrda::compute_all_partial_orders(
-                                     sqrt(ncol(context)/2), list=FALSE,
-                                     complemented=TRUE),n_rep=100,
-                                     ufg_size_interval = c(2,8)){
-  k <- 1
-  whole_context <- rbind(context,partial_order_context)
-
-  result <- array(0,c(nrow(whole_context) , ufg_size_interval[2]-ufg_size_interval[1]+1))
-  colnames(result) <- seq(ufg_size_interval[1],ufg_size_interval[2])
-  cardinalities <- choose(nrow(context),seq(ufg_size_interval[1],ufg_size_interval[2]))
-  probabilities <- cardinalities/sum(cardinalities)
-  probabilities <- probabilities*0 +1
-  probabilities <- probabilities/sum(probabilities)
-  print(c("porbabilities for choosing ufg premises of size:", ufg_size_interval, " :", probabilities))
-  while(TRUE){
-
-    size <- sample(seq(ufg_size_interval[1],ufg_size_interval[2]),size=1,prob = probabilities)
-    index <- sample(seq_len(nrow(context)),size=size)
-    subset <-rep(0,nrow(whole_context))
-    subset[index] <- 1
-    if(test_explicitly_ufg_p_order(subset,whole_context)){
-      extent <- operator_closure_obj_input(subset,whole_context)
-      extent[index] <-0
-
-      result[,size-ufg_size_interval[1]+1] <- result[,size-ufg_size_interval[1]+1] +extent
-      print(c(k,"size:",size))
-      k=k+1
-
-    }
-result <<- result
-    if(k > n_rep){return(result)}
-  }
-
-}
-
-####
 
 
-#context2 <- rbind(context,P5)
-#i <- which(!duplicated(context2))
-#whole_context <- context2[i,]
-#n_row_context <- nrow(context)
 
 
-enumerate_all_ufg_premises_basic <- function(subset,whole_context,n_row_context){
-  extent <- operator_closure_obj_input(subset,whole_context[seq_len(n_row_context),])
-  index <- which(extent==0)
-  index <- index[which(index > max(which(subset==1)))]
-  if(length(index)==0){stop}
-  for(k in index){
-    subset_new <- subset;subset_new[k] <- 1
-    subset_new_whole_context <- c(subset_new, rep(0,nrow(whole_context)-n_row_context))
-    if(sum(subset_new)==1 | test_explicitly_ufg_p_order(subset_new_whole_context,whole_context)){
-      #res <<- rbind(res,subset_new)
 
-      #res[counter,] <<- subset_new#rbind(res,subset_new)
-      #counter <<- counter+1
 
-    #  counter <<- counter+1
-    #  print(counter)
-      enumerate_all_ufg_premises_basic(subset_new,whole_context,n_row_context)
-    }
-  }
 
-  stop
-}
 
 
 #' Enumerate all ufg premises of a complemented poset context
 #'
-#' @description TODO
+#' @description 'enumerate_ufg_premises' enumerates all ufg premises for a set
+#' of partial order given as a complemented context
 #'
 #'
-#' @param whole_context is the whole context that describes the whole space of complemented
-#' partial orders.
+#' @param whole_context is the whole context that describes the whole space of
+#' complemented partial orders. In the current implementation it is not needed
+#' to supply the whole context of all partial orders, instead it is enough to
+#' supply only the orders obtained in the data sample
 #'
 #' @param n_row_context is the number of objects in the observed data sample.
-#' It is assumed that the first 'n_row_context' row of the ccontext
+#' It is assumed that the first 'n_row_context' rows of the context
 #' 'whole_context' represent the observed partial orders.
-#' @param n_ufgs is an upper bound for the number of ufg premises. This is needed to
-#' allocate enough memory for the result.
+#'
 #'
 #' @param print_progress If TRUE, the progress of the enumeration will printet.
 #'
 #'
-#' @return Amtraix where every row represents an ufg premise by giving the
-#' indices of the partial orders from the context 'whole_context'. Since
-#' different ufg premises can have different cardinalities, for ufg premises
-#' with smaller cardinalities the corresponding vectors are filled with zeros
+#' @return A list of all ufg premises given as a vector of indices.
 #'
 #'
 #'
 #' @export
 enumerate_ufg_premises <- function(whole_context, n_row_context,
-                                   n_ufgs=10000000, print_progress=TRUE){
-
-  '%fin%' <- fastmatch::'%fin%'
-
-  n_items <- sqrt(ncol(whole_context)/2)
-  upper_bound_ufg_dimension <- n_items*(n_items-1)/2
-  result <- list()#array(0,c(n_ufgs, upper_bound_ufg_dimension))
-  counter <- 1
-  subset <- rep(0,n_row_context)
-
-  w <- 0.5^(seq_len(n_row_context))
-  sets <- as.character("_",n_ufgs)
-  sets2 <- as.character("",n_ufgs)
-  counter2 <- 1
-
-  simple_ufg_index <- NULL
+                                   print_progress=TRUE){
 
 
-  #sets <- list()
-
-
-
-enum_ufg_premises_recursive <- function(subset,whole_context,n_row_context){
+  # compute list of porders (this is only needed for the function
+  # test_ufg_porder)
   data_list <- convert_context_to_list(whole_context[seq_len(n_row_context),
                                        seq_len(ncol(whole_context)/2)],
                                        complemented=FALSE)
 
-  extent <- operator_closure_obj_input(subset,whole_context[seq_len(n_row_context),])
+  # fast version for checking if ufg set is in the list of already enumerated
+  # ufg sets
+  '%fin%' <- fastmatch::'%fin%'
 
-  mask <- rep(1,n_row_context)
-  for(k in which(subset==1)){
+  n_items <- sqrt(ncol(whole_context)/2)
+  upper_bound_ufg_dimension <- n_items*(n_items-1)/2
+  result <- list()
+  counter <- 1
+  subset <- rep(0,n_row_context)
+  sets <- list()
+  #premises of size 1 are also enumerated but in the end they are excluded
+  simple_ufg_index <- NULL
+
+
+
+
+
+  # This function recursively enumerates all ufg-premises and stores them in the
+  # list result. The list sets serves as a look up list and the function stops
+  # if an ufg-premise was already visited.
+  enum_ufg_premises_recursive <- function(subset,whole_context,n_row_context){
+
+    if(paste(which(subset==1),collapse=";") %fin% sets[seq_len(counter)]){stop}
+    # The objects in the hull of a current ufg-premise can not be used
+    # to enlarge the ufg. Therfore they are later excluded (see also line
+    # ''index <- which(extent==0 & mask==1)''
+    extent <- operator_closure_obj_input(subset,
+                                         whole_context[seq_len(n_row_context),])
+
+    if(all(extent==1)){stop}
+
+    # every order p of the current ufg set genuinely removes some attributes
+    # from the intent. If another order p2 does also remove these attributes
+    # (and possibly more), then p would become redundant. therefore, such orders
+    #p2 are excluded by mask , cf. line ''index <- which(extent==0 & mask==1)''
+
+     mask <- rep(1,n_row_context)
+         for(k in which(subset==1)){
 
     subset_new <- subset; subset_new[k] <- 0
 
@@ -786,33 +738,49 @@ enum_ufg_premises_recursive <- function(subset,whole_context,n_row_context){
   }
 
   index <- which(extent==0 & mask==1)
-  #print(which(extent==0 & mask==0))
-  #index <- index[which(index > max(which(subset==1)))]
-  if(length(index)==0  | paste(which(subset==1),collapse=";") %in% sets[seq_len(counter)]){stop}
+
+  # stop if there cannot be added any order
+  if(length(index)==0){stop}
   for(k in index){
     subset_new <- subset;subset_new[k] <- 1
-    #if( (paste(which(subset_new==1),collapse=";") %in% sets2 )){print("ff");print(which(subset_new==1));print(sets2);hallo[7]=6;break}
-    #if( !(paste(which(subset_new==1),collapse=";") %in% sets2 )){
     subset_new_whole_context <- c(subset_new, rep(0,nrow(whole_context)-n_row_context))
-    if(  sum(subset_new)==1 | (!(  paste(which(subset_new==1),collapse=";") %in% sets[seq_len(counter)] ))){
-         #(! (any(sets %in% list(which(subset_new==1)) ))) ){
 
-    # if(sum(subset_new)==1 |   test_explicitly_ufg_p_order(subset_new_whole_context,whole_context)){
-    if(sum(subset_new)==1 |   test_ufg_porder(data_list[which(subset_new==1)])){
-     subset_new_index <- which(subset_new==1)
-      result[[counter]] <<- subset_new_index#[counter,seq_len(sum(subset_new))] <<- which(subset_new==1)#rbind(res,subset_new)
-     sets[counter] <<- paste(subset_new_index,collapse=";")
-     if(length(subset_new_index)==1){simple_ufg_index <<- c(simple_ufg_index,counter)}
-     #sets[[counter]] <<- which(subset_new==1)
+    # proced if |ufg|=1 or if subset_new was not already visited
+    subset_new <<- subset_new
+    if(  sum(subset_new)==1 | (!(  paste(which(subset_new==1),collapse=";") %fin% sets[seq_len(counter)] ))){
+
+    # This would be the line if one would use the explicit fiunction for testing
+    # the ufg-property. But we will use the faster direct test function
+    # ''test_ufg_porder from package ddandrda (see next line):
+    #
+    #if(sum(subset_new)==1 |   test_explicitly_ufg_p_order(
+    #    subset_new_whole_context,whole_context)){
+    #
+    # proceed if |ufg|=1 or uf subset_new is an ufg set
+    subset_new <<- subset_new
+    if(sum(subset_new)==1 |
+       ddandrda:::test_ufg_porder(data_list[which(subset_new==1)])){
+
+       subset_new_index <- which(subset_new==1)
+       # store ufg set in list result
+       result[[counter]] <<- subset_new_index
+       # store ufg set also in the look up list (as character)
+       sets[[counter]] <<- paste(subset_new_index,collapse=";")
+       # if the ufg set is a singleton store this in the index-vector
+       # simple_ufg_index
+       if(length(subset_new_index)==1){simple_ufg_index <<- c(
+         simple_ufg_index, counter)}
+
+       # set counter that counts the number of ufg sets to counter + 1
      counter <<- counter+1
-      if(print_progress & counter %% 1000 == 0) {print(counter)}
-     #print(counter)
+      if(print_progress & counter %% 1000 == 0) {print(paste("enumerated ",
+                                                             counter,
+                                                             " ufg-premises",
+                                                              collapse=""))}
+      # proceed with the new ufgset subset_new
       enum_ufg_premises_recursive(subset_new,whole_context,n_row_context)
     }
-     # else{
-      #  sets2[counter2] <<- paste(which(subset_new==1),collapse=";")
-       # counter2 <<- counter2 + 1
-       # }
+
 
 
   }
@@ -820,10 +788,13 @@ enum_ufg_premises_recursive <- function(subset,whole_context,n_row_context){
   stop
 }
 
-enum_ufg_premises_recursive(subset,whole_context,n_row_context)
-print(counter)
-result <- result[-counter]
-result <- result[-simple_ufg_index]
+
+
+  # Now call enum_ufg_premises_recursive and return the results
+  #
+  enum_ufg_premises_recursive(subset,whole_context,n_row_context)
+  result <- result[-counter]
+  result <- result[-simple_ufg_index]
 return(result)
 }
 
@@ -835,7 +806,7 @@ return(result)
 ####
 
 get_weighted_representation <- function(x,y = rep(1,dim(x)[1])){
-  ## computes weigthed representation of a data matrix x with duplicated rows,
+  ## computes weighthed representation of a data matrix x with duplicated rows,
   ##  returns unique(x) together with counts: how often appears the column,
   # mean_y: mean of y in the set of the duplicated columns
   xd <- data.frame(cbind(x,y))
@@ -844,10 +815,36 @@ get_weighted_representation <- function(x,y = rep(1,dim(x)[1])){
   p <- dim(x)[2]
   result=as.matrix(plyr::ddply(xd,names(xd[(1:p)]),dplyr::summarise,count=length(v1),mean.y=mean(y),sum.y=sum(y)))
   x_weighted=result[,(1:p)]
-  #colnames(result[,(1:p)]) <- colnames(x)
   colnames(x_weighted) <- colnames(x)
-  return(list(x_weighted=x_weighted, y_weighted=result[,p+3],mean_y=result[,p+2],counts=result[,p+1]))}
+return(list(x_weighted=x_weighted, y_weighted=result[,p+3],mean_y=result[,p+2],counts=result[,p+1]))}
 
+
+
+#' Compute ufg-depth for dataset of partial orders
+#'
+#' @description 'compute_ufg_depth' computes the ufg-depth of a data set of
+#' partial orders given as a complemented context
+#'
+#' @param data_context is the context of observed partial orders given as a
+#' complemented context. Usually the context data_context should be supplied as
+#' a context without duplicates. (the the integer vector counts of size
+#' nrow(data_context), see below, then specifies, how often every partial order
+#' was observed.
+#'
+#' @param evaluation_context is the set of partial orders for which the ufg
+#' depth values should be computed, given as a complemented context.
+#' ufg_list is a list of indices (w.r.t 'data_context') indicating which
+#' sets are ufg-sets. This list can be computed by the function
+#' 'enumrate_ufg-premises'
+#'
+#' @params counts Usually the context data_context should be supplied as a
+#' context without duplicates. The integer vector counts of size
+#' nrow(data_context) then specifies, how often every partial order was
+#' observed.
+#' @return list with depth values and the total number of ufg-premises
+#'
+#'
+#'@export
 compute_ufg_depth <- function(data_context, evaluation_context , ufg_list, counts){
 
   n_list <- length(ufg_list)
@@ -863,7 +860,7 @@ compute_ufg_depth <- function(data_context, evaluation_context , ufg_list, count
   }
 print(number_ufgs)
 
- return(result/number_ufgs)
+ return(list(depths=result/number_ufgs , number_ufgs=number_ufgs))
 
 }
 ###
