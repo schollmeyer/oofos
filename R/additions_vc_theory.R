@@ -908,7 +908,7 @@ get_weighted_representation <- function(x, y = rep(1, dim(x)[1])) {
 #'
 #'
 #' @export
-compute_ufg_depth <- function(data_context, evaluation_context, ufg_list, counts) {
+compute_ufg_depth <- function(data_context, evaluation_context, ufg_list, counts,n=sum(counts)) {
   n_list <- length(ufg_list)
   result <- rep(0, nrow(evaluation_context))
   number_ufgs <- 0
@@ -917,8 +917,8 @@ compute_ufg_depth <- function(data_context, evaluation_context, ufg_list, counts
     subset[ufg_list[[k]]] <- 1
     intent <- compute_psi(subset, data_context)
     extent <- compute_phi(intent, evaluation_context)
-    result[which(extent == 1)] <- result[which(extent == 1)] + prod(counts[ufg_list[[k]]])
-    number_ufgs <- number_ufgs + prod(counts[ufg_list[[k]]])
+    result[which(extent == 1)] <- result[which(extent == 1)] + prod(counts[ufg_list[[k]]]/n)
+    number_ufgs <- number_ufgs + prod(counts[ufg_list[[k]]]/n)
   }
   print(number_ufgs)
 
