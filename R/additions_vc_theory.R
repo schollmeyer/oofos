@@ -695,7 +695,7 @@ enumerate_ufg_premises <- function(whole_context, n_row_context,
                                    print_progress = TRUE) {
   # compute list of porders (this is only needed for the function
   # test_ufg_porder)
-  data_list <- convert_context_to_list(
+  data_list <- ddandrda::convert_context_to_list(
     whole_context[
       seq_len(n_row_context),
       seq_len(ncol(whole_context) / 2)
@@ -900,7 +900,7 @@ get_weighted_representation <- function(x, y = rep(1, dim(x)[1])) {
 #' sets are ufg-sets. This list can be computed by the function
 #' 'enumrate_ufg-premises'
 #'
-#' @params counts Usually the context data_context should be supplied as a
+#' @param counts Usually the context data_context should be supplied as a
 #' context without duplicates. The integer vector counts of size
 #' nrow(data_context) then specifies, how often every partial order was
 #' observed.
@@ -911,8 +911,10 @@ get_weighted_representation <- function(x, y = rep(1, dim(x)[1])) {
 compute_ufg_depth <- function(data_context, evaluation_context, ufg_list, counts,n=sum(counts)) {
   n_list <- length(ufg_list)
   result <- rep(0, nrow(evaluation_context))
-  number_ufgs <- 0
+  #result <- array(0, c(nrow(evaluation_context),10))
+  number_ufgs <- 0#rep(0,10)
   for (k in seq_len(n_list)) {
+    #l <- length(ufg_list[[k]])
     subset <- rep(0, nrow(data_context))
     subset[ufg_list[[k]]] <- 1
     intent <- compute_psi(subset, data_context)
@@ -922,7 +924,7 @@ compute_ufg_depth <- function(data_context, evaluation_context, ufg_list, counts
   }
   print(number_ufgs)
 
-  return(list(depths = result / number_ufgs, number_ufgs = number_ufgs))
+  return(list(depths = result, number_ufgs = number_ufgs))
 }
 ###
 ###

@@ -8,23 +8,30 @@ enumerate_ufg_premises(whole_context, n_row_context, print_progress = TRUE)
 }
 \arguments{
 \item{whole_context}{is the whole context that describes the whole space of
-complemented partial orders. In the current implementation it is not needed
-to supply the whole context of all partial orders, instead it is enough to
-supply only th orders obtained in the data sample}
+complemented partial orders.
+
+For the implementation with 'test_ufg_porder' as a test function for checking
+ufg-candidates it is not needed to supply the whole context of all partial
+orders, instead it is enough to supply only the orders obtained in the data
+sample.
+
+For the implementation with 'test_explicitly_ufg_p_order' as a test function
+for checking ufg-candidates it iis needed to supply the context of all
+partial orders.
+
+The current implementation is ...}
 
 \item{n_row_context}{is the number of objects in the observed data sample.
 It is assumed that the first 'n_row_context' rows of the context
 'whole_context' represent the observed partial orders.}
 
-\item{print_progress}{If TRUE, the progress of the enumeration will printet.}
+\item{print_progress}{If TRUE, the progress of the enumeration will printed.}
 }
 \value{
-Amtraix where every row represents an ufg premise by giving the
-indices of the partial orders from the context 'whole_context'. Since
-different ufg premises can have different cardinalities, for ufg premises
-with smaller cardinalities the corresponding vectors are filled with zeros
+A list of all ufg premises given as a vector of indices (w.r.t. the
+first 'n_row_context' rows of the context 'whole_context').
 }
 \description{
 'enumerate_ufg_premises' enumerates all ufg premises for a set
-of partial order given as a complemented context
+of partial orders given as a complemented context
 }
