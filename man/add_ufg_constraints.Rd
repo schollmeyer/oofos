@@ -31,10 +31,10 @@ constraints. With this additional constraints one can compute (with
 'gurobi(.)') a better upper bound for the ufg dimension. the ufg dimension is
 the largest cardinality of an ufg premise. Here, in fact the context of ALL
 partial orders is assumed as the underlying large context). Concretely,
-for a pair '(a,b)' it is implemented that if (a,b) is used as a distinguishing
-attribute, then '(b,a)' and 'not (a,b)' and 'not (b,a)' can not be used as a
-further distinguishing attribute for the envisaged ufg premise, cf., the
-notes in the ISPITA paper
+for a pair '(a,b)' it is implemented that if (a,b) is used as a
+distinguishing attribute, then '(b,a)' and 'not (a,b)' and 'not (b,a)' cannot
+be used as a further distinguishing attribute for the envisaged ufg premise,
+cf., the notes in the ISPITA paper
 }
 \examples{
 \dontrun{
@@ -53,8 +53,8 @@ ufg_upper_bound
 # NOTE: We only proved ufg dimension <= m(m-1)/2 but the proof for equality
 # seems to be simple? ... TODO !
 
-ufg_premise <- which(gurobi::gurobi(ufg_model)$x[seq_len(nrow(context))] == 1)
-ufg_premise
+ufg_prem <- which(gurobi::gurobi(ufg_model)$x[seq_len(nrow(context))] == 1)
+ufg_prem
 # [1]   2  35  41  99 120 168 partial orders 2,35,41,99,120 and 168 build a
 # ufg premise of maximal cardinality (thus, here the ufg dimension is 6)
 }

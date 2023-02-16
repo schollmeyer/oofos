@@ -28,10 +28,10 @@
 #' 'gurobi(.)') a better upper bound for the ufg dimension. the ufg dimension is
 #' the largest cardinality of an ufg premise. Here, in fact the context of ALL
 #' partial orders is assumed as the underlying large context). Concretely,
-#' for a pair '(a,b)' it is implemented that if (a,b) is used as a distinguishing
-#' attribute, then '(b,a)' and 'not (a,b)' and 'not (b,a)' can not be used as a
-#' further distinguishing attribute for the envisaged ufg premise, cf., the
-#' notes in the ISPITA paper
+#' for a pair '(a,b)' it is implemented that if (a,b) is used as a
+#' distinguishing attribute, then '(b,a)' and 'not (a,b)' and 'not (b,a)' cannot
+#' be used as a further distinguishing attribute for the envisaged ufg premise,
+#' cf., the notes in the ISPITA paper
 #'
 #' @param model is the model that was generated from the function
 #' compute_extent_vc-dimension with a context that represents a set of partial
@@ -62,8 +62,8 @@
 #' # NOTE: We only proved ufg dimension <= m(m-1)/2 but the proof for equality
 #' # seems to be simple? ... TODO !
 #'
-#' ufg_premise <- which(gurobi::gurobi(ufg_model)$x[seq_len(nrow(context))] == 1)
-#' ufg_premise
+#' ufg_prem <- which(gurobi::gurobi(ufg_model)$x[seq_len(nrow(context))] == 1)
+#' ufg_prem
 #' # [1]   2  35  41  99 120 168 partial orders 2,35,41,99,120 and 168 build a
 #' # ufg premise of maximal cardinality (thus, here the ufg dimension is 6)
 #' }
@@ -506,27 +506,38 @@ compute_sufg_dimension <- function(context, additional_constraint = TRUE) {
 }
 
 
-#### Neuer versuch smplen von ufg Praemisse mit VC Model+ add_ufg_constraints:
+#### Neuer versuch samplen von ufg Praemisse mit VC Model+ add_ufg_constraints:
+#'  ##TODO
 #'
 #'
-#' @export
-sample_ufg_K_objset_recursive <- function(context, K, N = rep(nrow(context), K), threads = 1, model = NULL) {
+sample_ufg_K_objset_recursive <- function(context, K,
+                                          N = rep(nrow(context), K),
+                                          threads = 1, model = NULL) {
   # Samples an ufg premise of size K
-  # Caution It is assumed that the large context is the given context 'context' therefore the name sufg (for small ufg)
+  # Caution It is assumed that the large context is the given context 'context'
+  # therefore the name sufg (for small ufg)
   # @context: Given context
   # @K size of ufg premise
-  # @N vector for the number of random draws in every step (default value is nrow(context), which means that the drawing probability for a sampled ufg premise is exactly computed in this case. Otherwise (for smaller values) this probability is estimated ( in such a way that 1/p is estimated in an unbiased way )
-  # @threads: number of threads used by gurobi
-
-  # Return (vector): smpled premise set as an indicator vector ßin \{0,1\}^nrow(context)
+  # @N vector for the number of random draws in every step
+  # (default value is nrow(context), which means that the drawing probability
+  # for a sampled ufg premise is exactly computed in this case. Otherwise (for
+  # smaller values) this probability is estimated ( in such a way that 1/p is
+  # estimated in an unbiased way ) @threads: number of threads used by gurobi
+  # Return (vector): sampled premise set as an indicator vector
+  # \in \{0,1\}^nrow(context)
   if (is.null(model)) {
     model <- compute_extent_vc_dimension(context)
     model <- add_ufg_constraints(model)
-    # model <- sufg_dimension(context) ## use MILP programe for checking if a given set Subset can be enlarged to a sufg-premise of size K
-    model$A <- rbind(model$A, c(rep(0, nrow(context)), rep(1, ncol(context)))) ## Modification of model: demand that size of sufg-premise is at least K ('==K' would be also possible:  !!!Noch checken: Ist nicht eigtll. == erforderlich?
+    # model <- sufg_dimension(context) ## use MILP programe for checking if a
+    # given set Subset can be enlarged to a sufg-premise of size K
+    model$A <- rbind(model$A, c(rep(0, nrow(context)), rep(1, ncol(context))))
+    ## Modification of model: demand that size of sufg-premise is at least
+    # K ('==K' would be also possible:
+    # !!!Noch checken: Ist nicht eigtll. == erforderlich?
     model$rhs <- c(model$rhs, K)
     model$sense <- c(model$sense, ">=")
-    model$obj <- NULL ## es soll nur getestet werden, ob Subset zu einer sufg-Prämisse der Größe >=K erweiterbar ist.
+    model$obj <- NULL ## es soll nur getestet werden, ob Subset zu einer
+    # sufg-Prämisse der Größe >=K erweiterbar ist.
   }
   NN <- N # unmber of draws in every step: will be modified during the sampling
   p_inverse <- 1 # Vector of inverse probabilities of drawing in every step
@@ -560,29 +571,43 @@ sample_ufg_K_objset_recursive <- function(context, K, N = rep(nrow(context), K),
     p_inverse <- c(p_inverse, length(idx) * length(idx2) / NN[k])
   }
 
-  return(list(Subset = Subset, p_inverse = p_inverse, Vector = Vector, model = model))
+  return(list(
+    Subset = Subset, p_inverse = p_inverse, Vector = Vector,
+    model = model
+  ))
 }
 
 
 
-sample_ufg_K_attribute_set <- function(context, K, N = rep(ncol(context), K), threads = 1, model = NULL) {
+sample_ufg_K_attribute_set <- function(context, K, N = rep(ncol(context), K),
+                                       threads = 1, model = NULL) {
   # Samples an ufg premise of size K
-  # Caution It is assumed that the large context is the given context 'context' therefore the name sufg (for small ufg)
+  # Caution It is assumed that the large context is the given context 'context'
+  # therefore the name sufg (for small ufg)
   # @context: Given context
   # @K size of ufg premise
-  # @N vector for the number of random draws in every step (default value is nrow(context), which means that the drawing probability for a sampled ufg premise is exactly computed in this case. Otherwise (for smaller values) this probability is estimated ( in such a way that 1/p is estimated in an unbiased way )
+  # @N vector for the number of random draws in every step (default value is
+  # nrow(context), which means that the drawing probability for a sampled ufg
+  # premise is exactly computed in this case. Otherwise (for smaller values)
+  # this probability is estimated ( in such a way that 1/p is estimated in an
+  # unbiased way )
   # @threads: number of threads used by gurobi
-
-  # Return (vector): smpled premise set as an indicator vector ßin \{0,1\}^nrow(context)
+  # Return (vector): smpled premise set as an indicator vector
+  # \in \{0,1\}^nrow(context)
   n_rows <- nrow(context)
   if (is.null(model)) {
     model <- compute_extent_vc_dimension(context)
     model <- add_ufg_constraints(model)
-    # model <- sufg_dimension(context) ## use MILP programe for checking if a given set Subset can be enlarged to a sufg-premise of size K
-    model$A <- rbind(model$A, c(rep(0, nrow(context)), rep(1, ncol(context)))) ## Modification of model: demand that size of sufg-premise is at least K ('==K' would be also possible:  !!!Noch checken: Ist nicht eigtll. == erforderlich?
+    # model <- sufg_dimension(context) ## use MILP programe for checking if a
+    # given set Subset can be enlarged to a sufg-premise of size K
+    model$A <- rbind(model$A, c(rep(0, nrow(context)), rep(1, ncol(context))))
+    ## Modification of model: demand that size of sufg-premise is at least
+    # K ('==K' would be also possible:  !!!Noch checken:
+    # Ist nicht eigtll. == erforderlich?
     model$rhs <- c(model$rhs, K)
     model$sense <- c(model$sense, ">=")
-    model$obj <- NULL ## es soll nur getestet werden, ob Subset zu einer sufg-Prämisse der Größe >=K erweiterbar ist.
+    model$obj <- NULL ## es soll nur getestet werden, ob Subset zu einer
+    # sufg-Prämisse der Größe >=K erweiterbar ist.
   }
   NN <- N # unmber of draws in every step: will be modified during the sampling
   p_inverse <- 1 # Vector of inverse probabilities of drawing in every step
@@ -616,13 +641,17 @@ sample_ufg_K_attribute_set <- function(context, K, N = rep(ncol(context), K), th
     p_inverse <- c(p_inverse, length(idx) * length(idx2) / NN[k])
   }
 
-  return(list(Subset = Subset, p_inverse = p_inverse, Vector = Vector, model = model))
+  return(list(
+    Subset = Subset, p_inverse = p_inverse, Vector = Vector,
+    model = model
+  ))
 }
 
 
 ### Zeugs von Weihnachten
 
-test_explicitly_ufg_p_order <- function(subset, p_order_context, print_q = FALSE) {
+test_explicitly_ufg_p_order <- function(subset, p_order_context,
+                                        print_q = FALSE) {
   ## ????? if(sum(subset)==1){return(FALSE)}
   subset_size <- sum(subset)
   ufg_prove_candidates <- operator_closure_obj_input(subset, p_order_context)
@@ -669,13 +698,14 @@ test_explicitly_ufg_p_order <- function(subset, p_order_context, print_q = FALSE
 #' For the implementation with 'test_ufg_porder' as a test function for checking
 #' ufg-candidates it is not needed to supply the whole context of all partial
 #' orders, instead it is enough to supply only the orders obtained in the data
-#' sample.
+#' sample. Currently the implementation uses 'test_ufg_porder'
 #'
 #' For the implementation with 'test_explicitly_ufg_p_order' as a test function
-#' for checking ufg-candidates it iis needed to supply the context of all
-#' partial orders.
+#' for checking ufg-candidates it is needed to supply the context of all
+#' partial orders. The current implementation does not use the function
+#' 'test_explicitly_ufg_p_order'
 #'
-#' The current implementation is ...
+#'
 #'
 #' @param n_row_context is the number of objects in the observed data sample.
 #' It is assumed that the first 'n_row_context' rows of the context
@@ -711,7 +741,7 @@ enumerate_ufg_premises <- function(whole_context, n_row_context,
   ## currently nowhere used
   upper_bound_ufg_dimension <- n_items * (n_items - 1) / 2
 
-  #list of of sets is stored in the list 'result'
+  # list of of sets is stored in the list 'result'
   result <- list()
 
   # counter for countinf currently enumerated ufg premise, important for
@@ -738,10 +768,12 @@ enumerate_ufg_premises <- function(whole_context, n_row_context,
   # This function recursively enumerates all ufg-premises and stores them in the
   # list 'result'. The list sets serves as a look up list and the function stops
   # if an ufg-premise was already visited.
-  enum_ufg_premises_recursive <- function(subset, whole_context, n_row_context) {
+  enum_ufg_premises_recursive <- function(subset, whole_context,
+                                          n_row_context) {
     if (paste(which(subset == 1), collapse = ";") %fin% sets[seq_len(counter)]) {
       stop
     }
+
     # The objects in the hull of a current ufg-premise can not be used
     # to enlarge the ufg. Therefore they are later excluded beforehand
     # (see line ''index <- which(extent==0 & mask==1)''
@@ -788,28 +820,27 @@ enumerate_ufg_premises <- function(whole_context, n_row_context,
       subset_new <- subset
       subset_new[k] <- 1
       subset_new_whole_context <- c(subset_new, rep(0, nrow(whole_context) -
-                                                      n_row_context))
+        n_row_context))
 
-      # proced if |ufg|=1 or if subset_new was not already visited
+      # proceed if |ufg|=1 or if subset_new was not already visited
       subset_new <<- subset_new
       if (sum(subset_new) == 1 |
-          (!(paste(which(subset_new == 1), collapse = ";") %fin%
-             sets[seq_len(counter)]))) {
-        # This would be the line if one would use the explicit function for testing
+        (!(paste(which(subset_new == 1), collapse = ";") %fin%
+          sets[seq_len(counter)]))) {
+        # This would be the line if one would use the explicit function for
+        # testing
         # the ufg-property.
 
-         if(sum(subset_new)==1 |   test_explicitly_ufg_p_order(
-            subset_new_whole_context,whole_context)){
+        #  if(sum(subset_new)==1 |   test_explicitly_ufg_p_order(
+        #    subset_new_whole_context,whole_context)){
         #
         # proceed if |ufg|=1 or uf subset_new is an ufg set
 
 
         # This would be the line if one would use the direct function
         # test_ufg_porder for testing the ufg-property.
-        #if (sum(subset_new) == 1 |
-        # ddandrda:::test_ufg_porder(data_list[which(subset_new == 1)])==TRUE) {
-
-
+        if (sum(subset_new) == 1 |
+          ddandrda::test_ufg_porder(data_list[which(subset_new == 1)]) == TRUE) {
           subset_new_index <- which(subset_new == 1)
           # store ufg set in list result
           result[[counter]] <<- subset_new_index
@@ -875,10 +906,16 @@ get_weighted_representation <- function(x, y = rep(1, dim(x)[1])) {
   names(xd)[1] <- "v1"
   v1 <- "v1"
   p <- dim(x)[2]
-  result <- as.matrix(plyr::ddply(xd, names(xd[(1:p)]), dplyr::summarise, count = length(v1), mean.y = mean(y), sum.y = sum(y)))
+  result <- as.matrix(plyr::ddply(xd, names(xd[(1:p)]), dplyr::summarise,
+    count = length(v1), mean.y = mean(y),
+    sum.y = sum(y)
+  ))
   x_weighted <- result[, (1:p)]
   colnames(x_weighted) <- colnames(x)
-  return(list(x_weighted = x_weighted, y_weighted = result[, p + 3], mean_y = result[, p + 2], counts = result[, p + 1]))
+  return(list(
+    x_weighted = x_weighted, y_weighted = result[, p + 3],
+    mean_y = result[, p + 2], counts = result[, p + 1]
+  ))
 }
 
 
@@ -908,19 +945,21 @@ get_weighted_representation <- function(x, y = rep(1, dim(x)[1])) {
 #'
 #'
 #' @export
-compute_ufg_depth <- function(data_context, evaluation_context, ufg_list, counts,n=sum(counts)) {
+compute_ufg_depth <- function(data_context, evaluation_context, ufg_list,
+                              counts, n = sum(counts)) {
   n_list <- length(ufg_list)
   result <- rep(0, nrow(evaluation_context))
-  #result <- array(0, c(nrow(evaluation_context),10))
-  number_ufgs <- 0#rep(0,10)
+  # result <- array(0, c(nrow(evaluation_context),10))
+  number_ufgs <- 0 # rep(0,10)
   for (k in seq_len(n_list)) {
-    #l <- length(ufg_list[[k]])
+    # l <- length(ufg_list[[k]])
     subset <- rep(0, nrow(data_context))
     subset[ufg_list[[k]]] <- 1
     intent <- compute_psi(subset, data_context)
     extent <- compute_phi(intent, evaluation_context)
-    result[which(extent == 1)] <- result[which(extent == 1)] + prod(counts[ufg_list[[k]]]/n)
-    number_ufgs <- number_ufgs + prod(counts[ufg_list[[k]]]/n)
+    result[which(extent == 1)] <- result[which(extent == 1)] +
+      prod(counts[ufg_list[[k]]] / n)
+    number_ufgs <- number_ufgs + prod(counts[ufg_list[[k]]] / n)
   }
   print(number_ufgs)
 

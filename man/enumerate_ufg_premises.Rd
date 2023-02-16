@@ -13,13 +13,12 @@ complemented partial orders.
 For the implementation with 'test_ufg_porder' as a test function for checking
 ufg-candidates it is not needed to supply the whole context of all partial
 orders, instead it is enough to supply only the orders obtained in the data
-sample.
+sample. Currently the implementation uses 'test_ufg_porder'
 
 For the implementation with 'test_explicitly_ufg_p_order' as a test function
-for checking ufg-candidates it iis needed to supply the context of all
-partial orders.
-
-The current implementation is ...}
+for checking ufg-candidates it is needed to supply the context of all
+partial orders. The current implementation does not use the function
+'test_explicitly_ufg_p_order'}
 
 \item{n_row_context}{is the number of objects in the observed data sample.
 It is assumed that the first 'n_row_context' rows of the context
