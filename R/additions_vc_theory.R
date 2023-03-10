@@ -811,6 +811,20 @@ enumerate_ufg_premises <- function(whole_context, n_row_context,
     # index of orders that are worth inspecting if they can be added to enlarge
     # the ufg set
     index <- which(extent == 0 & mask == 1)
+## Versuch
+if(sum(subset)>=2){
+    i1 <- which(subset[seq_len(n_row_context)]==1)
+    #print(which(subset==1))
+    #print("i1:")
+    #print(i1)
+    index_dist_attr <- which(colSums(whole_context[i1,])==length(i1)-1)
+    #print(index_dist_attr)
+    i2 <- which(rowSums(whole_context[seq_len(n_row_context),index_dist_attr]) >= length(i1))
+    print(which( ! (index%in%i2)))
+    #index <- setdiff(index,i2)
+}
+
+## Versuch
 
     # stop if there cannot be added any order
     if (length(index) == 0) {
@@ -831,16 +845,16 @@ enumerate_ufg_premises <- function(whole_context, n_row_context,
         # testing
         # the ufg-property.
 
-        #  if(sum(subset_new)==1 |   test_explicitly_ufg_p_order(
-        #    subset_new_whole_context,whole_context)){
+          if(sum(subset_new)==1 |   test_explicitly_ufg_p_order(
+            subset_new_whole_context,whole_context)){
         #
         # proceed if |ufg|=1 or uf subset_new is an ufg set
 
 
         # This would be the line if one would use the direct function
         # test_ufg_porder for testing the ufg-property.
-        if (sum(subset_new) == 1 |
-          ddandrda::test_ufg_porder(data_list[which(subset_new == 1)]) == TRUE) {
+        #if (sum(subset_new) == 1 |
+        #  ddandrda::test_ufg_porder(data_list[which(subset_new == 1)]) == TRUE) {
           subset_new_index <- which(subset_new == 1)
           # store ufg set in list result
           result[[counter]] <<- subset_new_index
