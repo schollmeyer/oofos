@@ -1,3 +1,20 @@
+get_extreme_attributes <- function(intent,context){
+  ## extreme points vs basis points TODO
+  extent <- compute_phi(intent,context)
+  result <- NULL
+  for(k in which(intent==1)){
+    intent_new <- intent
+    intent_new[k] <- 0
+    if(any(compute_phi(intent_new,context)!=extent)){
+      result <- c(result,k)
+    }
+
+
+  }
+  return(result)
+}
+
+
 compute_example_contexts <- function(){
   planets <- fcaR::planets
   vegas <- fcaR::vegas

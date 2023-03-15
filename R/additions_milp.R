@@ -1,3 +1,31 @@
+add_attr_antiimplications <- function(model){
+  A <- array(0,c(model$n_cols,model$n_rows+ model$n_cols))
+  t <- 1
+  for(k in seq_len(model$n_cols)){
+    index <- which(model$context[,k]==1)
+    if(length(index)>=2){
+      index_2 <- which(colSums(model$context[index,])==0)
+      if(length(index_2)>=1){
+        A[t,model$n_rows+k] <- 1
+        A[t,model$n_rows+ index_2] <- 1/length(index_2)
+        t <- t+1
+
+      }
+
+    }
+
+
+
+  }
+  t <- t-1
+  result <- model
+  result$A <- rbind (result$A,A[(1:t),])
+  result$rhs <- c(result$rhs,rep(1,t))
+  result$sense <- c(result$sense, rep("<=",t))
+  return(result)
+}
+
+
 
 add_two_object_implications <- function(model, X, index1, index2) {
   m <- dim(X)[1]
