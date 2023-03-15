@@ -1,3 +1,21 @@
+reduce_columns <- function(context){
+
+  ## removes reducible attributes from a context
+  # TODO description etc.
+  result <- NULL
+  #m=dim(X)[1]
+  #n=dim(X)[2]
+  for(k in seq_len(ncol(context))){
+    pre_intent <- rep(0,ncol(context))
+    pre_intent[k] <- 1
+    intent <- operator_closure_attr_input(pre_intent,context=context)
+    intent[k] <- 0
+    extent <- compute_phi(intent,context)
+    if(any(extent !=context[,k])){ result <- c(result,k)}
+  }
+  return(context[,result])}
+
+
 get_extreme_attributes <- function(intent,context){
   ## extreme points vs basis points TODO
   extent <- compute_phi(intent,context)
