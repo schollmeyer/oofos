@@ -845,16 +845,16 @@ if(sum(subset)>=2){
         # testing
         # the ufg-property.
 
-          if(sum(subset_new)==1 |   test_explicitly_ufg_p_order(
-            subset_new_whole_context,whole_context)){
+         # if(sum(subset_new)==1 |   test_explicitly_ufg_p_order(
+          #  subset_new_whole_context,whole_context)){
         #
         # proceed if |ufg|=1 or uf subset_new is an ufg set
 
 
         # This would be the line if one would use the direct function
         # test_ufg_porder for testing the ufg-property.
-        #if (sum(subset_new) == 1 |
-        #  ddandrda::test_ufg_porder(data_list[which(subset_new == 1)]) == TRUE) {
+        if (sum(subset_new) == 1 |
+          ddandrda::test_ufg_porder(data_list[which(subset_new == 1)]) == TRUE) {
           subset_new_index <- which(subset_new == 1)
           # store ufg set in list result
           result[[counter]] <<- subset_new_index
