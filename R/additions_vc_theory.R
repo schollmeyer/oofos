@@ -820,7 +820,7 @@ if(sum(subset)>=2){
     index_dist_attr <- which(colSums(whole_context[i1,])==length(i1)-1)
     #print(index_dist_attr)
     i2 <- which(rowSums(whole_context[seq_len(n_row_context),index_dist_attr]) >= length(i1))
-    print(which( ! (index%in%i2)))
+    # print(which( ! (index%in%i2)))
     #index <- setdiff(index,i2)
 }
 
