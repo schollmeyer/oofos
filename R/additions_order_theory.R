@@ -308,7 +308,7 @@ compute_order_dimension <- function(poset, poset_context=NULL){
   if(is.null(poset_context)){
     n_items <- nrow(poset)
     perms <- gtools::permutations(n_items,n_items)
-    context <- ddandrda:::compute_ranking_scaling(perms, remove_full_columns = FALSE, complemented = FALSE)
+    poset_context <- ddandrda:::compute_ranking_scaling(perms, remove_full_columns = FALSE, complemented = FALSE)
   }
   # now we compute the formal concept (E,I) with extent E as the set of all linear extensions of the considered poset 'poset' and I as the set of all pairs in 'poset'
   E <- rep(0,nrow(poset_context))
