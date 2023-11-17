@@ -629,6 +629,116 @@ get_auto_conceptual_scaling <- function(data_matrix,print_scalings=TRUE) {
   return(context_converted)
 }
 
+min_k_attr_generated=function(extent,intent,X){  # Berecchnet für Begriff gegeben durch Umfang extent und Inhalt intent das maximale k, für das der Begriff k-Merkmalserzeugt ist (Kontext X muss ebenfalls mit übergeben werden)
+  m=dim(X)[1]
+  n=dim(X)[2]
+  model=k_extent_opt_b(X,(1:m),(1:m),K=dim(X)[2])
+  model$lb[which(extent==1)]=1
+  model$ub[which(extent==0)]=0
+  model$ub[which(intent==0)+m]=0
+  model$obj=c(rep(0,m),rep(1,n))
+  model$modelsense="min"
+  return(model)}
+
+
+min_k_obj_generated=function(extent,intent,X){min_k_attr_generated(intent,extent,t(X))} # Berecchnet für Begriff gegeben durch Umfang extent und Inhalt intent das maximale k, für das der Begriff k-MGegenstandserzeugt ist (Kontext X muss ebenfalls mit übergeben werden)
+
+k_extent_opt_b=function(X,gen_index,v,binary_variables="afap",K){##  extentopt: Version, wie TR 209, S.23 beschrieben, nur Ungleichungen (21) verschärft
+  # adaptiert, so dass Modell zur Optimierung von Zielfunktion v über alle K-Merkmalserzeugte Begriffe berchnet wird
+  m=dim(X)[1]
+  n=dim(X)[2]
+  mask=rep(0,m)
+  mask[gen_index]=1
+  N=2*(m+n)
+
+  A= array(0,c(N,m+n))
+  rhs=rep(0,N)
+  sense=rep("",N)
+  t=1
+  for(k in (1:m)){
+    i=which(X[k,]==0)
+    if(length(i)>=1){
+      A[t,k]=length(i);A[t,i+m]=1;rhs[t]=length(i);sense[t]="<="
+      t=t+1
+    }
+
+  }
+
+  for(k in (1:n)){
+    i=which(X[,k]==0)
+    if(length(i)>=1){
+      A[t,k+m]=length(i);A[t,i]=1;rhs[t]=length(i);sense[t]="<="
+      t=t+1
+    }
+
+  }
+
+  for(k in (1:m)){
+    i=which(X[k,]==0)
+    if(length(i)>=1){
+      A[t,which(X[k,]==0)+m]=1;A[t,k]=1;rhs[t]=1;sense[t]=">=";t=t+1
+    }}
+
+  # for(k in (1:n)){
+  #j=which(mask==1 & X[,k]==0)
+  #if(length(j)>=1){
+  #A[t,which(mask==1 & X[,k]==0)]=1;A[t,k+m]=1;sense[t]=">=";rhs[t]=1;t=t+1}}
+  t=t-1
+
+
+
+
+
+  lb=rep(0,m+n)
+  ub= rep(1,m+n)
+  idx=which(colSums(X[gen_index,])==length(gen_index))
+  if(length(idx)>0){lb[m+idx]=1}
+
+  idx=which(rowSums(X[,])==n)
+  if(length(idx)>0){lb[idx]=1}
+
+  ###  setze je nach Methode gewisse Variablen als binaer
+  vtypes=rep("C",m+n)
+  if(binary_variables=="afap"){
+    if(length(gen_index)<=min(m,n)){
+      vtypes[gen_index]="B"
+    }
+    if(length(gen_index)>min(m,n) & m<=n){
+      vtypes[(1:m)]="B"
+    }
+    if(length(gen_index)>min(m,n) & n<=m){
+      vtypes[-(1:m)]="B"
+    }
+  }
+
+  if(binary_variables=="sd"){
+    if(m<=n){
+      vtypes[(1:m)]="B"
+    }
+    else{vtypes[-(1:m)]="B"}
+  }
+
+  if(binary_variables=="allgen"){
+    vtypes[gen.index]="B"
+    vtypes[-(1:m)]="B"
+  }
+
+  if(binary_variables=="all"){
+    vtypes=rep("B",m+n)
+  }
+
+  if(  !(binary_variables %in% c("afap","sd","allgen","all"))){print("invalid argument for binary.variabes")}
+
+  A=rbind(A[(1:t),],c(rep(0,m),rep(1,n)))
+  rhs=c(rhs[(1:t)],K)
+  sense=c(sense[(1:t)],"<")
+  ##Über vtypes nochmalnachdenken:
+
+  vtypes[(1:m)]="C"
+  vtypes[-(1:m)]="B"
+
+  return(list(A=as.simple_triplet_matrix(A),rhs=rhs,sense=sense,modelsense="max",lb=lb,ub=ub,obj=c(v,rep(0,n)),ext.obj=v,intent.obj=rep(0,n),m=m,n=n,vtypes=vtypes,n.constr=t,context=X))}
+
 
 
 

@@ -286,3 +286,41 @@ compute_transitive_hull <- function(relation_mat) {
 
   return(transitive_hull)
 }
+
+
+
+#' Compute the order dimension of a partially ordered set
+#'
+#' @description 'compute_order-dimension' computes the order dimension of a partially ordered set,
+#' i.e., the minimal k such that the poset can be represented as the intersection of k linear orderstichain.
+#'
+#' @param poset square incidence matrix with 0-1 entries that describes the poset
+#' @param poset_context For the computation of the order dimension, the context with all partial orders
+#' as intents is needed. More precisely, one needs a formal context where every object is a linear order L and
+#' every attribute is a pair (a,b) and L I (a,b) iff (a,b) in L. Note that the empty intersection of objects
+#' gives the all relation, and the all relation is not a partial order.
+#' If poset_context is not supplied, then it will be computed beforehand
+#' @return the order dimension of the poset.
+#'
+#' @export
+compute_order_dimension <- function(poset, poset_context=NULL){
+  # the context with all partial orders as intents is needed. If it is not supplied, then it will be computed beforehand
+  if(is.null(poset_context)){
+    n_items <- nrow(poset)
+    perms <- gtools::permutations(n_items,n_items)
+    context <- ddandrda:::compute_ranking_scaling(perms, remove_full_columns = FALSE, complemented = FALSE)
+  }
+  # now we compute the formal concept (E,I) with extent E as the set of all linear extensions of the considered poset 'poset' and I as the set of all pairs in 'poset'
+  E <- rep(0,nrow(poset_context))
+  for(k in seq_len(nrow(poset_context))){
+    # if the linear order 'context[k,]' extents is a linear extension of 'poset' then it is in the extent E (i.e., E[k]=1)
+    if(all(poset_context[k,] >= as.vector(poset))){E[k] <-1}
+  }
+  # additionally compute the intent I by applying the derivation operator psi to E
+  I <- ddandrda:::calculate_psi(E,poset_context)
+  # computes a gurobi modelmodel that itself computes a minimal k such that there exists an object set F of size k that generates E (i.e. gamma(F)=E, where gamma is the closure operator phi \circ psi w.r.t. the context 'context')
+  gurobi_model <- min_k_obj_generated(E,I,poset_context)
+  #Now the actual gurobi model is computed
+  result <- gurobi(model)
+  # the minimal value of the binarry linear program is the minimal k such that the given partial order 'poset' cann be represented as the intersection of k linear orders (concretely the partial orders context[k,] with E[k]=1)
+  return(result$objval)}
