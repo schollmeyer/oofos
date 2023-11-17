@@ -321,6 +321,6 @@ compute_order_dimension <- function(poset, poset_context=NULL){
   # computes a gurobi modelmodel that itself computes a minimal k such that there exists an object set F of size k that generates E (i.e. gamma(F)=E, where gamma is the closure operator phi \circ psi w.r.t. the context 'context')
   gurobi_model <- min_k_obj_generated(E,I,poset_context)
   #Now the actual gurobi model is computed
-  result <- gurobi(model)
+  result <- gurobi::gurobi(gurobi_model)
   # the minimal value of the binarry linear program is the minimal k such that the given partial order 'poset' cann be represented as the intersection of k linear orders (concretely the partial orders context[k,] with E[k]=1)
   return(result$objval)}
