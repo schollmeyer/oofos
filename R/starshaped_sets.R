@@ -228,9 +228,9 @@ compute_quotient_order <- function(incidence) {
 
 
 
+# old version TODO: remove
 
-
-cut_incidence <- function(incidence, width, interval = stats::quantile(
+old_cut_incidence <- function(incidence, width, interval = stats::quantile(
                             unique(as.vector(incidence)), c(0, 1)
                           )) {
   vc <- compute_width(compute_quotient_order(
@@ -253,6 +253,26 @@ cut_incidence <- function(incidence, width, interval = stats::quantile(
 }
 
 
+# new version
+cut_incidence <- function(incidence, cut_value, complexity_measure=compute_widthwidth,interval = stats::quantile(unique(as.vector(incidence)),
+                                                                                                    c(0, 1)))
+{
+  vc <- (complexity_measure(compute_quotient_order(compute_transitive_hull(incidence >=
+                                                                             interval[2]))))[[1]]
+  if (vc <= cut_value) {
+    return(list(cutting_value=cut_value,incidence=(incidence >=interval[2])))
+  }
+  f <- function(C, incidence) {
+    complexity <- (complexity_measure(compute_transitive_hull(incidence >= C)))[[1]]
+    return(complexity - cut_value)
+  }
+  ans <- stats::uniroot(f, interval = interval, incidence = incidence)
+  return(list(cutting_value=ans$root,incidence=compute_transitive_hull(incidence >= ans$root)))
+}
+
+
+
+
 #' Perform a starshaped subgroup discovery
 #'
 #' @description 'discover_starshaped_subgroups' performs a starshaped subgroup
@@ -267,7 +287,7 @@ cut_incidence <- function(incidence, width, interval = stats::quantile(
 #' @param objective is the (linear) objective function to optimize given as an
 #' objective vector of the same length as the number of objects.
 #'
-#' @param local_vc_dimension Is the local VC dimension: Given a centerpoint
+#' @param complexity_control TODO!!! Is the local VC dimension: Given a centerpoint
 #' c, the VC dimension of the subfamily of all starshaped sets with centerpoint
 #' c is controlled with this parameter. If local_vc_dimension is set to Inf,
 #' then the complexity of the family of all starshaped sets is not reduced at
@@ -276,11 +296,11 @@ cut_incidence <- function(incidence, width, interval = stats::quantile(
 #' @param params is a list with further arguments that are passed to the gurobi
 #' optimizer. By default the outputflag of the gurobi solver is set to 0 (this
 #' means that not optimization details are printed during the optimization).
-#'
+#'f
 #' @return a list with the following entries: TODO
 #' @export
 discover_starshaped_subgroups <- function(stylized_betweenness, objective,
-                                          local_vc_dimension,
+                                          complexity_measure=compute_width, complexity_control,
                                           params = list(Outputflag = 0)) {
   if (dim(stylized_betweenness)[1] != dim(stylized_betweenness)[2] |
     dim(stylized_betweenness)[1] != dim(stylized_betweenness)[3] |
@@ -288,6 +308,8 @@ discover_starshaped_subgroups <- function(stylized_betweenness, objective,
     print("dimension mismatch")
   }
   n_rows <- nrow(stylized_betweenness)
+  cutting_values <- rep(Inf,n_rows)
+  cutting_value=Inf
   used_betweenness <- array(0,rep(n_rows,3))
   max_value <- max(stylized_betweenness)
   model <- list(
@@ -303,14 +325,16 @@ discover_starshaped_subgroups <- function(stylized_betweenness, objective,
   for (k in seq_len(n_rows)) { ## quantify over all starcenters
     utils::setTxtProgressBar(pb, k)
 
-    if (local_vc_dimension == Inf) {
+    if (complexity_control == Inf) {
       incidence <- (stylized_betweenness[k, , ] >=
         max_value) * 1
     } else {
-      incidence <- cut_incidence(
+      temp <- cut_incidence(
         stylized_betweenness[k, , ],
-        local_vc_dimension
+        complexity_control,complexity_measure=complexity_measure
       )
+      incidence <- temp$incidence
+      cutting_values[k] <- temp$cutting_value
     }
 
     used_betweenness[k,,] <- incidence
@@ -343,11 +367,14 @@ discover_starshaped_subgroups <- function(stylized_betweenness, objective,
 
 
 
-  if (local_vc_dimension == Inf) {
+  if (complexity_control == Inf) {
     incidence <- (stylized_betweenness[i, , ] >=
       max(stylized_betweenness[k, , ])) * 1
   } else {
-    incidence <- cut_incidence(stylized_betweenness[i, , ], local_vc_dimension)
+    incidence <- used_betweenness[i,,]
+incidence <<- incidence
+    #  cut_incidence(stylized_betweenness[i, , ], complexity_control)$incidence
+    cutting_value <- cutting_values[i]
   }
 
 
@@ -369,7 +396,7 @@ discover_starshaped_subgroups <- function(stylized_betweenness, objective,
     star = stars[i, ], center_id = i,
     fuzzy_incidence = stylized_betweenness[i, , ],
     incidence = incidence, model = model, runtimes=runtimes, used_betweenness =
-      used_betweenness
+      used_betweenness, cutting_values=cutting_values,cutting_value=cutting_value
   ))
 }
 

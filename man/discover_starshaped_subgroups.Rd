@@ -7,7 +7,8 @@
 discover_starshaped_subgroups(
   stylized_betweenness,
   objective,
-  local_vc_dimension,
+  complexity_measure = compute_width,
+  complexity_control,
   params = list(Outputflag = 0)
 )
 }
@@ -17,7 +18,7 @@ discover_starshaped_subgroups(
 \item{objective}{is the (linear) objective function to optimize given as an
 objective vector of the same length as the number of objects.}
 
-\item{local_vc_dimension}{Is the local VC dimension: Given a centerpoint
+\item{complexity_control}{TODO!!! Is the local VC dimension: Given a centerpoint
 c, the VC dimension of the subfamily of all starshaped sets with centerpoint
 c is controlled with this parameter. If local_vc_dimension is set to Inf,
 then the complexity of the family of all starshaped sets is not reduced at
@@ -25,7 +26,8 @@ all.}
 
 \item{params}{is a list with further arguments that are passed to the gurobi
 optimizer. By default the outputflag of the gurobi solver is set to 0 (this
-means that not optimization details are printed during the optimization).}
+means that not optimization details are printed during the optimization).
+f}
 }
 \value{
 a list with the following entries: TODO

@@ -56,7 +56,7 @@ test_that("compute_starshaped_distr_test works", {
                                  target_class=1)
 
 
-  discovery <- discover_starshaped_subgroups(betweenness,objective,local_vc_dimension=Inf)
+  discovery <- discover_starshaped_subgroups(betweenness,objective,complexity_measure=compute_width,complexity_control=Inf)
   test <- compute_starshaped_distr_test(discovery,n_rep=100)
 
   expect_equal((abs(test$p_value-test$p_value_parametric)<=0.05),TRUE)
@@ -73,17 +73,17 @@ test_that("discover_starshaped_subgroups works", {
     compute_example_posets(6)$two_dimensional_grid
   )
   objective <- stats::rnorm(nrow(betweenness))
-  result <- discover_starshaped_subgroups(betweenness, objective, Inf)
+  result <- discover_starshaped_subgroups(betweenness, objective,complexity_measure=compute_width, complexity_control= Inf)
   expect_equal(check_if_starshaped(result$star, betweenness), TRUE)
-  result_2 <- discover_starshaped_subgroups(betweenness, objective, 8)
+  result_2 <- discover_starshaped_subgroups(betweenness, objective,complexity_measure=compute_width,complexity_control= 8)
   result$objval > result_2$objval
 
 
   ternary_relation <- runif(20^3)
   dim(ternary_relation) <- rep(20, 3)
   objective <- rnorm(20)
-  result_1 <- discover_starshaped_subgroups(ternary_relation, objective, Inf)
-  result_2 <- discover_starshaped_subgroups(ternary_relation, objective, 8)
+  result_1 <- discover_starshaped_subgroups(ternary_relation, objective, complexity_measure=compute_width,complexity_control=Inf)
+  result_2 <- discover_starshaped_subgroups(ternary_relation, objective, complexity_measure=compute_width,complexity_control=8)
   expect_equal(result_1$objval >= result_2$objval, TRUE)
   expect_equal(result_1$objval > result_2$objval, TRUE)
 
@@ -93,7 +93,7 @@ test_that("discover_starshaped_subgroups works", {
     compute_example_posets(n)$two_dimensional_grid
   )
   objective <- stats::rnorm(nrow(betweenness))
-  result <- discover_starshaped_subgroups(betweenness, objective, Inf)
+  result <- discover_starshaped_subgroups(betweenness, objective, complexity_measure=compute_width,complexity_control=Inf)
   sets <- gtools::permutations(2, n^2, repeats.allowed = TRUE) - 1
   objval <- -Inf
   for (k in seq_len(nrow(sets))) {
@@ -112,7 +112,7 @@ test_that("discover_starshaped_subgroups works", {
 
   ternary_relation <- get_random_ternary_relation(12, prob = 0.5)
   objective <- rnorm(12)
-  result <- discover_starshaped_subgroups(ternary_relation, objective, Inf)
+  result <- discover_starshaped_subgroups(ternary_relation, objective, complexity_measure=compute_width,complexity_control=Inf)
   sets <- gtools::permutations(2, 12, repeats.allowed = TRUE) - 1
   objval <- -Inf
   for (k in seq_len(nrow(sets))) {
