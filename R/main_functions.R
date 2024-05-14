@@ -353,11 +353,12 @@ compute_extent_optim_test <- function(model, n_rep = 1000,
     p_value <- mean(x >= model$objval)
     if (k > 2) {
       suppressWarnings(fit <- fit_ks_distribution(x))
-
-      p_value_parametric <- stats::pbeta(model$objval, fit$par[1],
-                                         fit$par[2], fit$par[3],
-                                         lower.tail = FALSE
-      )
+      p_value_parametric <- pnorm((model$objval-mean(x))/sd(x),lower.tail=FALSE)
+      # old version
+      #p_value_parametric <- stats::pbeta(model$objval, fit$par[1],
+      #                                   fit$par[2], fit$par[3],
+      #                                   lower.tail = FALSE
+      #)
     }
 
     if (plot_progress == TRUE & k > 2) {
