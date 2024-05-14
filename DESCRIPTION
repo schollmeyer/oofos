@@ -17,6 +17,7 @@ Imports:
     dplyr,
     fastmatch,
     fcaR,
+    ggplot2 (>= 3.5.1),
     gtools,
     gurobi,
     igraph,
@@ -27,3 +28,5 @@ Imports:
     stats,
     withr
 RoxygenNote: 7.2.3
+Remotes:  
+    tidyverse/ggplot2

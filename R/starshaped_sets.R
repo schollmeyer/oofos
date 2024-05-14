@@ -507,34 +507,49 @@ compute_starshaped_distr_test <- function(ssd_result, n_rep = 1000,
     }
 
     if (plot_progress == TRUE & k > 2) {
-      plot(stats::ecdf(x),
-        do.points = FALSE, col.01line = NULL,
-        main = paste(
-          "observed value:",
-          round(ssd_result$objval, 4),
-          "p-palue:", round(p_value, 4), "\n; param. p-value:",
-          round(p_value_parametric, 4), "; n:", k, "\nmedian:", round(stats::median(x),4)
-        ), verticals = TRUE,
-        xlab = "test statistic", ylab = "cdf (black), density (grey)",
-        xlim = c(0.95*min(x), 1.05 * max(c(x, ssd_result$objval)))
-      )
-      graphics::abline(v = ssd_result$objval, col = "darkblue")
-      graphics::abline(v = stats::median(x), col = "darkgreen", lty = 2)
+
+      #plot(stats::ecdf(x),
+      #  do.points = FALSE, col.01line = NULL,
+      #  main = paste(
+      #    "observed value:",
+      #    round(ssd_result$objval, 4),
+      #    "p-palue:", round(p_value, 4), "\n; param. p-value:",
+      #    round(p_value_parametric, 4), "; n:", k, "\nmedian:", round(stats::median(x),4)
+      #  ), verticals = TRUE,
+      #  xlab = "test statistic", ylab = "cdf (black), density (grey)",
+      #  xlim = c(0.95*min(x), 1.05 * max(c(x, ssd_result$objval)))
+      #)
+      #graphics::abline(v = ssd_result$objval, col = "darkblue")
+      #graphics::abline(v = stats::median(x), col = "darkgreen", lty = 2)
       sort_x <- seq(0, 1, length.out = 1000)
       density_parametric <- stats::dbeta(
         sort_x, fit$par[1], fit$par[2],
         fit$par[3]
       )
-      graphics::lines(sort_x, density_parametric / max(density_parametric),
-        col = "darkgreen"
-      )
+      #graphics::lines(sort_x, density_parametric / max(density_parametric),
+      #  col = "darkgreen"
+      #)
       cdf_parametric <- stats::pbeta(sort_x, fit$par[1], fit$par[2], fit$par[3])
-      graphics::lines(sort_x, cdf_parametric, col = "darkgreen")
+      #graphics::lines(sort_x, cdf_parametric, col = "darkgreen")
       f <- stats::density(x)
-      graphics::lines(f$x, f$y / max(f$y), col = "grey")
+      #graphics::lines(f$x, f$y / max(f$y), col = "grey")
       # TODO :result_temp <<- list(objvalues = x, p_value = p_value,
       #                           p_value_parametric =
        #   p_value_parametric)
+
+      # ggplot variant:
+      #plot(ecdf(rnorm(100)))
+      ggplot2::ggplot(data=data.frame(x=rnorm(100)), aes(x=x)) + stat_ecdf(geom = "step", pad = TRUE, lwd=1.2) # lims(x=c(0,2.8)) + geom_vline(xintercept=starshaped_discovery_gbsb$objval,lwd=1.2,col="darkblue")
+
+
+      set.seed(1)
+      df <- data.frame(
+        x = c(rnorm(100, 0, 3), rnorm(100, 0, 10)),
+        g = gl(2, 100)
+      )
+      ggplot2::ggplot(df, aes(x)) +
+        stat_ecdf(geom = "step")
+
     }
   }
   #rm(result_temp)
