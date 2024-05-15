@@ -539,16 +539,20 @@ compute_starshaped_distr_test <- function(ssd_result, n_rep = 1000,
 
       # ggplot variant:
       #plot(ecdf(rnorm(100)))
-      ggplot2::ggplot(data=data.frame(x=rnorm(100)), aes(x=x)) + stat_ecdf(geom = "step", pad = TRUE, lwd=1.2) # lims(x=c(0,2.8)) + geom_vline(xintercept=starshaped_discovery_gbsb$objval,lwd=1.2,col="darkblue")
+      ans <- ggplot2::ggplot(data=data.frame(x=x), aes(x=x))  + stat_ecdf(geom = "step", pad = TRUE, lwd=1) +
+       geom_vline(xintercept=ssd_result$objval,lwd=1,col="darkblue") +
+        labs(title = paste( "observed value:",round(ssd_result$objval, 4),"; p-palue:", round(p_value, 4), "; parametric p-value:",    round(p_value_parametric, 4), "; n:", k, "; median:", round(stats::median(x),4) ),x="statistic")
+             #subtitle = "My subtitle", caption = "My caption")
 
 
-      set.seed(1)
-      df <- data.frame(
-        x = c(rnorm(100, 0, 3), rnorm(100, 0, 10)),
-        g = gl(2, 100)
-      )
-      ggplot2::ggplot(df, aes(x)) +
-        stat_ecdf(geom = "step")
+     # set.seed(1)
+      #df <- data.frame(
+       # x = c(rnorm(100, 0, 3), rnorm(100, 0, 10)),
+        #g = gl(2, 100)
+    #  )
+     #ans <- ggplot2::ggplot(df, aes(x)) +
+      #  stat_ecdf(geom = "step")
+     show(ans)
 
     }
   }
