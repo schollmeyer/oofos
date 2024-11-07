@@ -426,6 +426,9 @@ quality <- function(model,result,NAMES=colnames(model$context)){
 # TODO description etc.
 
 calculate_nominal_scaling_vec <- function(data_values, add_column_name=NULL) {
+  # This function (with slight modifications) is taken from the R package
+  # ddandrda version 0.0.0.9000 ( https://github.com/hannahblo/ddandrda )
+
   # nominal scaling the vector
 
   # Input: data values(vector): for each observation one factor value
@@ -454,6 +457,9 @@ calculate_nominal_scaling_vec <- function(data_values, add_column_name=NULL) {
 }
 
 calculate_ordinal_scaling_vec <- function(data_values, add_column_name = NULL) {
+  # This function (with slight modifications) is taken from the R package
+  # ddandrda version 0.0.0.9000 ( https://github.com/hannahblo/ddandrda )
+
   # ordinal scaling the vector
 
   # Input: data values (vector): for each observation the corresponding numeric value
@@ -488,6 +494,9 @@ calculate_ordinal_scaling_vec <- function(data_values, add_column_name = NULL) {
 
 
 calculate_dual_ordinal_scaling_vec <- function(data_values, add_column_name = NULL) {
+  # This function (with slight modifications) is taken from the R package
+  # ddandrda version 0.0.0.9000 ( https://github.com/hannahblo/ddandrda )
+
   # dual-ordinal (meaning >= instead of <=) scaling the vector
 
   # Input: data values (vector): for each observation the corresponding numeric value
@@ -524,6 +533,9 @@ calculate_dual_ordinal_scaling_vec <- function(data_values, add_column_name = NU
 
 # Auxiliary function for calculate_conceptual_scaling
 calculate_number_columns_attr <- function(data_matrix){
+  # This function (with slight modifications) is taken from the R package
+  # ddandrda version 0.0.0.9000 ( https://github.com/hannahblo/ddandrda )
+
   # This function is needed to calculate the number of attributes needed to
   # represent each column. This depends on the used class of the values in the
   # column.
@@ -571,6 +583,9 @@ calculate_number_columns_attr <- function(data_matrix){
 
 
 get_auto_conceptual_scaling <- function(data_matrix,print_scalings=TRUE) {
+  # This function (with slight modifications) is taken from the R package
+  # ddandrda version 0.0.0.9000 ( https://github.com/hannahblo/ddandrda )
+
   # main function for scaling automatically
 
   # Input: data_matrix (dataframe): each row represents one attribute

@@ -198,7 +198,9 @@ return(list(width=result$objval,antichain=result$x))}
 
 
 
-### From Package ddandrda:
+### # This function (with slight modifications) is taken from the R package
+# ddandrda version 0.0.0.9000 ( https://github.com/hannahblo/ddandrda )
+
 ## TODO : harmonize with latest ddandrda version
 
 
@@ -236,7 +238,11 @@ compute_relation_product <- function(x, y) {
 #' Compute the transitive hull of a partial order
 #'
 #' @description
-#' 'compute_transitive_hull' returns a 0-1-matrix which represents the
+#'
+#' This function (with slight modifications) is taken from the R package
+#' ddandrda version 0.0.0.9000 ( https://github.com/hannahblo/ddandrda )
+#'
+#' compute_transitive_hull' returns a 0-1-matrix which represents the
 #' order-pairs given by the transitivity property of a partial order
 #'
 #' @param relation_mat Rrepresents a relation matrix. Note that
@@ -252,6 +258,8 @@ compute_relation_product <- function(x, y) {
 #' oofos:::compute_transitive_hull(relation_mat_input)
 #'
 compute_transitive_hull <- function(relation_mat) {
+  # This function (with slight modifications) is taken from the R package
+  # ddandrda version 0.0.0.9000 ( https://github.com/hannahblo/ddandrda )
   # @relation_mat (sqared matrix): represents a relation matrix
   # Return (squared matrix): the transitive hull of the relation matrix
   # relation_mat

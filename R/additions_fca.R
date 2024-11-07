@@ -79,6 +79,10 @@ return(list(planets=planets,vegas=vegas,chords=mat))
 # cross tabel / incidence
 ################################################################################
 compute_phi <- function(subset_attributes, context) {
+
+  # This function (with slight modifications) is taken from the R package
+  # ddandrda version 0.0.0.9000 ( https://github.com/hannahblo/ddandrda )
+
   # computes for a subset of attributes the minimal extent based on the given context
 
   # Input: subset_attributes (array): set of attributes
@@ -107,6 +111,10 @@ compute_phi <- function(subset_attributes, context) {
 
 
 compute_psi <- function(subset_objects, context) {
+
+  # This function (with slight modifications) is taken from the R package
+  # ddandrda version 0.0.0.9000 ( https://github.com/hannahblo/ddandrda )
+
   # computes for a subset of objects the minimal intent based on the given context
 
   # Input: subset_objects (array): set of objects
@@ -134,6 +142,11 @@ compute_psi <- function(subset_objects, context) {
 
 
 operator_closure_attr_input <- function(subset_attribute, context) {
+
+  # This function (with slight modifications) is taken from the R package
+  # ddandrda version 0.0.0.9000 ( https://github.com/hannahblo/ddandrda )
+
+
   # Defines the closure operator for computing all intents (attribute)
 
   # Input: subset_attribute (array): set of attributes
@@ -147,6 +160,11 @@ operator_closure_attr_input <- function(subset_attribute, context) {
 
 
 operator_closure_obj_input <- function(subset_object, context) {
+
+  # This function (with slight modifications) is taken from the R package
+  # ddandrda version 0.0.0.9000 ( https://github.com/hannahblo/ddandrda )
+
+
   # Defines the closure operator for computing all extends (objects)
 
   # Input: subset_object (array): set of objects
@@ -160,6 +178,10 @@ operator_closure_obj_input <- function(subset_object, context) {
 
 # Auxiliary functions of compute_all_closure, for algorithm-step 2: next closure
 adds_element <- function(old_subset, element) {
+
+  # This function (with slight modifications) is taken from the R package
+  # ddandrda version 0.0.0.9000 ( https://github.com/hannahblo/ddandrda )
+
   # Adds a further element to old_subset and deletes all larger elements
   # based on: Granter (2013), Diskrete Mathematik: Geordnete Mengen, Springer Spektur, p.85
 
@@ -187,7 +209,11 @@ adds_element <- function(old_subset, element) {
 
 # Auxiliary function of compute_all_closure defining order structure given by 'lektisch' order
 compare_closures_lower_i <- function(old_closure, new_closure, element) {
-  # Tests if the old_closure is smaller than  the new_closure within the meaning of
+
+  # This function (with slight modifications) is taken from the R package
+  # ddandrda version 0.0.0.9000 ( https://github.com/hannahblo/ddandrda )
+
+    # Tests if the old_closure is smaller than  the new_closure within the meaning of
   # 'lektisch' order
   # based on: Granter (2013), Diskrete Mathematik: Geordnete Mengen, Springer Spekturm, p.26 + 84
 
@@ -210,6 +236,10 @@ compare_closures_lower_i <- function(old_closure, new_closure, element) {
 compute_all_closure <- function(closure_operator, context,
                                 number_attributes = NA,
                                 already_computed_closures = 1000) {
+
+  # This function (with slight modifications) is taken from the R package
+  # ddandrda version 0.0.0.9000 ( https://github.com/hannahblo/ddandrda )
+
   # Calculation of all sets of the complete lattice.
   # based on: Granter (2013), Diskrete Mathematik: Geordnete Mengen, Springer Spekturm, p.68
 
@@ -281,6 +311,11 @@ compute_all_closure <- function(closure_operator, context,
 
 
 compute_concept_lattice <- function(context, compute_extents = TRUE) {
+
+  # This function (with slight modifications) is taken from the R package
+  # ddandrda version 0.0.0.9000 ( https://github.com/hannahblo/ddandrda )
+
+
   # computes the formal concept lattice.
   # Therefore, all formal concept which are defined by the formal context are
   # computed.
@@ -336,6 +371,10 @@ compute_concept_lattice <- function(context, compute_extents = TRUE) {
 ################################################################################
 
 compute_incidence <- function(extent_list) {
+
+  # This function (with slight modifications) is taken from the R package
+  # ddandrda version 0.0.0.9000 ( https://github.com/hannahblo/ddandrda )
+
   # generates incidence matrix of a given data table (here it's a closure set)
   # Needed to plot "Begriffsverband"
 
@@ -383,7 +422,9 @@ compute_random_context <- function(nrow = 20,
 
 ###
 
-# From Package ddanrda
+# # This function (with slight modifications) is taken from the R package
+# ddandrda version 0.0.0.9000 ( https://github.com/hannahblo/ddandrda )
+
 # TODO : harmonize with current version of ddandrda
 
 #' Plot a binary relation
@@ -424,6 +465,11 @@ compute_random_context <- function(nrow = 20,
 #' oofos:::plot_relation(chevron)
 #'
 plot_relation <- function(incidence) {
+
+  # This function (with slight modifications) is taken from the R package
+  # ddandrda version 0.0.0.9000 ( https://github.com/hannahblo/ddandrda )
+
+
   # define the incidence as a formal context for the fcaR package
   fc <- fcaR::FormalContext$new(incidence[, seq_len(nrow(incidence))])
   # compute all concepts
