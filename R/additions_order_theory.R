@@ -140,10 +140,12 @@ compute_incidence <- function(X) {
 #' hull is computed and then the width of the quotient order ( i.e., incidence
 #' factorized over incidence cap incidence^T )
 #' @param incidence  square incidence matrix with 0-1 entries
+#' @param quotient_order logical If true, before computing the width,
+#' the quotient relation of the relation incidence is computet
 #' @return a list with entry width that gives the width of the poset.
 #'
 #' @export
-compute_width <- function(incidence) {
+compute_width <- function(incidence,quotient_order=TRUE) {
   # TODO : Antiketten auch berechnen und ausgeben (Achtung mit Faktorisierung)
   if (is.null(incidence)) {
     return(list(width = 0))
@@ -159,7 +161,7 @@ compute_width <- function(incidence) {
   }
   incidence <- compute_transitive_hull(incidence)
   diag(incidence) <- 1
-  incidence <- compute_quotient_order(incidence)
+  if(quotient_order){incidence <- compute_quotient_order(incidence)}
   n_rows <- nrow(incidence)
   if (n_rows == 0) {
     return(list(width = 0))
@@ -174,10 +176,18 @@ compute_width <- function(incidence) {
     cbind(0 * incidence, incidence),
     cbind(0 * incidence, 0 * incidence)
   )
+  colnames(graph_incidence) <- as.character(seq_len(2*n_rows))
+  rownames(graph_incidence) <- as.character(seq_len(2*n_rows))
   graph <- igraph::graph_from_adjacency_matrix(graph_incidence)
   igraph::V(graph)$type <- c(rep(FALSE, n_rows), rep(TRUE, n_rows))
   ans <- igraph::max_bipartite_match(graph)
-  return(list(width = n_rows - ans$matching_size))
+  antichain_indexs <- seq_len(n_rows)
+
+  #na_indexs <- which(is.na(ans$matching[seq_len(n_rows)])) #- n_rows
+  #antichain_indexs <- antichain_indexs[-na_indexs]
+  #antichain_indexs <- setdiff(antichain_indexs,ans$matching[seq_len(n_rows)])
+  #antichain_indexs <- antichain_indexs[which(antichain_indexs %in% seq_len(n_rows))]
+  return(list(width = n_rows - ans$matching_size,antichain_indexs=antichain_indexs,matching_result=ans,graph_incidence=graph_incidence))
 }
 
 

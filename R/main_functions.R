@@ -63,7 +63,13 @@
 #' @export
 optimize_on_context_extents <- function(context,
                                         gen_index = seq_len(nrow(context)),
-                                        objective, binary_variables = "afap") {
+                                        objective, binary_variables = "afap",start_solution=FALSE) {
+  start <- NULL
+  if(start_solution==TRUE){
+    extent <- univariate_prediction(context,objective)$x
+    intent <- compute_psi(extent,context)
+    start <- c(extent,intent)
+    }
   n_rows <- dim(context)[1]
   n_cols <- dim(context)[2]
   mask <- rep(0, n_rows)
@@ -228,7 +234,7 @@ optimize_on_context_extents <- function(context,
     obj = c(objective, rep(0, n_cols)),
     ext_obj = objective, intent_obj = rep(0, n_cols),
     n_rows = n_rows, n_cols = n_cols, vtypes = vtypes,
-    n_constr = t, context = context
+    n_constr = t, context = context, start=start
   ))
 }
 
@@ -340,21 +346,21 @@ optim_on_context_extents_h0 <- function(model, params =
 #'
 #'
 #' @export
-compute_extent_optim_test <- function(model, n_rep = 1000,
-                                          plot_progress = TRUE) {
+compute_extent_optim_test <- function(model, n_rep = 10000,
+                                          plot_progress = TRUE,params=list(outputflag=1,timelimit=Inf)) {
   if (n_rep <= 2) {
     print("Be serious!")
     return(NULL)
   }
   objvalues <- rep(0, n_rep)
   for (k in seq_len(n_rep)) {
-    objvalues[k] <- optim_on_context_extents_h0(model)
+    objvalues[k] <- optim_on_context_extents_h0(model,params=params)
     x <- objvalues[seq_len(k)]
     p_value <- mean(x >= model$objval)
     if (k > 2) {
       suppressWarnings(fit <- fit_ks_distribution(x))
       p_value_parametric <- pnorm((model$objval-mean(x))/sd(x),lower.tail=FALSE)
-      # old version
+      sigma <- (model$objval-mean(x))/sd(x)# old version
       #p_value_parametric <- stats::pbeta(model$objval, fit$par[1],
       #                                   fit$par[2], fit$par[3],
       #                                   lower.tail = FALSE
@@ -366,9 +372,11 @@ compute_extent_optim_test <- function(model, n_rep = 1000,
            do.points = FALSE, col.01line = NULL,
            main = paste(
              "observed value:",
-             round(model$objval, 4),
-             "p-palue:", round(p_value, 4), "\n; param. p-value:",
-             round(p_value_parametric, 4), "; n:", k, "\nmedian:", round(stats::median(x),4)
+             round(model$objval, 3),
+             "sigma:",
+             round(sigma, 2),
+             "\n p-value:", round(p_value, 3), "; param. p-value:",
+             round(p_value_parametric, 3), "; n:", k, "\nmedian:", round(stats::median(x),4)
            ), verticals = TRUE,
            xlab = "test statistic", ylab = "cdf (black), density (grey)",
            xlim = c(0.95*min(x), 1.05 * max(c(x, model$objval)))
@@ -399,7 +407,17 @@ compute_extent_optim_test <- function(model, n_rep = 1000,
   ))
 }
 
+significance_plot <- function(resamples,observed_value){
+ x_max <- 1.1*max(max(resamples),observed_value)
+ x_min <- 0.9*min(resamples)
+ sigma <- (observed_value-median(resamples))/sd(resamples)
+ plot(ecdf(resamples),xlim=c(x_min,x_max),verticals=TRUE,main=c("sigma:",sigma))
+abline(v=observed_value)}
 
+univariate_prediction <- function(context,objective,attribute_weights=rep(1,ncol(context))){
+  v <- as.vector(objective%*%context)
+  i <- which.max(v*attribute_weights)
+return(list(x = context[,i],objval =v[i],which_col=i))}
 
 quality <- function(model,result,NAMES=colnames(model$context)){
 
@@ -659,8 +677,10 @@ min_k_attr_generated=function(extent,intent,X){  # Berecchnet für Begriff gegeb
 
 min_k_obj_generated=function(extent,intent,X){min_k_attr_generated(intent,extent,t(X))} # Berecchnet für Begriff gegeben durch Umfang extent und Inhalt intent das maximale k, für das der Begriff k-MGegenstandserzeugt ist (Kontext X muss ebenfalls mit übergeben werden)
 
-k_extent_opt_b=function(X,gen_index,v,binary_variables="afap",K){##  extentopt: Version, wie TR 209, S.23 beschrieben, nur Ungleichungen (21) verschärft
-  # adaptiert, so dass Modell zur Optimierung von Zielfunktion v über alle K-Merkmalserzeugte Begriffe berchnet wird
+k_extent_opt_b=function(X,gen_index=seq_len(nrow(X)),objective,binary_variables="afap",K){##  extentopt: Version, wie TR 209, S.23 beschrieben, nur Ungleichungen (21) verschärft
+  # adaptiert, so dass Modell zur Optimierung von Zielfunktion objective über alle K-Merkmalserzeugte Begriffe berchnet wird
+  # extra handling of the case K=1:
+  if(K==1){return(univariate_prediction(X,objective))}
   m=dim(X)[1]
   n=dim(X)[2]
   mask=rep(0,m)
@@ -753,7 +773,7 @@ k_extent_opt_b=function(X,gen_index,v,binary_variables="afap",K){##  extentopt: 
   vtypes[(1:m)]="C"
   vtypes[-(1:m)]="B"
 
-  return(list(A=as.simple_triplet_matrix(A),rhs=rhs,sense=sense,modelsense="max",lb=lb,ub=ub,obj=c(v,rep(0,n)),ext.obj=v,intent.obj=rep(0,n),m=m,n=n,vtypes=vtypes,n.constr=t,context=X))}
+  return(list(A=as.simple_triplet_matrix(A),rhs=rhs,sense=sense,modelsense="max",lb=lb,ub=ub,obj=c(objective,rep(0,n)),ext.obj=objective,intent.obj=rep(0,n),m=m,n=n,vtypes=vtypes,n.constr=t,context=X))}
 
 
 

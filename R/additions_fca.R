@@ -80,8 +80,8 @@ return(list(planets=planets,vegas=vegas,chords=mat))
 ################################################################################
 compute_phi <- function(subset_attributes, context) {
 
-  # This function (with slight modifications) is taken from the R package
-  # ddandrda version 0.0.0.9000 ( https://github.com/hannahblo/ddandrda )
+  # This function is based on the
+  # the master thesis '***''
 
   # computes for a subset of attributes the minimal extent based on the given context
 
