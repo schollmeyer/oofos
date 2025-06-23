@@ -33,6 +33,34 @@ get_extreme_attributes <- function(intent,context){
 }
 
 
+get_one_minimal_generator <- function(intent,context){
+
+  get_smaller_intent <- function(intent,context){
+    indexs <- which(intent==1)
+    extent <- compute_phi(intent,context)
+    for(k in indexs){
+      intent_new <- intent
+      intent_new[k] <- 0
+      if(all(extent==compute_phi(intent_new,context))){
+        return(intent_new)
+      }
+
+
+    }
+    return(NULL)
+  }
+
+  minimal_generator <- intent
+  intent_new <- intent
+  while(TRUE){
+    temp <- get_smaller_intent(intent_new,context)
+    if(is.null(temp)){return(intent_new)}
+    intent_new <- temp
+  }
+}
+
+
+
 compute_example_contexts <- function(){
   planets <- fcaR::planets
   vegas <- fcaR::vegas
@@ -79,9 +107,10 @@ return(list(planets=planets,vegas=vegas,chords=mat))
 # cross tabel / incidence
 ################################################################################
 compute_phi <- function(subset_attributes, context) {
-
-  # This function is based on the
-  # the master thesis '***''
+  # This function is based on code that is part of the master thesis
+  # Blocher, Hannah (2020). A Supremum Type Test Statistic for  Distributional
+  # Tests: An Analysis in the Context of VC Theory, Partially Spatial Data and
+  # Regularization. LMU Munich
 
   # computes for a subset of attributes the minimal extent based on the given context
 
@@ -111,9 +140,10 @@ compute_phi <- function(subset_attributes, context) {
 
 
 compute_psi <- function(subset_objects, context) {
-
-  # This function (with slight modifications) is taken from the R package
-  # ddandrda version 0.0.0.9000 ( https://github.com/hannahblo/ddandrda )
+  # This function is based on code that is part of the master thesis
+  # Blocher, Hannah (2020). A Supremum Type Test Statistic for  Distributional
+  # Tests: An Analysis in the Context of VC Theory, Partially Spatial Data and
+  # Regularization. LMU Munich
 
   # computes for a subset of objects the minimal intent based on the given context
 
@@ -142,9 +172,10 @@ compute_psi <- function(subset_objects, context) {
 
 
 operator_closure_attr_input <- function(subset_attribute, context) {
-
-  # This function (with slight modifications) is taken from the R package
-  # ddandrda version 0.0.0.9000 ( https://github.com/hannahblo/ddandrda )
+  # This function is based on code that is part of the master thesis
+  # Blocher, Hannah (2020). A Supremum Type Test Statistic for  Distributional
+  # Tests: An Analysis in the Context of VC Theory, Partially Spatial Data and
+  # Regularization. LMU Munich
 
 
   # Defines the closure operator for computing all intents (attribute)
@@ -160,10 +191,10 @@ operator_closure_attr_input <- function(subset_attribute, context) {
 
 
 operator_closure_obj_input <- function(subset_object, context) {
-
-  # This function (with slight modifications) is taken from the R package
-  # ddandrda version 0.0.0.9000 ( https://github.com/hannahblo/ddandrda )
-
+  # This function is based on code that is part of the master thesis
+  # Blocher, Hannah (2020). A Supremum Type Test Statistic for  Distributional
+  # Tests: An Analysis in the Context of VC Theory, Partially Spatial Data and
+  # Regularization. LMU Munich
 
   # Defines the closure operator for computing all extends (objects)
 
@@ -178,9 +209,10 @@ operator_closure_obj_input <- function(subset_object, context) {
 
 # Auxiliary functions of compute_all_closure, for algorithm-step 2: next closure
 adds_element <- function(old_subset, element) {
-
-  # This function (with slight modifications) is taken from the R package
-  # ddandrda version 0.0.0.9000 ( https://github.com/hannahblo/ddandrda )
+  # This function is based on code that is part of the master thesis
+  # Blocher, Hannah (2020). A Supremum Type Test Statistic for  Distributional
+  # Tests: An Analysis in the Context of VC Theory, Partially Spatial Data and
+  # Regularization. LMU Munich
 
   # Adds a further element to old_subset and deletes all larger elements
   # based on: Granter (2013), Diskrete Mathematik: Geordnete Mengen, Springer Spektur, p.85
@@ -209,9 +241,10 @@ adds_element <- function(old_subset, element) {
 
 # Auxiliary function of compute_all_closure defining order structure given by 'lektisch' order
 compare_closures_lower_i <- function(old_closure, new_closure, element) {
-
-  # This function (with slight modifications) is taken from the R package
-  # ddandrda version 0.0.0.9000 ( https://github.com/hannahblo/ddandrda )
+  # This function is based on code that is part of the master thesis
+  # Blocher, Hannah (2020). A Supremum Type Test Statistic for  Distributional
+  # Tests: An Analysis in the Context of VC Theory, Partially Spatial Data and
+  # Regularization. LMU Munich
 
     # Tests if the old_closure is smaller than  the new_closure within the meaning of
   # 'lektisch' order
@@ -236,9 +269,10 @@ compare_closures_lower_i <- function(old_closure, new_closure, element) {
 compute_all_closure <- function(closure_operator, context,
                                 number_attributes = NA,
                                 already_computed_closures = 1000) {
-
-  # This function (with slight modifications) is taken from the R package
-  # ddandrda version 0.0.0.9000 ( https://github.com/hannahblo/ddandrda )
+  # This function is based on code that is part of the master thesis
+  # Blocher, Hannah (2020). A Supremum Type Test Statistic for  Distributional
+  # Tests: An Analysis in the Context of VC Theory, Partially Spatial Data and
+  # Regularization. LMU Munich
 
   # Calculation of all sets of the complete lattice.
   # based on: Granter (2013), Diskrete Mathematik: Geordnete Mengen, Springer Spekturm, p.68
@@ -311,9 +345,10 @@ compute_all_closure <- function(closure_operator, context,
 
 
 compute_concept_lattice <- function(context, compute_extents = TRUE) {
-
-  # This function (with slight modifications) is taken from the R package
-  # ddandrda version 0.0.0.9000 ( https://github.com/hannahblo/ddandrda )
+  # This function is based on code that is part of the master thesis
+  # Blocher, Hannah (2020). A Supremum Type Test Statistic for  Distributional
+  # Tests: An Analysis in the Context of VC Theory, Partially Spatial Data and
+  # Regularization. LMU Munich
 
 
   # computes the formal concept lattice.
@@ -371,9 +406,10 @@ compute_concept_lattice <- function(context, compute_extents = TRUE) {
 ################################################################################
 
 compute_incidence <- function(extent_list) {
-
-  # This function (with slight modifications) is taken from the R package
-  # ddandrda version 0.0.0.9000 ( https://github.com/hannahblo/ddandrda )
+  # This function is based on code that is part of the master thesis
+  # Blocher, Hannah (2020). A Supremum Type Test Statistic for  Distributional
+  # Tests: An Analysis in the Context of VC Theory, Partially Spatial Data and
+  # Regularization. LMU Munich
 
   # generates incidence matrix of a given data table (here it's a closure set)
   # Needed to plot "Begriffsverband"

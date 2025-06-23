@@ -215,6 +215,11 @@ return(list(width=result$objval,antichain=result$x))}
 
 
 compute_relation_product <- function(x, y) {
+  # This function is based on code that is part of the master thesis
+  # Blocher, Hannah (2020). A Supremum Type Test Statistic for  Distributional
+  # Tests: An Analysis in the Context of VC Theory, Partially Spatial Data and
+  # Regularization. LMU Munich
+
   # @X (matrix): Represents a graph with edges (weight one) and knots
   # @Y (matrix): Represents a graph with edges (weight one)and knots
   # Return (matrix): Represents a graph after two steps which are defined by
@@ -249,8 +254,11 @@ compute_relation_product <- function(x, y) {
 #'
 #' @description
 #'
-#' This function (with slight modifications) is taken from the R package
-#' ddandrda version 0.0.0.9000 ( https://github.com/hannahblo/ddandrda )
+#' This function is based on code that is part of the master thesis
+#' Blocher, Hannah (2020). A Supremum Type Test Statistic for  Distributional
+#' Tests: An Analysis in the Context of VC Theory, Partially Spatial Data and
+#' Regularization. LMU Munich
+#'
 #'
 #' compute_transitive_hull' returns a 0-1-matrix which represents the
 #' order-pairs given by the transitivity property of a partial order
@@ -268,8 +276,6 @@ compute_relation_product <- function(x, y) {
 #' oofos:::compute_transitive_hull(relation_mat_input)
 #'
 compute_transitive_hull <- function(relation_mat) {
-  # This function (with slight modifications) is taken from the R package
-  # ddandrda version 0.0.0.9000 ( https://github.com/hannahblo/ddandrda )
   # @relation_mat (sqared matrix): represents a relation matrix
   # Return (squared matrix): the transitive hull of the relation matrix
   # relation_mat

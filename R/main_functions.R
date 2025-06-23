@@ -166,6 +166,7 @@ optimize_on_context_extents <- function(context,
 
 
     if (length(j) >= 1) {
+
       L <- length(j)
 
       I[tt] <- t
@@ -432,20 +433,19 @@ quality <- function(model,result,NAMES=colnames(model$context)){
   n <- length(idx)
   p <- length(which(model$obj[seq_len(model$n_rows)]>0 & result$x[seq_len(model$n_rows)]>0.5))/n
   p0 <- length(which(model$obj>0))/model$n_rows
+  extreme_point_indices <-get_extreme_attributes(result$x[-seq_len(model$n_rows)],model$context )
   return(list(n=n,n0=n0,p=p,p0=p0,piatetsky_shapiro=n*(p-p0),wracc=n*(p-p0)*model$n_rows,lift=p/p0,kolmogorov_smirnov=result$objval,obj=result$objval,argmax=NAMES[jdx],
-              argmax_extreme_points=NAMES[
-
-
-
-                get_extreme_attributes(result$x[-seq_len(model$n_rows)],model$context )]))
+              argmax_extreme_points=NAMES[extreme_point_indices],extreme_point_indices=extreme_point_indices))
 
 }
 
 # TODO description etc.
 
 calculate_nominal_scaling_vec <- function(data_values, add_column_name=NULL) {
-  # This function (with slight modifications) is taken from the R package
-  # ddandrda version 0.0.0.9000 ( https://github.com/hannahblo/ddandrda )
+  # This function is based on code that is part of the master thesis
+  # Blocher, Hannah (2020). A Supremum Type Test Statistic for  Distributional
+  # Tests: An Analysis in the Context of VC Theory, Partially Spatial Data and
+  # Regularization. LMU Munich
 
   # nominal scaling the vector
 
@@ -475,8 +475,10 @@ calculate_nominal_scaling_vec <- function(data_values, add_column_name=NULL) {
 }
 
 calculate_ordinal_scaling_vec <- function(data_values, add_column_name = NULL) {
-  # This function (with slight modifications) is taken from the R package
-  # ddandrda version 0.0.0.9000 ( https://github.com/hannahblo/ddandrda )
+  # This function is based on code that is part of the master thesis
+  # Blocher, Hannah (2020). A Supremum Type Test Statistic for  Distributional
+  # Tests: An Analysis in the Context of VC Theory, Partially Spatial Data and
+  # Regularization. LMU Munich
 
   # ordinal scaling the vector
 
@@ -512,8 +514,10 @@ calculate_ordinal_scaling_vec <- function(data_values, add_column_name = NULL) {
 
 
 calculate_dual_ordinal_scaling_vec <- function(data_values, add_column_name = NULL) {
-  # This function (with slight modifications) is taken from the R package
-  # ddandrda version 0.0.0.9000 ( https://github.com/hannahblo/ddandrda )
+  # This function is based on code that is part of the master thesis
+  # Blocher, Hannah (2020). A Supremum Type Test Statistic for  Distributional
+  # Tests: An Analysis in the Context of VC Theory, Partially Spatial Data and
+  # Regularization. LMU Munich
 
   # dual-ordinal (meaning >= instead of <=) scaling the vector
 
@@ -551,8 +555,10 @@ calculate_dual_ordinal_scaling_vec <- function(data_values, add_column_name = NU
 
 # Auxiliary function for calculate_conceptual_scaling
 calculate_number_columns_attr <- function(data_matrix){
-  # This function (with slight modifications) is taken from the R package
-  # ddandrda version 0.0.0.9000 ( https://github.com/hannahblo/ddandrda )
+  # This function is based on code that is part of the master thesis
+  # Blocher, Hannah (2020). A Supremum Type Test Statistic for  Distributional
+  # Tests: An Analysis in the Context of VC Theory, Partially Spatial Data and
+  # Regularization. LMU Munich
 
   # This function is needed to calculate the number of attributes needed to
   # represent each column. This depends on the used class of the values in the
@@ -601,8 +607,11 @@ calculate_number_columns_attr <- function(data_matrix){
 
 
 get_auto_conceptual_scaling <- function(data_matrix,print_scalings=TRUE) {
-  # This function (with slight modifications) is taken from the R package
-  # ddandrda version 0.0.0.9000 ( https://github.com/hannahblo/ddandrda )
+  # This function is based on code that is part of the master thesis
+  # Blocher, Hannah (2020). A Supremum Type Test Statistic for  Distributional
+  # Tests: An Analysis in the Context of VC Theory, Partially Spatial Data and
+  # Regularization. LMU Munich
+
 
   # main function for scaling automatically
 

@@ -122,6 +122,7 @@ add_ufg_constraints <- function(model) {
 #' directly connected to a shatterable subset of maximal cardinality, cf., TODO
 #' ) are identical.
 #'
+#'
 #' @return a MILP model that can be optimized with 'gurobi(.)'. The VC dimension
 #' is then given bei the maximum value ('$objval') of the optimized model.
 #' The contranominal scale that represents the shatterable set of maximal
