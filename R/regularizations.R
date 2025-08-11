@@ -134,6 +134,43 @@ test <- function(model,context_distances,threshold,K_max){
   result$index_K_max_contsraint <- length(result$rhs)
   return(result)
 }
+
+
+
+test2 <- function(model,context_distances,threshold,K_max){
+  I <- context_distances > threshold
+  diag(I) <- 1
+  graph0 <- igraph::graph_from_adjacency_matrix(I)
+  #graph <- igraph::as_graphnel(graph)
+  coloring <- igraph::greedy_vertex_coloring(graph0)
+  K <- max(coloring)
+  result <- model
+  A <- model$A
+  B <- array(0,c(nrow(A),K))
+  t <- 1
+  genconmax <- list()
+  for(k in seq_len(K)){
+    indexs <- as.vector(which(coloring == k))
+    genconmax[[t]] <- list(resvar = ncol(A)+ t,vars = indexs + nrow(model$context))
+    t <- t+1
+  }
+
+  result$A <- cbind(A,B)
+  result$A <- rbind(result$A,matrix(c(rep(0,ncol(A)),rep(1,K)),nrow=1))
+  result$rhs <- c(result$rhs,K_max)
+  result$sense <- c(result$sense,"<=")
+  result$lb <- c(result$lb,rep(0,K))
+  result$ub <- c(result$ub,rep(1,K))
+  result$obj <- c(result$obj,rep(0,K))
+  result$vtypes <- c(result$vtypes,rep("B",K))
+  result$genconmax <- genconmax
+  result$groups <- coloring
+  result$n_groups=K
+  result$K_max <- K_max
+  result$index_K_max_contsraint <- length(result$rhs)
+  return(result)
+}
+
 get_context_from_distance <- function(dist_mat,threshold,object_stresses=rep(0,ncol(dist_mat)^2),complemented=FALSE,indexs=NULL,sampling_proportion=1,remove_duplicates=TRUE,set_seed=TRUE,seed=1234567,eps=10^-10,eps2=10^-10,lambda=1,counterexamples = check_three_point_condition(dist_mat,eps=eps2,lambda=lambda)$counterexamples){
   n_rows <- nrow(dist_mat)
   n_rows_sample <- ceiling(sampling_proportion*n_rows)
@@ -174,3 +211,82 @@ get_context_from_distance <- function(dist_mat,threshold,object_stresses=rep(0,n
 
   }
   return(list(context=context,counterexamples=ce,halfspace_stresses=halfspace_stresses))}
+
+
+
+
+
+add_sos_constraints_obtuse_cone <- function(model,context_distances,threshold){
+  sos_model <- model
+  sos_model$sos <- list()
+  t <- 1
+  for(k in seq_len(nrow(context_distances))){
+    temp <- which(context_distances[k,] > threshold)
+    if(length(temp)>=1){
+      sos_model$sos[[t]] = list(index=temp + model$n_rows, type=1,weight=rep(1,length(temp)))
+      t <- t+1
+    }
+  }
+
+  return(sos_model)}
+
+
+
+
+
+compute_maximal_clique <- function (context, additional_constraint = FALSE)
+{
+  n_rows <- nrow(context)
+  n_cols <- ncol(context)
+  result <- list()
+  result$A <- array(0, c(2 * (n_rows + n_cols), n_rows + n_cols))
+  result$rhs <- rep(0, 2 * (n_rows + n_cols))
+  result$sense <- rep("", 2 * (n_rows + n_cols))
+  result$context <- context
+  t <- 1
+  for (i in seq_len(n_rows)) {
+    j <- which(context[i, ] == 0)
+    result$A[t, j + n_rows] <- 1
+    result$A[t, i] <- n_cols - 1
+    result$rhs[t] <- n_cols -1
+    result$sense[t] <- "<="
+    t <- t + 1
+    result$A[t, j + n_rows] <- 1
+    result$A[t, i] <- -1
+    result$rhs[t] <- -1
+    result$sense[t] <- ">="
+    t <- t + 1
+  }
+  for (j in seq_len(n_cols)) {
+    i <- which(context[, j] == 0)
+    result$A[t, i] <- 1
+    result$A[t, j + n_rows] <- n_rows - 1
+    result$rhs[t] <- n_rows -1
+    result$sense[t] <- "<="
+    t <- t + 1
+    result$A[t, i] <- 1
+    result$A[t, j + n_rows] <- -1
+    result$rhs[t] <-  -1
+    result$sense[t] <- ">="
+    t <- t + 1
+  }
+  result$modelsense <- "max"
+  result$lb <- rep(0, n_rows + n_cols)
+  result$ub <- rep(1, n_rows + n_cols)
+  result$vtypes <- c(rep("B", n_rows), rep("B", n_cols))
+  result$obj <- c(rep(1, n_rows), rep(0, n_cols))
+  result$A <- rbind(result$A, c(rep(1, n_rows), rep(0, n_cols)),
+                    c(rep(0, n_rows), rep(1, n_cols)), rep(1, n_rows + n_cols))
+  result$rhs <- c(result$rhs, min(n_rows, n_cols), min(n_rows,
+                                                       n_cols), n_rows + n_cols)
+  result$sense <- c(result$sense, "<=", "<=", "<=")
+  if (additional_constraint) {
+    result$A <- rbind(result$A, c(rep(-1, n_rows), rep(1,
+                                                       n_cols)))
+    result$rhs <- c(result$rhs, 0)
+    result$sense <- c(result$sense, "=")
+  }
+  return(result)
+}
+
+

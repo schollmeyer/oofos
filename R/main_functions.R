@@ -782,7 +782,7 @@ k_extent_opt_b=function(X,gen_index=seq_len(nrow(X)),objective,binary_variables=
   vtypes[(1:m)]="C"
   vtypes[-(1:m)]="B"
 
-  return(list(A=as.simple_triplet_matrix(A),rhs=rhs,sense=sense,modelsense="max",lb=lb,ub=ub,obj=c(objective,rep(0,n)),ext.obj=objective,intent.obj=rep(0,n),m=m,n=n,vtypes=vtypes,n.constr=t,context=X))}
+  return(list(A=as.simple_triplet_matrix(A),rhs=rhs,sense=sense,modelsense="max",lb=lb,ub=ub,obj=c(objective,rep(0,n)),ext.obj=objective,intent.obj=rep(0,n),m=m,n=n,n_rows=nrow(X),n_cols=ncol(X),vtypes=vtypes,n.constr=t,context=X))}
 
 
 
