@@ -401,6 +401,164 @@ incidence <<- incidence
 }
 
 
+##Trial:#' Perform a starshaped subgroup discovery
+#'
+#' @description 'discover_starshaped_subgroups' performs a starshaped subgroup
+#' discovery, see Schollmeyer et al. 2023. An objective function (e.g., the
+#' Shapiro- Piatetsky quality function) is maximized over the family of all
+#' subgroups that are starshaped w.r.t. a 'fuzzy' betweennes relation
+#'
+#' TODO : explain VC trimming...
+#'
+#' @param stylized_betweenness is the fuzzy betweennness relation.
+#'
+#' @param objective is the (linear) objective function to optimize given as an
+#' objective vector of the same length as the number of objects.
+#'
+#' @param complexity_control TODO!!! Is the local VC dimension: Given a centerpoint
+#' c, the VC dimension of the subfamily of all starshaped sets with centerpoint
+#' c is controlled with this parameter. If local_vc_dimension is set to Inf,
+#' then the complexity of the family of all starshaped sets is not reduced at
+#' all.
+#'
+#' @param params is a list with further arguments that are passed to the gurobi
+#' optimizer. By default the outputflag of the gurobi solver is set to 0 (this
+#' means that not optimization details are printed during the optimization).
+#'f
+#' @return a list with the following entries: TODO
+#' @export
+discover_starshaped_subgroups_par <- function(stylized_betweenness, objective,
+                                          complexity_measure=compute_width, complexity_control,
+                                          params = list(Outputflag = 0)) {
+  if (dim(stylized_betweenness)[1] != dim(stylized_betweenness)[2] |
+    dim(stylized_betweenness)[1] != dim(stylized_betweenness)[3] |
+    dim(stylized_betweenness)[2] != dim(stylized_betweenness)[3]) {
+    print("dimension mismatch")
+  }
+  n_rows <- nrow(stylized_betweenness)
+  cutting_values <- rep(Inf,n_rows)
+  cutting_value=Inf
+  used_betweenness <- array(0,rep(n_rows,3))
+  max_value <- max(stylized_betweenness)
+  model <- list(
+    modelsense = "max", obj = objective, lb = rep(0, n_rows),
+    ub = rep(1, n_rows)
+  )
+  solutions <- list()
+  objvals <- rep(0, n_rows)
+  stars <- array(0, c(n_rows, n_rows))
+  runtimes <- list()
+  models <- list()
+  pb <- utils::txtProgressBar(min = 0, max = n_rows, initial = 0)
+  ### paralellized_with chatGPT
+
+  # Load necessary libraries
+library(foreach)
+library(doParallel)
+
+# Set up parallel backend
+num_cores <- parallel::detectCores() - 1
+cl <- makeCluster(num_cores)
+registerDoParallel(cl)
+
+# Parallel version of the loop
+results <- foreach(k = seq_len(n_rows), .packages = c("gurobi", "slam")) %dopar% {
+  if (complexity_control == Inf) {
+    incidence <- (stylized_betweenness[k, , ] >= max_value) * 1
+  } else {
+    temp <- cut_incidence(
+      stylized_betweenness[k, , ],
+      complexity_control,
+      complexity_measure = complexity_measure
+    )
+    incidence <- temp$incidence
+    cutting_value_k <- temp$cutting_value
+  }
+
+  incidence_k <- incidence  # save for output
+
+  model_k <- get_model_from_quasiorder(t(incidence))
+  if (is.null(model_k)) {
+    model_k <- list(
+      A = matrix(0, nrow = 1, ncol = n_rows), rhs = 1, sense = "<="
+    )
+  }
+  model_k$A <- slam::as.simple_triplet_matrix(model_k$A)
+  model_k$obj <- objective
+  model_k$lb <- rep(0, n_rows)
+  model_k$ub <- rep(1, n_rows)
+  model_k$lb[k] <- 1  # Force centerpoint into the set
+  model_k$modelsense <- "max"
+
+  b <- gurobi::gurobi(model_k, params = params)
+
+  list(
+    solution = b,
+    runtime = b$runtime,
+    objval = b$objval,
+    star = b$x,
+    model = model_k,
+    used_betweenness = incidence_k,
+    cutting_value = if (exists("cutting_value_k")) cutting_value_k else Inf
+  )
+}
+
+# Stop cluster
+stopCluster(cl)
+
+# Unpack parallel results
+for (k in seq_len(n_rows)) {
+  solutions[[k]] <- results[[k]]$solution
+  runtimes[[k]] <- results[[k]]$runtime
+  objvals[k] <- results[[k]]$objval
+  stars[k, ] <- results[[k]]$star
+  models[[k]] <- results[[k]]$model
+  used_betweenness[k, , ] <- results[[k]]$used_betweenness
+  cutting_values[k] <- results[[k]]$cutting_value
+}
+
+
+
+  ###
+  i <- which.max(objvals)
+
+
+
+  if (complexity_control == Inf) {
+    incidence <- (stylized_betweenness[i, , ] >=
+      max(stylized_betweenness[k, , ])) * 1
+  } else {
+    incidence <- used_betweenness[i,,]
+incidence <<- incidence
+    #  cut_incidence(stylized_betweenness[i, , ], complexity_control)$incidence
+    cutting_value <- cutting_values[i]
+  }
+
+
+  model <- get_model_from_quasiorder(t(incidence))
+  if (is.null(model)) {
+    model <- list(A = matrix(0, nrow = 1, ncol = n_rows), rhs = 1, sense = "<=")
+  }
+  model$obj <- objective
+  model$lb <- rep(0, n_rows)
+  model$ub <- rep(1, n_rows)
+  # force centerpoint to be in the set
+  model$lb[i] <- 1
+  model$modelsense <- "max"
+  b <- gurobi::gurobi(model, params = params)
+  close(pb)
+  return(list(
+    models = models, obj = objective, solutions = solutions,
+    objvals = objvals, stars = stars, objval = objvals[i],
+    star = stars[i, ], center_id = i,
+    fuzzy_incidence = stylized_betweenness[i, , ],
+    incidence = incidence, model = model, runtimes=runtimes, used_betweenness =
+      used_betweenness, cutting_values=cutting_values,cutting_value=cutting_value
+  ))
+}
+
+
+
 compute_widths <- function(ternary_relation) {
   # TODO : Antiketten auch berechnen und ausgeben (Achtung mit Faktorisierung)
   n_rows <- nrow(ternary_relation)
