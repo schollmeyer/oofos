@@ -429,7 +429,7 @@ incidence <<- incidence
 #' @export
 discover_starshaped_subgroups_par <- function(stylized_betweenness, objective,
                                           complexity_measure=compute_width, complexity_control,
-                                          params = list(Outputflag = 0)) {
+                                          params = list(Outputflag = 0),num_cores = parallel::detectCores() - 2) {
   if (dim(stylized_betweenness)[1] != dim(stylized_betweenness)[2] |
     dim(stylized_betweenness)[1] != dim(stylized_betweenness)[3] |
     dim(stylized_betweenness)[2] != dim(stylized_betweenness)[3]) {
@@ -457,7 +457,7 @@ library(foreach)
 library(doParallel)
 
 # Set up parallel backend
-num_cores <- parallel::detectCores() - 1
+
 cl <- makeCluster(num_cores)
 registerDoParallel(cl)
 
