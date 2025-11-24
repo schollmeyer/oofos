@@ -417,24 +417,71 @@ abline(v=observed_value)}
 
 univariate_prediction <- function(context,objective,attribute_weights=rep(1,ncol(context))){
   v <- as.vector(objective%*%context)
-  i <- which.max(v*attribute_weights)
+  i <- Rfast::nth(v*attribute_weights,k=1,descending=TRUE,index.return=TRUE)
 return(list(x = context[,i],objval =v[i],which_col=i))}
 
+
+D_KL <- function(p,p_0){return(p*log(p/p_0)+(1-p)*log((1-p)/(1-p_0)))}
+Q_LLR <- function(extent,context,objective){
+  y <- (objective >0)*1
+  
+  p_0 <- mean(y)
+  p <- mean(y[which(extent==1)])
+  
+  if(p == 0){p <- 10^-20}
+  if(p==1){ p <- 1 - 10^-16}
+  
+  
+  
+  q <- mean(y[which(extent==0)])
+  if(q == 0){q <- 10^-20}
+  if(q==1){ q <- 1 - 10^-16}
+  if(all(extent== 1)){q <- p}
+  #if(q ==1){ p <- 1-10^-20}
+  N <- length(extent)
+  s <- sum(extent)/N
+  
+  Q_LLR <- N*(s*D_KL(p,p_0)+(1-s)*D_KL(q,p_0))
+  
+  return(Q_LLR)
+}
+
+Q_LLR_lattice <- function(lattice,objective,eps =rep(10^-16,nrow(lattice$extents))){
+ N <- ncol(lattice$extents)
+ y <- (objective > 0)*1
+ p_0 <- rep(mean(y),nrow(lattice$extents))
+ n_subgroup <- lattice$extents%*%(y)
+ n_complement <- (1-lattice$extents)%*%(y)
+ temp <- rowSums(lattice$extents)
+ p <- pmin(pmax(eps,n_subgroup/temp),1-eps)
+ q <- pmin(pmax(eps,n_complement / (N - temp)),1-eps)
+ Q_LLR <- N*(temp/N*D_KL(p,p_0)+(1-temp/N)*D_KL(q,p_0))
+ return(Q_LLR)
+
+}
 quality <- function(model,result,NAMES=colnames(model$context)){
 
 
   ## berechnet Piatetsky-Shapiro-Qualitätsfunktion für bereits geloestes Model (Variable result). Variable sdtask ist erzeugtes #Modell aus Funktion subgroup.discovery.fca.milp
   ## computes quality function for a subgroup
   # TODO description etc
-
+  D_KL <- function(p,p_0){p*log(p/p_0)+(1-p)*log((1-p)/(1-p_0))}
+  N <- model$n_rows
+  
+  
   idx <- which(result$x[seq_len(model$n_rows)]>0.5)
   jdx <- which(result$x[-seq_len(model$n_rows)]>0.5)
   n0 <- length(which(model$obj[seq_len(model$n_rows)]>0))
   n <- length(idx)
+  s <- n/N
   p <- length(which(model$obj[seq_len(model$n_rows)]>0 & result$x[seq_len(model$n_rows)]>0.5))/n
+  if(p == 0){p <- 10^-20}
+  if(p==1){ p <- 1 - 10^-16}
+  q <- length(which(model$obj[seq_len(model$n_rows)]>0 & result$x[seq_len(model$n_rows)]<0.5))/(N-n)
   p0 <- length(which(model$obj>0))/model$n_rows
+  Q_LLR <- N*(s*D_KL(p,p0)+(1-s)*D_KL(q,p0))
   extreme_point_indices <-get_extreme_attributes(result$x[-seq_len(model$n_rows)],model$context )
-  return(list(n=n,n0=n0,p=p,p0=p0,piatetsky_shapiro=n*(p-p0),wracc=n*(p-p0)*model$n_rows,lift=p/p0,kolmogorov_smirnov=result$objval,obj=result$objval,argmax=NAMES[jdx],
+  return(list(n=n,n0=n0,p=p,p0=p0,piatetsky_shapiro=n*(p-p0),Q_LLR=Q_LLR,wracc=n*(p-p0)*model$n_rows,lift=p/p0,kolmogorov_smirnov=result$objval,obj=result$objval,argmax=NAMES[jdx],
               argmax_extreme_points=NAMES[extreme_point_indices],extreme_point_indices=extreme_point_indices))
 
 }
