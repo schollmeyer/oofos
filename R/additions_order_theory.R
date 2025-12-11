@@ -109,7 +109,7 @@ compute_example_posets <- function(n,powerset_order=TRUE) {
 }
 
 
-compute_incidence <- function(X) {
+compute_incidence_old <- function(X) {
   # erzeugt Inzidenzmatrix einer gegebenen Datentabelle (Zeilen entsprechen
   # statistischen Einheiten und Spalten entsprechen Auspraegungen verschiedener
   # Dimensionen. statistische Einheit x ist kleinergleich statistische Einheit y
@@ -123,6 +123,39 @@ compute_incidence <- function(X) {
   }
   return(ans)
 }
+
+compute_incidence <- function(X) {
+  # erzeugt Inzidenzmatrix einer gegebenen Datentabelle (Zeilen entsprechen
+  # statistischen Einheiten und Spalten entsprechen Auspraegungen verschiedener
+  # Dimensionen. statistische Einheit x ist kleinergleich statistische Einheit y
+  # iff x_i <= y_i fuer jede Dimension i)
+  m <- nrow(X)
+  ans <- matrix(TRUE, m, m)
+
+  for (j in seq_len(ncol(X))) {
+    # Compare the jth variable across all pairs at once
+    ans <- ans & outer(X[, j], X[, j], `<=`)
+  }
+
+  return(ans)
+}
+
+compute_strict_incidence <- function(X) {
+  # erzeugt Inzidenzmatrix einer gegebenen Datentabelle (Zeilen entsprechen
+  # statistischen Einheiten und Spalten entsprechen Auspraegungen verschiedener
+  # Dimensionen. statistische Einheit x ist echt kleiner als statistische Einheit y
+  # iff x_i < y_i fuer jede Dimension i)
+  m <- nrow(X)
+  ans <- matrix(TRUE, m, m)
+
+  for (j in seq_len(ncol(X))) {
+    # Compare the jth variable across all pairs at once
+    ans <- ans & outer(X[, j], X[, j], `<`)
+  }
+
+  return(ans)
+}
+
 
 # TODO MILP version von width plus beides geneinander testen. Achtung: bei
 # nicht-posets kann ergebnis unterschiedlich sein.
@@ -169,7 +202,7 @@ compute_width <- function(incidence,quotient_order=TRUE) {
   if (n_rows == 1) {
     return(list(width = 1))
   }
-  incidence <<- incidence
+  
 
   diag(incidence) <- 0
   graph_incidence <- rbind(

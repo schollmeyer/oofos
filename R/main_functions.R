@@ -270,16 +270,20 @@ optimize_on_context_extents <- function(context,
 #' Department of Statistics, LMU Munich.
 #'
 #' @export
-compute_objective <- function(dat, target, target_class, weights = rep(1, length(dat[[target]]))) {
+compute_objective <- function(dat, target, target_class, weights = rep(1, length(dat[[target]])),type="Kolmogorov_Smirnov") {
   if (any(weights < 0)) {
     print("warning: negative weights")
   }
   i <- which(dat[[target]] == target_class)
   v <- rep(0, length(dat[[target]]))
-
   v[i] <- weights[i] / sum(weights[i])
   v[-i] <- -weights[-i] / sum(weights[-i])
-
+  y <- (v>0)*1
+  G_1 <- sum(y)
+  G_0 <- sum(1-y)
+  G_n <- length(v)
+  if(type=="Kolmogorov_Smirnov"){return(v)}
+  if(type=="Piatetsky_Shapiro"){return(v*G_1*G_0/G_n)}
   # v <- (dat[[target]]==target_class)-(dat[[target]]!=target_class)*mean(dat[[target]]==target_class)/mean(dat[[target]]!=target_class)
   return(v)
 }
@@ -422,28 +426,39 @@ return(list(x = context[,i],objval =v[i],which_col=i))}
 
 
 D_KL <- function(p,p_0){return(p*log(p/p_0)+(1-p)*log((1-p)/(1-p_0)))}
-Q_LLR <- function(extent,context,objective){
+Q_LLR <- function(extent,objective,p=NULL,q=NULL){
   y <- (objective >0)*1
   
   p_0 <- mean(y)
-  p <- mean(y[which(extent==1)])
   
-  if(p == 0){p <- 10^-20}
-  if(p==1){ p <- 1 - 10^-16}
+  if(is.null(p)){
+    p <- mean(y[which(extent==1)])  
+    if(p == 0){p <- 10^-20}
+    if(p==1){ p <- 1 - 10^-16}
+   }
   
   
-  
-  q <- mean(y[which(extent==0)])
-  if(q == 0){q <- 10^-20}
-  if(q==1){ q <- 1 - 10^-16}
-  if(all(extent== 1)){q <- p}
+  if(is.null(q)){
+     q <- mean(y[which(extent==0)])
+     if(q == 0){q <- 10^-20}
+     if(q==1){ q <- 1 - 10^-16}
+     if(all(extent== 1)){q <- p}
+	}
   #if(q ==1){ p <- 1-10^-20}
   N <- length(extent)
   s <- sum(extent)/N
   
   Q_LLR <- N*(s*D_KL(p,p_0)+(1-s)*D_KL(q,p_0))
+  n_11 <- sum(y==1 & extent==1)
+  n_10 <- sum(y==0 & extent==1)
+  n_01 <- sum(y==1 & extent==0)
+  n_00 <- sum(y==0 & extent==0)
+  loglik <- n_00*log(1-q)+n_01*log(q) +n_10*log(1-p)+n_11*log(p)
+  loglik0 <- sum(y)*log(p)+sum(1-y)*log(1-p)
   
-  return(Q_LLR)
+  p_bar <- (sum(extent)*p + sum(1-extent)*q)/N
+  
+  return(list(loglik =loglik, loglik0=loglik0,Q_LLR=loglik-loglik0,p=p,q=q,p_bar=p_bar))
 }
 
 Q_LLR_lattice <- function(lattice,objective,eps =rep(10^-16,nrow(lattice$extents))){
@@ -459,7 +474,16 @@ Q_LLR_lattice <- function(lattice,objective,eps =rep(10^-16,nrow(lattice$extents
  return(Q_LLR)
 
 }
-quality <- function(model,result,NAMES=colnames(model$context)){
+
+
+loglik <- function(p,y){
+        i <- which(y >0)
+        j <- which( y  <= 0)
+return( sum(log(p[i]))+sum(log(1-p[j])))}
+
+
+Q_PS <- function(extent,obj){sum(extent*obj)}
+quality <- function(model,result,NAMES=colnames(model$context),compute_extreme_points=FALSE){
 
 
   ## berechnet Piatetsky-Shapiro-Qualitätsfunktion für bereits geloestes Model (Variable result). Variable sdtask ist erzeugtes #Modell aus Funktion subgroup.discovery.fca.milp
@@ -467,6 +491,11 @@ quality <- function(model,result,NAMES=colnames(model$context)){
   # TODO description etc
   D_KL <- function(p,p_0){p*log(p/p_0)+(1-p)*log((1-p)/(1-p_0))}
   N <- model$n_rows
+  
+  y <- (model$obj>0)*1
+  G_1 <- sum(y)
+  G_0 <- sum(1-y)
+  G_n <- length(y)
   
   
   idx <- which(result$x[seq_len(model$n_rows)]>0.5)
@@ -480,9 +509,20 @@ quality <- function(model,result,NAMES=colnames(model$context)){
   q <- length(which(model$obj[seq_len(model$n_rows)]>0 & result$x[seq_len(model$n_rows)]<0.5))/(N-n)
   p0 <- length(which(model$obj>0))/model$n_rows
   Q_LLR <- N*(s*D_KL(p,p0)+(1-s)*D_KL(q,p0))
-  extreme_point_indices <-get_extreme_attributes(result$x[-seq_len(model$n_rows)],model$context )
-  return(list(n=n,n0=n0,p=p,p0=p0,piatetsky_shapiro=n*(p-p0),Q_LLR=Q_LLR,wracc=n*(p-p0)*model$n_rows,lift=p/p0,kolmogorov_smirnov=result$objval,obj=result$objval,argmax=NAMES[jdx],
-              argmax_extreme_points=NAMES[extreme_point_indices],extreme_point_indices=extreme_point_indices))
+  Q_LLR_approx <- (n*(p-p0))^2/(2*N*s*(1-s)*p0*(1-p0))
+  
+  #v*G_1*G_0/G_n
+  ps <- n*(p-p0)
+  ks <- ps *G_n/(G_1*G_0)
+  chi_square <- n/(N-n)*(p-p0)^2
+  if(compute_extreme_points)
+  {extreme_point_indices <-get_extreme_attributes(result$x[-seq_len(model$n_rows)],model$context )
+  return(list(n=n,n0=n0,p=p,p0=p0,q=q,Piatetsky_Shapiro=n*(p-p0),chi_square=chi_square,Q_LLR=Q_LLR,Q_LLR_approx=Q_LLR_approx,wracc=n*(p-p0)*model$n_rows,lift=p/p0,Kolmogorov_Smirnov=ks,obj=result$objval,argmax=NAMES[jdx],
+              argmax_extreme_points=NAMES[extreme_point_indices],extreme_point_indices=extreme_point_indices))}
+			  
+  else{
+	return(list(n=n,n0=n0,p=p,p0=p0,q=q,Piatetsky_Shapiro=n*(p-p0),chi_square=chi_square,Q_LLR=Q_LLR,Q_LLR_approx=Q_LLR_approx,wracc=n*(p-p0)*model$n_rows,lift=p/p0,Kolmogorov_Smirnov=ks,obj=result$objval))
+			  }
 
 }
 
@@ -955,3 +995,4 @@ k_extent_opt_b=function(X,gen_index=seq_len(nrow(X)),objective,binary_variables=
 #   # ans$vtypes=rep("B",length(ans$vtypes))
 #   return(ans)
 # }
+
