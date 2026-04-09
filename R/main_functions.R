@@ -761,7 +761,7 @@ get_auto_conceptual_scaling <- function(data_matrix,print_scalings=TRUE) {
 
 
 ### TODO: description
-ranking_scaling=function(X,remove.full.columns=TRUE){ #Funktion zum begrifflichen Skalieren von Ranking Daten in Ranking Notation
+ranking_scaling <- function(X,remove.full.columns=TRUE){ #Funktion zum begrifflichen Skalieren von Ranking Daten in Ranking Notation
   m <- dim(X)[1]
   n <- dim(X)[2]
   NAMES <- rep("",n^2)
