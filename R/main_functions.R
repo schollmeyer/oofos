@@ -428,16 +428,16 @@ return(list(x = context[,i],objval =v[i],which_col=i))}
 D_KL <- function(p,p_0){return(p*log(p/p_0)+(1-p)*log((1-p)/(1-p_0)))}
 Q_LLR <- function(extent,objective,p=NULL,q=NULL){
   y <- (objective >0)*1
-  
+
   p_0 <- mean(y)
-  
+
   if(is.null(p)){
-    p <- mean(y[which(extent==1)])  
+    p <- mean(y[which(extent==1)])
     if(p == 0){p <- 10^-20}
     if(p==1){ p <- 1 - 10^-16}
    }
-  
-  
+
+
   if(is.null(q)){
      q <- mean(y[which(extent==0)])
      if(q == 0){q <- 10^-20}
@@ -447,7 +447,7 @@ Q_LLR <- function(extent,objective,p=NULL,q=NULL){
   #if(q ==1){ p <- 1-10^-20}
   N <- length(extent)
   s <- sum(extent)/N
-  
+
   Q_LLR <- N*(s*D_KL(p,p_0)+(1-s)*D_KL(q,p_0))
   n_11 <- sum(y==1 & extent==1)
   n_10 <- sum(y==0 & extent==1)
@@ -455,9 +455,9 @@ Q_LLR <- function(extent,objective,p=NULL,q=NULL){
   n_00 <- sum(y==0 & extent==0)
   loglik <- n_00*log(1-q)+n_01*log(q) +n_10*log(1-p)+n_11*log(p)
   loglik0 <- sum(y)*log(p)+sum(1-y)*log(1-p)
-  
+
   p_bar <- (sum(extent)*p + sum(1-extent)*q)/N
-  
+
   return(list(loglik =loglik, loglik0=loglik0,Q_LLR=loglik-loglik0,p=p,q=q,p_bar=p_bar))
 }
 
@@ -491,13 +491,13 @@ quality <- function(model,result,NAMES=colnames(model$context),compute_extreme_p
   # TODO description etc
   D_KL <- function(p,p_0){p*log(p/p_0)+(1-p)*log((1-p)/(1-p_0))}
   N <- model$n_rows
-  
+
   y <- (model$obj>0)*1
   G_1 <- sum(y)
   G_0 <- sum(1-y)
   G_n <- length(y)
-  
-  
+
+
   idx <- which(result$x[seq_len(model$n_rows)]>0.5)
   jdx <- which(result$x[-seq_len(model$n_rows)]>0.5)
   n0 <- length(which(model$obj[seq_len(model$n_rows)]>0))
@@ -510,7 +510,7 @@ quality <- function(model,result,NAMES=colnames(model$context),compute_extreme_p
   p0 <- length(which(model$obj>0))/model$n_rows
   Q_LLR <- N*(s*D_KL(p,p0)+(1-s)*D_KL(q,p0))
   Q_LLR_approx <- (n*(p-p0))^2/(2*N*s*(1-s)*p0*(1-p0))
-  
+
   #v*G_1*G_0/G_n
   ps <- n*(p-p0)
   ks <- ps *G_n/(G_1*G_0)
@@ -519,7 +519,7 @@ quality <- function(model,result,NAMES=colnames(model$context),compute_extreme_p
   {extreme_point_indices <-get_extreme_attributes(result$x[-seq_len(model$n_rows)],model$context )
   return(list(n=n,n0=n0,p=p,p0=p0,q=q,Piatetsky_Shapiro=n*(p-p0),chi_square=chi_square,Q_LLR=Q_LLR,Q_LLR_approx=Q_LLR_approx,wracc=n*(p-p0)*model$n_rows,lift=p/p0,Kolmogorov_Smirnov=ks,obj=result$objval,argmax=NAMES[jdx],
               argmax_extreme_points=NAMES[extreme_point_indices],extreme_point_indices=extreme_point_indices))}
-			  
+
   else{
 	return(list(n=n,n0=n0,p=p,p0=p0,q=q,Piatetsky_Shapiro=n*(p-p0),chi_square=chi_square,Q_LLR=Q_LLR,Q_LLR_approx=Q_LLR_approx,wracc=n*(p-p0)*model$n_rows,lift=p/p0,Kolmogorov_Smirnov=ks,obj=result$objval))
 			  }
@@ -758,6 +758,36 @@ get_auto_conceptual_scaling <- function(data_matrix,print_scalings=TRUE) {
 
   return(context_converted)
 }
+
+
+### TODO: description
+ranking_scaling=function(X,remove.full.columns=TRUE){ #Funktion zum begrifflichen Skalieren von Ranking Daten in Ranking Notation
+  m <- dim(X)[1]
+  n <- dim(X)[2]
+  NAMES <- rep("",n^2)
+  ans <- array(0,c(m,n^2))
+  temp <- array(0,c(n,n))
+  for(k in (1:m)){
+    for(l1 in (1:n)){
+      for(l2 in (1:n)){
+        temp[l1,l2] <- (X[k,l1] <= X[k,l2])*1  ##  setzt eine eins fall Rang von item l1 kleinergleich rang von l2 ist (Für Datenpunkt k)
+      }
+    }
+    ans[k,] <- as.vector(t(temp))
+  }
+  t <- 1
+  for(l1 in (1:n)){
+    for(l2 in (1:n)){
+      NAMES[t] <- paste(c(colnames(X)[l1]," <= ",colnames(X)[l2]),collapse="")
+      t <- t+1
+    }
+  }
+  colnames(ans) <- NAMES
+  if(remove.full.columns){
+    i <- which(colSums(ans)==m)
+    ans <- ans[,-i]
+  }
+  return(ans)}
 
 min_k_attr_generated=function(extent,intent,X){  # Berecchnet für Begriff gegeben durch Umfang extent und Inhalt intent das maximale k, für das der Begriff k-Merkmalserzeugt ist (Kontext X muss ebenfalls mit übergeben werden)
   m=dim(X)[1]
