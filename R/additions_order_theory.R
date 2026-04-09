@@ -89,7 +89,7 @@ compute_example_posets <- function(n,powerset_order=TRUE) {
       interval_order[k, l] <- (upper[k] <= lower[l])
     }
   }
-  p5 <- ddandrda::compute_all_partial_orders(5,list=FALSE,complemented=FALSE)
+  p5 <- ddandrda::compute_all_poset(5,list=FALSE,complemented=FALSE)
   index <- sample(seq_len(nrow(p5)),size=1)
   random_p_order_1 <- p5[index,]; dim(random_p_order_1) <- c(5,5)
   index <- sample(seq_len(nrow(p5)),size=1)
@@ -202,7 +202,7 @@ compute_width <- function(incidence,quotient_order=TRUE) {
   if (n_rows == 1) {
     return(list(width = 1))
   }
-  
+
 
   diag(incidence) <- 0
   graph_incidence <- rbind(

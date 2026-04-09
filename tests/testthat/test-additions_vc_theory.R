@@ -1,5 +1,5 @@
 test_that("enumerate_ufg_premises works", {
- p5 <- ddandrda::compute_all_partial_orders(5,list=FALSE,complemented=TRUE)
+ p5 <- ddandrda::compute_all_poset(5,list=FALSE,complemented=TRUE)
  i <- sample(seq_len(nrow(p5)))
  p5 <- p5[i,]
  n_row_context <-17
